@@ -97,13 +97,13 @@ export default function RootLayout({
 
   return (
     <html lang="it" className={privacyMode ? 'privacy-active' : ''}>
-      <body className="bg-slate-950 text-slate-200 antialiased selection:bg-emerald-500/30 min-h-screen flex flex-col">
+      <body className="bg-slate-950 text-slate-200 antialiased selection:bg-emerald-500/30 h-screen max-h-screen overflow-hidden flex flex-col">
         
         {/* Mostra la barra venditore solo nelle sezioni del laboratorio */}
         {!isPublicPage && (
           <>
-            <header className="sticky top-0 z-40 w-full bg-slate-950/80 backdrop-blur-md border-b border-slate-800/80 print:hidden transition-all">
-              <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
+            <header className="flex-shrink-0 z-40 w-full bg-slate-950/90 backdrop-blur-md border-b border-slate-800/80 print:hidden transition-all">
+              <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-2">
                 
                 {/* Brand Logo */}
                 <Link href="/" className="flex items-center gap-2.5 hover:opacity-90 transition-opacity flex-shrink-0">
@@ -349,7 +349,7 @@ export default function RootLayout({
           </>
         )}
 
-        <main className="flex-1">
+        <main className={`flex-1 overflow-hidden flex flex-col ${isPublicPage ? 'h-screen' : 'h-[calc(100vh-3.5rem)]'}`}>
           {children}
         </main>
       </body>

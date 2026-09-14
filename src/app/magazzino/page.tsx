@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Box, Plus, Trash2, Layers, Wrench, Search, 
   CheckCircle2, Scale, Pencil, X, AlertTriangle, 
-  Info, Sparkles, RefreshCw, SlidersHorizontal
+  Info, Sparkles, RefreshCw, SlidersHorizontal, QrCode
 } from 'lucide-react';
 import { 
   SPOOL_TARE_PRESETS, 
@@ -12,6 +12,7 @@ import {
   calculateNetFilamentWeight, 
   SpoolTarePreset 
 } from '@/data/spoolTares';
+import QrLabelModal, { SpoolLabelData } from '@/components/QrLabelModal';
 
 export interface Spool {
   id: string;
@@ -69,6 +70,7 @@ export default function MagazzinoPage() {
   const [activeTareWeight, setActiveTareWeight] = useState<number>(200);
   const [activeTareModel, setActiveTareModel] = useState<string>('Personalizzata');
   const [tareSearchFilter, setTareSearchFilter] = useState('');
+  const [activeSpoolLabel, setActiveSpoolLabel] = useState<SpoolLabelData | null>(null);
 
   // Form nuovo componente hardware
   const [newHardware, setNewHardware] = useState<Omit<HardwareItem, 'id'>>({
@@ -204,6 +206,23 @@ export default function MagazzinoPage() {
     setGrossWeightInput(spool.weightRemaining + tare);
   };
 
+  // Rileva scansione QR Code Bobina da fotocamera smartphone (?spoolId=...&weigh=1)
+  useEffect(() => {
+    if (typeof window === 'undefined' || inventory.spools.length === 0) return;
+    const params = new URLSearchParams(window.location.search);
+    const targetSpoolId = params.get('spoolId');
+    const shouldWeigh = params.get('weigh') === '1';
+
+    if (targetSpoolId && shouldWeigh) {
+      const targetSpool = inventory.spools.find(s => s.id === targetSpoolId);
+      if (targetSpool) {
+        openWeighModal(targetSpool);
+        const cleanUrl = window.location.pathname;
+        window.history.replaceState({}, '', cleanUrl);
+      }
+    }
+  }, [inventory.spools]);
+
   const handleApplyWeighedWeight = () => {
     if (!weighingSpool) return;
     const gross = typeof grossWeightInput === 'number' ? grossWeightInput : 0;
@@ -282,33 +301,33 @@ export default function MagazzinoPage() {
   const remainingValue = weighingSpool ? ((currentNet / (weighingSpool.weightTotal || 1000)) * weighingSpool.cost).toFixed(2) : '0.00';
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 p-4 md:p-8 font-sans">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="h-full max-h-full overflow-hidden bg-slate-950 text-slate-200 p-2 sm:p-3 font-sans flex flex-col">
+      <div className="max-w-7xl mx-auto w-full flex-1 min-h-0 flex flex-col gap-2 overflow-hidden">
         
         {/* HEADER */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex-shrink-0 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
-              <Box className="w-6 h-6 text-emerald-400" />
+            <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight flex items-center gap-2">
+              <Box className="w-5 h-5 text-emerald-400" />
               Magazzino & Materiali
             </h1>
-            <p className="text-slate-400 text-sm">
-              Gestione bobine, tara dei produttori, pesatura alla bilancia e scorte minuteria
+            <p className="text-slate-400 text-xs">
+              Gestione bobine, tara produttori, pesatura e scorte minuteria
             </p>
           </div>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
             {savedSuccess && (
-              <span className="text-xs text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-3 py-1.5 rounded-xl flex items-center gap-1.5 animate-in fade-in duration-200">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" /> {feedbackMsg || "Modifiche salvate"}
+              <span className="text-xs text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-2.5 py-1 rounded-lg flex items-center gap-1 animate-in fade-in duration-200">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> {feedbackMsg || "Modifiche salvate"}
               </span>
             )}
             
             {/* TABS SELECTOR RESPONSIVE */}
-            <div className="flex bg-slate-900 border border-slate-800 p-1 rounded-xl shadow-sm">
+            <div className="flex bg-slate-900 border border-slate-800 p-0.5 rounded-lg shadow-sm">
               <button
                 onClick={() => setActiveTab('spools')}
-                className={`flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`flex items-center justify-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all ${
                   activeTab === 'spools' ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-950' : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -316,7 +335,7 @@ export default function MagazzinoPage() {
               </button>
               <button
                 onClick={() => setActiveTab('hardware')}
-                className={`flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`flex items-center justify-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all ${
                   activeTab === 'hardware' ? 'bg-purple-600 text-white shadow-sm shadow-purple-950' : 'text-slate-400 hover:text-white'
                 }`}
               >
@@ -328,11 +347,11 @@ export default function MagazzinoPage() {
 
         {/* CONTENUTO TAB 1: BOBINE */}
         {activeTab === 'spools' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-3 overflow-hidden">
             
             {/* FORM AGGIUNTA BOBINA (4 COLONNE) */}
-            <div className="lg:col-span-4">
-              <form onSubmit={handleAddSpool} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 sticky top-6 shadow-xl">
+            <div className="lg:col-span-4 flex flex-col min-h-0 overflow-y-auto">
+              <form onSubmit={handleAddSpool} className="bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-3 shadow-xl">
                 <div className="flex items-center justify-between">
                   <h2 className="text-sm font-bold text-white flex items-center gap-2 uppercase tracking-wider">
                     <Plus className="w-4 h-4 text-emerald-400" /> Aggiungi Bobina
@@ -499,32 +518,32 @@ export default function MagazzinoPage() {
             </div>
 
             {/* LISTA BOBINE ATTIVE (8 COLONNE) */}
-            <div className="lg:col-span-8 space-y-4">
+            <div className="lg:col-span-8 flex flex-col min-h-0 space-y-2 overflow-hidden">
               
               {/* BARRA RICERCA & STATISTICHE RAPIDE */}
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex-shrink-0 flex flex-col sm:flex-row gap-2">
                 <div className="relative flex-1">
-                  <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+                  <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
                   <input 
                     type="text" 
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     placeholder="Cerca bobina per marca, materiale, colore o note..." 
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
                   />
                 </div>
 
-                <div className="bg-slate-900/80 border border-slate-800 px-3.5 py-1.5 rounded-xl flex items-center gap-4 text-xs">
+                <div className="bg-slate-900/80 border border-slate-800 px-3 py-1 rounded-lg flex items-center gap-3 text-xs flex-shrink-0">
                   <div>
-                    <span className="text-slate-500 text-[10px] block uppercase">Totale Filamento</span>
-                    <strong className="text-white font-mono">
+                    <span className="text-slate-500 text-[9px] block uppercase">Totale Filamento</span>
+                    <strong className="text-white font-mono text-xs">
                       {(inventory.spools.reduce((acc, s) => acc + (s.weightRemaining || 0), 0) / 1000).toFixed(2)} kg
                     </strong>
                   </div>
-                  <div className="h-6 w-px bg-slate-800" />
+                  <div className="h-5 w-px bg-slate-800" />
                   <div>
-                    <span className="text-slate-500 text-[10px] block uppercase">Valore Giacenza</span>
-                    <strong className="text-emerald-400 font-mono">
+                    <span className="text-slate-500 text-[9px] block uppercase">Valore Giacenza</span>
+                    <strong className="text-emerald-400 font-mono text-xs">
                       €{inventory.spools.reduce((acc, s) => acc + (((s.weightRemaining || 0) / (s.weightTotal || 1000)) * s.cost), 0).toFixed(2)}
                     </strong>
                   </div>
@@ -532,7 +551,8 @@ export default function MagazzinoPage() {
               </div>
 
               {/* GRIGLIA CARDS DELLE BOBINE */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[75vh] overflow-y-auto pr-1">
+              <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {filteredSpools.length === 0 ? (
                   <div className="col-span-2 text-center py-16 bg-slate-900/50 border border-slate-800 rounded-2xl text-slate-500 text-sm flex flex-col items-center justify-center gap-2">
                     <Box className="w-8 h-8 text-slate-600" />
@@ -631,7 +651,7 @@ export default function MagazzinoPage() {
 
                         {/* FOOTER AZIONI: PESA ALLA BILANCIA, MODIFICA COMPLETA, AGGIORNAMENTO RAPIDO GRAMMI, ELIMINA */}
                         <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
-                          {/* PULSANTI RAPIDI PESA & MODIFICA */}
+                          {/* PULSANTI RAPIDI PESA, MODIFICA & ETICHETTA QR */}
                           <div className="flex items-center gap-1.5">
                             <button
                               onClick={() => openWeighModal(spool)}
@@ -640,6 +660,26 @@ export default function MagazzinoPage() {
                             >
                               <Scale className="w-3.5 h-3.5" />
                               <span>Pesa</span>
+                            </button>
+
+                            <button
+                              onClick={() => setActiveSpoolLabel({
+                                type: 'spool',
+                                id: spool.id,
+                                brand: spool.brand,
+                                material: spool.material,
+                                color: spool.color,
+                                colorHex: spool.colorHex,
+                                weightRemaining: spool.weightRemaining,
+                                weightTotal: spool.weightTotal || 1000,
+                                tareWeight: spool.spoolTare ?? 200,
+                                cost: spool.cost,
+                              })}
+                              className="px-2.5 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
+                              title="Stampa etichetta adesiva QR con tara e link di pesata istantanea"
+                            >
+                              <QrCode className="w-3.5 h-3.5" />
+                              <span>QR</span>
                             </button>
 
                             <button
@@ -677,6 +717,7 @@ export default function MagazzinoPage() {
                     );
                   })
                 )}
+                </div>
               </div>
             </div>
 
@@ -685,52 +726,52 @@ export default function MagazzinoPage() {
 
         {/* CONTENUTO TAB 2: HARDWARE & BOM */}
         {activeTab === 'hardware' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-3 overflow-hidden">
             
             {/* FORM AGGIUNTA HARDWARE (4 COLONNE) */}
-            <div className="lg:col-span-4">
-              <form onSubmit={handleAddHardware} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4 shadow-xl">
-                <h2 className="text-sm font-bold text-white flex items-center gap-2 uppercase tracking-wider">
-                  <Plus className="w-4 h-4 text-purple-400" /> Aggiungi Componente
+            <div className="lg:col-span-4 flex flex-col min-h-0 overflow-y-auto">
+              <form onSubmit={handleAddHardware} className="bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-3 shadow-xl">
+                <h2 className="text-xs font-bold text-white flex items-center gap-1.5 uppercase tracking-wider">
+                  <Plus className="w-3.5 h-3.5 text-purple-400" /> Aggiungi Componente
                 </h2>
 
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Nome Articolo / Specifiche</label>
+                  <label className="block text-[11px] text-slate-400 mb-0.5">Nome Articolo / Specifiche</label>
                   <input 
                     type="text" 
                     value={newHardware.name} 
                     onChange={e => setNewHardware({ ...newHardware, name: e.target.value })} 
                     placeholder="Es. Inserti M3, Cuscinetti 608, Viti..."
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:ring-1 focus:ring-purple-500 outline-none"
+                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-white focus:ring-1 focus:ring-purple-500 outline-none"
                     required
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">Quantità a Scorta</label>
+                    <label className="block text-[11px] text-slate-400 mb-0.5">Quantità a Scorta</label>
                     <input 
                       type="number" 
                       value={newHardware.qty} 
                       onChange={e => setNewHardware({ ...newHardware, qty: parseInt(e.target.value) || 0 })} 
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:ring-1 focus:ring-purple-500 outline-none"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-white focus:ring-1 focus:ring-purple-500 outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">Costo Unitario (€)</label>
+                    <label className="block text-[11px] text-slate-400 mb-0.5">Costo Unitario (€)</label>
                     <input 
                       type="number" 
                       step="0.01"
                       value={newHardware.cost} 
                       onChange={e => setNewHardware({ ...newHardware, cost: parseFloat(e.target.value) || 0 })} 
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:ring-1 focus:ring-purple-500 outline-none"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-white focus:ring-1 focus:ring-purple-500 outline-none"
                     />
                   </div>
                 </div>
 
                 <button 
                   type="submit" 
-                  className="w-full py-2.5 bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-lg shadow-purple-950"
+                  className="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs rounded-lg flex items-center justify-center gap-1 transition-colors shadow-md shadow-purple-950"
                 >
                   <Plus className="w-3.5 h-3.5" /> Salva nel Cassetto Hardware
                 </button>
@@ -738,19 +779,19 @@ export default function MagazzinoPage() {
             </div>
 
             {/* TABELLA HARDWARE (8 COLONNE) */}
-            <div className="lg:col-span-8 space-y-4">
-              <div className="relative">
-                <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+            <div className="lg:col-span-8 flex flex-col min-h-0 space-y-2 overflow-hidden">
+              <div className="relative flex-shrink-0">
+                <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
                 <input 
                   type="text" 
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   placeholder="Cerca viteria, dadi, inserti, magneti..." 
-                  className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-purple-500"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-purple-500"
                 />
               </div>
 
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+              <div className="flex-1 min-h-0 bg-slate-900 border border-slate-800 rounded-xl overflow-y-auto shadow-xl">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-slate-950/80 text-slate-400 border-b border-slate-800 uppercase tracking-wider text-[10px]">
                     <tr>
@@ -1248,6 +1289,14 @@ export default function MagazzinoPage() {
 
             </div>
           </div>
+        )}
+
+        {/* MODALE ETICHETTA QR BOBINA / BILANCIA */}
+        {activeSpoolLabel && (
+          <QrLabelModal 
+            data={activeSpoolLabel} 
+            onClose={() => setActiveSpoolLabel(null)} 
+          />
         )}
 
       </div>

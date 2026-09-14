@@ -119,17 +119,17 @@ export default function BackupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 p-4 md:p-8 font-sans">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="h-full max-h-full overflow-hidden bg-slate-950 text-slate-200 p-2 sm:p-3 font-sans flex flex-col">
+      <div className="max-w-6xl mx-auto w-full flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden">
         
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 flex-shrink-0">
           <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
-              <HardDrive className="w-6 h-6 text-emerald-400" />
+            <h1 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+              <HardDrive className="w-5 h-5 text-emerald-400" />
               Centro Backup & Sicurezza Dati
             </h1>
-            <p className="text-slate-400 text-sm">
+            <p className="text-slate-400 text-xs">
               Esporta, archivia e ripristina l&apos;intero database per prevenire perdite di dati su Raspberry Pi
             </p>
           </div>
@@ -137,7 +137,7 @@ export default function BackupPage() {
           <button
             onClick={handleCreateSnapshot}
             disabled={loading}
-            className="px-4 py-2.5 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-200 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 w-full sm:w-auto"
+            className="px-3.5 py-1.5 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-200 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-emerald-400' : ''}`} />
             <span>Crea Snapshot Immediato</span>
@@ -146,25 +146,27 @@ export default function BackupPage() {
 
         {/* Feedback Message */}
         {message && (
-          <div className={`p-4 rounded-xl border text-sm flex items-start gap-3 ${
+          <div className={`p-3 rounded-xl border text-xs flex items-start gap-2.5 flex-shrink-0 ${
             message.type === 'success' 
               ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' 
               : 'bg-red-500/10 border-red-500/30 text-red-300'
           }`}>
             {message.type === 'success' ? (
-              <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-400 mt-0.5" />
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-emerald-400 mt-0.5" />
             ) : (
-              <AlertTriangle className="w-5 h-5 flex-shrink-0 text-red-400 mt-0.5" />
+              <AlertTriangle className="w-4 h-4 flex-shrink-0 text-red-400 mt-0.5" />
             )}
             <div>
               <p className="font-semibold">{message.type === 'success' ? 'Operazione Riuscita' : 'Attenzione'}</p>
-              <p className="text-xs opacity-90 mt-0.5">{message.text}</p>
+              <p className="text-[11px] opacity-90 mt-0.5">{message.text}</p>
             </div>
           </div>
         )}
 
-        {/* Azioni Principali: 2 Card Grandi */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Content Scroll Container */}
+        <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-3">
+          {/* Azioni Principali: 2 Card Grandi */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           
           {/* Card 1: Esporta / Download */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between space-y-4">
@@ -299,6 +301,7 @@ export default function BackupPage() {
               <li>Sincronizzare la cartella <code>/app/data/backups/</code> verso Google Drive o Dropbox tramite strumenti leggeri come <em>rclone</em>.</li>
             </ul>
           </div>
+        </div>
         </div>
 
       </div>

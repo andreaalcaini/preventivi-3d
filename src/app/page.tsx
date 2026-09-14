@@ -5,10 +5,15 @@ import {
   Settings, Calculator, Clock, Wrench, Share2, 
   Plus, Trash2, ChevronDown, ChevronUp, CheckCircle2, 
   Save, FolderOpen, FilePlus2, ExternalLink, Link as LinkIcon,
-  User, UserPlus, Layers, FileText, Pencil, X, Box as BoxIcon
+  User, UserPlus, Layers, FileText, Pencil, X, Box as BoxIcon,
+  MessageSquare, Phone, QrCode, FileCode2, UploadCloud, AlertCircle,
+  Sparkles, RefreshCw, Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 import StlViewer from '@/components/StlViewer';
+import { parseSlicerFile } from '@/lib/slicerParser';
+import { getWhatsAppUrl } from '@/lib/whatsapp';
+import QrLabelModal, { ParcelLabelData } from '@/components/QrLabelModal';
 
 interface BomItem {
   name: string;
@@ -22,6 +27,7 @@ interface QuoteState {
   id: string;
   name: string;
   clientName: string;
+  clientContact?: string;
   pricingType: PricingType;
   makerWorldUrl?: string;
   material: string;
@@ -89,6 +95,7 @@ const emptyQuote: QuoteState = {
   id: '',
   name: '',
   clientName: '',
+  clientContact: '',
   pricingType: 'collega',
   makerWorldUrl: '',
   material: 'PETG',
@@ -129,10 +136,27 @@ function getPrivacySnapshot(): string {
 
 export default function QuoteCalculator() {
   const [showSettings, setShowSettings] = useState(false);
+  const [calcTab, setCalcTab] = useState<'print' | 'costs' | 'extra'>('print');
   const [copied, setCopied] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [showStlViewer, setShowStlViewer] = useState(false);
   const [uploadingModel, setUploadingModel] = useState(false);
+
+  // Slicer parser & WhatsApp / Label states
+  const [parsingSlicer, setParsingSlicer] = useState(false);
+  const [slicerFeedback, setSlicerFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+  const [activeParcelLabel, setActiveParcelLabel] = useState<ParcelLabelData | null>(null);
+
+  // MakerWorld auto-fetch state
+  const [loadingMakerWorld, setLoadingMakerWorld] = useState(false);
+  const [makerWorldInfo, setMakerWorldInfo] = useState<{
+    modelTitle: string;
+    coverUrl?: string;
+    authorName?: string;
+    selectedProfile: any;
+    availableProfiles: any[];
+  } | null>(null);
+  const [makerWorldError, setMakerWorldError] = useState<string | null>(null);
 
   const [clientDropdownOpen, setClientDropdownOpen] = useState(false);
   const clientInputContainerRef = useRef<HTMLDivElement>(null);
@@ -337,6 +361,105 @@ export default function QuoteCalculator() {
     }));
   };
 
+  const handleSlicerFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setParsingSlicer(true);
+    setSlicerFeedback(null);
+    try {
+      const parsed = await parseSlicerFile(file);
+      setQuote(prev => ({
+        ...prev,
+        name: prev.name.trim() ? prev.name : file.name.replace(/\.(gcode|3mf|gco|g)$/i, ''),
+        hours: parsed.hours,
+        mins: parsed.mins,
+        weight: parsed.weightGrams,
+        material: parsed.material || prev.material,
+        multiColor: parsed.multiColor ?? prev.multiColor,
+        colorChanges: parsed.colorCount ? Math.max(0, parsed.colorCount - 1) : prev.colorChanges,
+        purgeWeight: (parsed.multiColor && prev.purgeWeight === 0) ? Math.round(parsed.weightGrams * 0.25) : prev.purgeWeight
+      }));
+      setSlicerFeedback({
+        type: 'success',
+        message: `Dati importati con successo da ${parsed.slicerName || 'Slicer'}: ${parsed.hours}h ${parsed.mins}m • ${parsed.weightGrams}g${parsed.material ? ` ${parsed.material}` : ''}${parsed.multiColor ? ` • AMS (${parsed.colorCount} colori)` : ''}`
+      });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Errore durante la lettura del file slicer';
+      setSlicerFeedback({ type: 'error', message: msg });
+    } finally {
+      setParsingSlicer(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleFetchMakerWorld = async (overrideUrl?: string, targetProfileId?: number) => {
+    const urlToFetch = (overrideUrl !== undefined ? overrideUrl : quote.makerWorldUrl)?.trim();
+    if (!urlToFetch) return;
+
+    setLoadingMakerWorld(true);
+    setMakerWorldError(null);
+
+    try {
+      let endpoint = `/api/makerworld?url=${encodeURIComponent(urlToFetch)}`;
+      if (targetProfileId) {
+        endpoint += `&profileId=${targetProfileId}`;
+      }
+
+      const res = await fetch(endpoint);
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Impossibile recuperare dati da MakerWorld');
+      }
+
+      setMakerWorldInfo({
+        modelTitle: data.modelTitle,
+        coverUrl: data.coverUrl,
+        authorName: data.authorName,
+        selectedProfile: data.selectedProfile,
+        availableProfiles: data.availableProfiles || []
+      });
+
+      const prof = data.selectedProfile;
+      if (prof) {
+        setQuote(prev => ({
+          ...prev,
+          name: (!prev.name || prev.name.trim() === 'Stampa 3D Custom') ? data.modelTitle : prev.name,
+          hours: prof.printHours,
+          mins: prof.printMinutes,
+          weight: prof.weightGrams,
+          material: prof.material || prev.material,
+          multiColor: prof.needAms ?? prev.multiColor,
+          colorChanges: prof.needAms ? Math.max(1, prev.colorChanges) : prev.colorChanges,
+          purgeWeight: (prof.needAms && prev.purgeWeight === 0) ? Math.round(prof.weightGrams * 0.25) : prev.purgeWeight
+        }));
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Errore durante il recupero da MakerWorld';
+      setMakerWorldError(msg);
+    } finally {
+      setLoadingMakerWorld(false);
+    }
+  };
+
+  const handleSelectMakerWorldProfile = (profileId: number) => {
+    if (!makerWorldInfo) return;
+    const target = makerWorldInfo.availableProfiles.find(p => p.id === profileId);
+    if (!target) return;
+
+    setMakerWorldInfo(prev => prev ? { ...prev, selectedProfile: target } : null);
+    setQuote(prev => ({
+      ...prev,
+      hours: target.printHours,
+      mins: target.printMinutes,
+      weight: target.weightGrams,
+      material: target.material || prev.material,
+      multiColor: target.needAms ?? prev.multiColor,
+      colorChanges: target.needAms ? Math.max(1, prev.colorChanges) : prev.colorChanges,
+      purgeWeight: (target.needAms && prev.purgeWeight === 0) ? Math.round(target.weightGrams * 0.25) : prev.purgeWeight
+    }));
+  };
+
   const saveCurrentQuote = async () => {
     const isEditing = Boolean(quote.id);
     const currentId = quote.id || crypto.randomUUID();
@@ -434,11 +557,14 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
   };
 
   const clientStats = useMemo(() => {
-    const stats: Record<string, { count: number; totalSpent: number; totalProfit: number; lastType?: PricingType }> = {};
+    const stats: Record<string, { count: number; totalSpent: number; totalProfit: number; lastType?: PricingType; phone?: string }> = {};
     savedQuotes.forEach(q => {
       const c = (q.clientName || 'Anonimo').trim();
       if (!stats[c]) {
-        stats[c] = { count: 0, totalSpent: 0, totalProfit: 0, lastType: q.pricingType };
+        stats[c] = { count: 0, totalSpent: 0, totalProfit: 0, lastType: q.pricingType, phone: q.clientContact };
+      }
+      if (!stats[c].phone && q.clientContact) {
+        stats[c].phone = q.clientContact;
       }
       stats[c].count += 1;
       stats[c].totalSpent += (q.totalCalculated || 0);
@@ -462,7 +588,7 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
   const activeClientStat = exactClientMatch ? clientStats[exactClientMatch] : null;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 p-4 md:p-8 font-sans">
+    <div className="h-full max-h-full overflow-hidden bg-slate-950 text-slate-200 p-2 sm:p-3 font-sans flex flex-col">
       
       {/* FOGLIO DI LAVORO / RICEVUTA PDF MINIMALE */}
       <div className="hidden print:block text-black bg-white p-8 max-w-2xl mx-auto font-sans">
@@ -533,74 +659,70 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
         </div>
       </div>
 
-      {/* SCHERMATA STANDARD WEB */}
-      <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-8 pb-32 lg:pb-12 print:hidden font-sans">
+      {/* SCHERMATA STANDARD WEB RIGIDA SENZA SCORRIMENTO */}
+      <div className="max-w-7xl mx-auto w-full flex-1 min-h-0 flex flex-col print:hidden font-sans overflow-hidden">
         
         {/* BANNER NOTIFICA SE STAI MODIFICANDO UN PREVENTIVO */}
         {quote.id && (
-          <div className="mb-6 p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-lg shadow-amber-950/20">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-500/20 rounded-xl text-amber-400">
-                <Pencil className="w-5 h-5" />
+          <div className="flex-shrink-0 mb-2 p-2 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center justify-between gap-2 shadow-sm">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="p-1 bg-amber-500/20 rounded-lg text-amber-400 flex-shrink-0">
+                <Pencil className="w-3.5 h-3.5" />
               </div>
-              <div>
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  Modalità Modifica Attiva
-                  <span className="text-xs font-mono font-normal text-amber-400">({quote.name || 'Senza nome'})</span>
-                </h3>
-                <p className="text-xs text-slate-400">Stai modificando un preventivo salvato in precedenza.</p>
+              <div className="flex items-center gap-1.5 text-xs truncate">
+                <span className="font-bold text-white">Modalità Modifica:</span>
+                <span className="font-mono text-amber-400 truncate">{quote.name || 'Senza nome'}</span>
               </div>
             </div>
 
             <button 
               onClick={resetQuote}
-              className="px-3.5 py-1.5 bg-slate-900 border border-slate-700 hover:bg-slate-800 text-slate-300 text-xs font-medium rounded-xl flex items-center gap-1.5 transition-colors self-end sm:self-auto"
+              className="px-2.5 py-1 bg-slate-900 border border-slate-700 hover:bg-slate-800 text-slate-300 text-xs font-medium rounded-lg flex items-center gap-1 transition-colors flex-shrink-0"
             >
-              <X className="w-3.5 h-3.5" /> Esci dalla Modifica (Crea Nuovo)
+              <X className="w-3 h-3" /> Esci
             </button>
           </div>
         )}
 
-        {/* HEADER RESPONSIVE CON PRESET A PILLOLE */}
-        <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 sm:mb-8 gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 sm:p-3 bg-emerald-500/10 rounded-2xl text-emerald-400 border border-emerald-500/20 shadow-md shadow-emerald-950/30">
-              <Calculator className="w-6 h-6" />
+        {/* HEADER COMPATTO CON PRESET A PILLOLE */}
+        <header className="flex-shrink-0 flex items-center justify-between mb-2 gap-2 flex-wrap sm:flex-nowrap">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="p-1.5 bg-emerald-500/10 rounded-xl text-emerald-400 border border-emerald-500/20 shadow-sm flex-shrink-0">
+              <Calculator className="w-4 h-4" />
             </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Calcolatore Preventivi FDM</h1>
-              <p className="text-slate-400 text-xs sm:text-sm">
-                {isPrivacyMode && <span className="text-amber-400 font-semibold mr-2">[Modalità Cliente]</span>}
-                {quote.id ? <span className="text-amber-400 font-mono">Modifica preventivo attivo</span> : 'Inserisci i parametri dallo slicer per determinare il prezzo'}
+            <div className="min-w-0">
+              <h1 className="text-sm sm:text-base font-bold text-white tracking-tight leading-tight truncate">
+                Calcolatore Preventivi FDM
+              </h1>
+              <p className="text-slate-400 text-[11px] truncate">
+                {isPrivacyMode && <span className="text-amber-400 font-semibold mr-1">[Cliente]</span>}
+                {quote.id ? 'Modifica preventivo attivo' : 'Parametri per determinare il prezzo'}
               </p>
             </div>
           </div>
           
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full lg:w-auto justify-between lg:justify-end">
-            <div className="flex items-center gap-2">
-              <button 
-                onClick={resetQuote} 
-                className="px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl hover:bg-slate-800 text-slate-300 text-xs sm:text-sm flex items-center gap-1.5 transition-colors shadow-sm"
-                title="Azzera campi e crea nuovo preventivo"
-              >
-                <FilePlus2 className="w-4 h-4 text-blue-400" /> 
-                <span>Nuovo</span>
-              </button>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <button 
+              onClick={resetQuote} 
+              className="px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg hover:bg-slate-800 text-slate-300 text-xs flex items-center gap-1 transition-colors shadow-sm"
+              title="Azzera campi e crea nuovo preventivo"
+            >
+              <FilePlus2 className="w-3.5 h-3.5 text-blue-400" /> 
+              <span className="hidden sm:inline">Nuovo</span>
+            </button>
 
-              <Link 
-                href="/preventivi"
-                className="px-3 py-2 bg-slate-900 border border-slate-800 rounded-xl hover:bg-slate-800 text-slate-300 text-xs sm:text-sm flex items-center gap-1.5 transition-colors shadow-sm"
-              >
-                <FolderOpen className="w-4 h-4 text-emerald-400" /> 
-                <span>Lavori ({savedQuotes.length})</span>
-              </Link>
-            </div>
+            <Link 
+              href="/preventivi"
+              className="px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg hover:bg-slate-800 text-slate-300 text-xs flex items-center gap-1 transition-colors shadow-sm"
+            >
+              <FolderOpen className="w-3.5 h-3.5 text-emerald-400" /> 
+              <span>Lavori ({savedQuotes.length})</span>
+            </Link>
 
-            {/* Segmented Pill Selector for Pricing Presets */}
-            <div className="flex bg-slate-900 border border-slate-800 p-1 rounded-xl gap-1 shadow-sm">
+            <div className="flex bg-slate-900 border border-slate-800 p-0.5 rounded-lg gap-0.5 shadow-sm">
               <button 
                 onClick={() => applyPreset('amico')} 
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
                   quote.pricingType === 'amico' 
                     ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm' 
                     : 'text-slate-400 hover:text-slate-200 border border-transparent'
@@ -610,7 +732,7 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
               </button>
               <button 
                 onClick={() => applyPreset('collega')} 
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
                   quote.pricingType === 'collega' 
                     ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40 shadow-sm' 
                     : 'text-slate-400 hover:text-slate-200 border border-transparent'
@@ -620,7 +742,7 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
               </button>
               <button 
                 onClick={() => applyPreset('commerciale')} 
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
                   quote.pricingType === 'commerciale' 
                     ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-sm' 
                     : 'text-slate-400 hover:text-slate-200 border border-transparent'
@@ -632,430 +754,678 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
           </div>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* GRIGLIA PRINCIPALE BLOCCATA A 100VH */}
+        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-3 overflow-hidden">
           
-          {/* LEFT: FORM PRINCIPALE */}
-          <div className="lg:col-span-8 space-y-6">
+          {/* LEFT: FORM PRINCIPALE A SCHEDE */}
+          <div className="lg:col-span-8 flex flex-col min-h-0 bg-slate-900 border border-slate-800 rounded-xl p-3 overflow-hidden">
             
-            {/* PARAMETRI GLOBALI */}
-            {!isPrivacyMode && (
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
-                <button 
-                  onClick={() => setShowSettings(!showSettings)}
-                  className="w-full px-6 py-4 flex justify-between items-center bg-slate-900 hover:bg-slate-800/50 transition-colors"
+            {/* TABS HEADER */}
+            <div className="flex-shrink-0 flex items-center justify-between border-b border-slate-800 pb-2 mb-2 gap-2 flex-wrap">
+              <div className="flex bg-slate-950 border border-slate-800 p-0.5 rounded-lg gap-0.5">
+                <button
+                  type="button"
+                  onClick={() => setCalcTab('print')}
+                  className={`px-3 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                    calcTab === 'print'
+                      ? 'bg-emerald-600 text-white shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
                 >
-                  <div className="flex items-center gap-2 text-slate-300 font-medium text-sm">
-                    <Settings className="w-4 h-4 text-slate-400" /> Parametri Stampante & Costi Base
-                  </div>
-                  {showSettings ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  <Layers className="w-3.5 h-3.5" />
+                  <span>1. Stampa & Slicer</span>
                 </button>
-                
-                {showSettings && (
-                  <div className="p-6 border-t border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-900/50">
+                <button
+                  type="button"
+                  onClick={() => setCalcTab('costs')}
+                  className={`px-3 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                    calcTab === 'costs'
+                      ? 'bg-emerald-600 text-white shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>2. Tempi & Tariffe</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCalcTab('extra')}
+                  className={`px-3 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                    calcTab === 'extra'
+                      ? 'bg-emerald-600 text-white shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  <Wrench className="w-3.5 h-3.5" />
+                  <span>3. Hardware & 3D {quote.extraBom.length > 0 ? `(${quote.extraBom.length})` : ''}</span>
+                </button>
+              </div>
+
+              {!isPrivacyMode && (
+                <button
+                  type="button"
+                  onClick={() => setShowSettings(!showSettings)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors flex items-center gap-1 ${
+                    showSettings 
+                      ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' 
+                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                  }`}
+                  title="Mostra / Nascondi parametri base stampante (kWh, Watt, Ammortamento)"
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Costi Base</span>
+                  {showSettings ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                </button>
+              )}
+            </div>
+
+            {/* CONTENITORE CONTENUTO TAB SCROLLABILE INTERNAMENTE SE NECESSARIO */}
+            <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-3">
+              
+              {/* ACCORDION PARAMETRI STAMPANTE (SE APERTO) */}
+              {!isPrivacyMode && showSettings && (
+                <div className="p-3 bg-slate-950/80 border border-slate-800 rounded-xl mb-3 animate-in fade-in duration-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                      <Settings className="w-3.5 h-3.5 text-emerald-400" /> Parametri Stampante & Costi Base
+                    </span>
+                    <span className="text-[10px] text-slate-500">Salvati in memoria</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Costo Energia (€/kWh)</label>
-                      <input type="number" step="0.01" value={settings.powerCost} onChange={e => updateSetting('powerCost', e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm outline-none" />
+                      <label className="block text-[10px] text-slate-400 mb-0.5 truncate">Energia (€/kWh)</label>
+                      <input type="number" step="0.01" value={settings.powerCost} onChange={e => updateSetting('powerCost', e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs outline-none text-white" />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Potenza Stampante (Watt)</label>
-                      <input type="number" value={settings.watt} onChange={e => updateSetting('watt', e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm outline-none" />
+                      <label className="block text-[10px] text-slate-400 mb-0.5 truncate">Potenza (Watt)</label>
+                      <input type="number" value={settings.watt} onChange={e => updateSetting('watt', e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs outline-none text-white" />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Ammortamento (€/h)</label>
-                      <input type="number" step="0.10" value={settings.wearCost} onChange={e => updateSetting('wearCost', e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm outline-none" />
+                      <label className="block text-[10px] text-slate-400 mb-0.5 truncate">Ammort. (€/h)</label>
+                      <input type="number" step="0.10" value={settings.wearCost} onChange={e => updateSetting('wearCost', e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs outline-none text-white" />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Tariffa Operatore (€/h)</label>
-                      <input type="number" step="1" value={settings.laborRate} onChange={e => updateSetting('laborRate', e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm outline-none" />
+                      <label className="block text-[10px] text-slate-400 mb-0.5 truncate">Operatore (€/h)</label>
+                      <input type="number" step="1" value={settings.laborRate} onChange={e => updateSetting('laborRate', e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs outline-none text-white" />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Tasso Rischio/Scarto (%)</label>
-                      <input type="number" value={settings.risk} onChange={e => updateSetting('risk', e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm outline-none" />
+                      <label className="block text-[10px] text-slate-400 mb-0.5 truncate">Rischio (%)</label>
+                      <input type="number" value={settings.risk} onChange={e => updateSetting('risk', e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs outline-none text-white" />
                     </div>
                     <div>
-                      <label className="block text-xs text-slate-400 mb-1">Ricarico / Margine (%)</label>
-                      <input type="number" value={settings.markup} onChange={e => updateSetting('markup', e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm outline-none" />
+                      <label className="block text-[10px] text-slate-400 mb-0.5 truncate">Margine (%)</label>
+                      <input type="number" value={settings.markup} onChange={e => updateSetting('markup', e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs outline-none text-white" />
                     </div>
                   </div>
-                )}
-              </div>
-            )}
-
-            {/* QUOTE FORM */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
-              
-              {/* NOME OGGETTO, CLIENTE & PROFILO */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Descrizione Oggetto / File</label>
-                  <input 
-                    type="text" 
-                    value={quote.name} 
-                    onChange={e => updateQuote('name', e.target.value)} 
-                    placeholder="Es. Case ESP32, Staffa..."
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2.5 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-sm" 
-                  />
                 </div>
+              )}
 
-                <div ref={clientInputContainerRef} className="relative">
-                  <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center justify-between">
-                    <span className="flex items-center gap-1.5">
-                      <User className="w-3.5 h-3.5 text-emerald-400" /> Nome Cliente
-                    </span>
-                    {activeClientStat && <span className="text-[10px] text-emerald-400">Riconosciuto ✓</span>}
-                  </label>
-                  
-                  <input 
-                    type="text" 
-                    value={quote.clientName} 
-                    onFocus={() => setClientDropdownOpen(true)}
-                    onChange={e => {
-                      updateQuote('clientName', e.target.value);
-                      setClientDropdownOpen(true);
-                    }} 
-                    placeholder="Nome amico o collega..."
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2.5 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-sm" 
-                  />
+              {/* TAB 1: STAMPA & SLICER */}
+              {calcTab === 'print' && (
+                <div className="space-y-3">
+                  {/* Riga Nome, Cliente, Cellulare, Tariffa */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-400 mb-1">Descrizione Oggetto / File</label>
+                      <input 
+                        type="text" 
+                        value={quote.name} 
+                        onChange={e => updateQuote('name', e.target.value)} 
+                        placeholder="Es. Case ESP32, Staffa..."
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 focus:border-emerald-500 outline-none text-xs text-white" 
+                      />
+                    </div>
 
-                  {clientDropdownOpen && quote.clientName.trim().length > 0 && (
-                    <div className="absolute left-0 right-0 top-[68px] bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-30 overflow-hidden max-h-56 overflow-y-auto">
-                      {clientSuggestions.map((client) => {
-                        const stat = clientStats[client];
-                        return (
-                          <div 
-                            key={client}
-                            onClick={() => {
-                              updateQuote('clientName', client);
-                              if (stat.lastType) applyPreset(stat.lastType);
-                              setClientDropdownOpen(false);
-                            }}
-                            className="p-3 hover:bg-slate-800 cursor-pointer border-b border-slate-800/60 transition-colors"
-                          >
-                            <div className="flex justify-between items-center mb-1">
-                              <span className="font-semibold text-white text-sm">{client}</span>
-                              <span className="text-xs text-emerald-400 font-medium">Tot: €{stat.totalSpent.toFixed(2)}</span>
+                    <div ref={clientInputContainerRef} className="relative">
+                      <label className="block text-[11px] font-medium text-slate-400 mb-1 flex items-center justify-between">
+                        <span className="flex items-center gap-1">
+                          <User className="w-3 h-3 text-emerald-400" /> Nome Cliente
+                        </span>
+                        {activeClientStat && <span className="text-[10px] text-emerald-400">Riconosciuto ✓</span>}
+                      </label>
+                      
+                      <input 
+                        type="text" 
+                        value={quote.clientName} 
+                        onFocus={() => setClientDropdownOpen(true)}
+                        onChange={e => {
+                          updateQuote('clientName', e.target.value);
+                          setClientDropdownOpen(true);
+                        }} 
+                        placeholder="Nome cliente..."
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 focus:border-emerald-500 outline-none text-xs text-white" 
+                      />
+
+                      {clientDropdownOpen && quote.clientName.trim().length > 0 && (
+                        <div className="absolute left-0 right-0 top-[58px] bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-30 overflow-hidden max-h-56 overflow-y-auto">
+                          {clientSuggestions.map((client) => {
+                            const stat = clientStats[client];
+                            return (
+                              <div 
+                                key={client}
+                                onClick={() => {
+                                  updateQuote('clientName', client);
+                                  if (stat.phone && !quote.clientContact) {
+                                    updateQuote('clientContact', stat.phone);
+                                  }
+                                  if (stat.lastType) applyPreset(stat.lastType);
+                                  setClientDropdownOpen(false);
+                                }}
+                                className="p-2.5 hover:bg-slate-800 cursor-pointer border-b border-slate-800/60 transition-colors"
+                              >
+                                <div className="flex justify-between items-center mb-0.5">
+                                  <span className="font-semibold text-white text-xs">{client}</span>
+                                  <span className="text-[11px] text-emerald-400 font-medium">Tot: €{stat.totalSpent.toFixed(2)}</span>
+                                </div>
+                                <div className="flex items-center justify-between text-[10px] text-slate-400">
+                                  <span>Ordini: <strong className="text-slate-200">{stat.count}</strong></span>
+                                  {stat.phone && <span className="text-emerald-400 font-mono">{stat.phone}</span>}
+                                </div>
+                              </div>
+                            );
+                          })}
+
+                          {!exactClientMatch && quote.clientName.trim() && (
+                            <div 
+                              onClick={() => setClientDropdownOpen(false)}
+                              className="p-2.5 bg-slate-950/80 hover:bg-slate-800 text-emerald-400 cursor-pointer flex items-center gap-1.5 text-xs font-medium border-t border-slate-700/50"
+                            >
+                              <UserPlus className="w-3.5 h-3.5 text-emerald-400" />
+                              <span>Inserisci &quot;{quote.clientName.trim()}&quot; come nuovo</span>
                             </div>
-                            <div className="flex items-center gap-3 text-[11px] text-slate-400">
-                              <span>Ordini: <strong className="text-slate-200">{stat.count}</strong></span>
-                              {!isPrivacyMode && <span>Netto: <strong className="text-blue-400">€{stat.totalProfit.toFixed(2)}</strong></span>}
-                            </div>
-                          </div>
-                        );
-                      })}
-
-                      {!exactClientMatch && quote.clientName.trim() && (
-                        <div 
-                          onClick={() => setClientDropdownOpen(false)}
-                          className="p-3 bg-slate-950/80 hover:bg-slate-800 text-emerald-400 cursor-pointer flex items-center gap-2 text-xs font-medium border-t border-slate-700/50"
-                        >
-                          <UserPlus className="w-4 h-4 text-emerald-400" />
-                          <span>Inserisci &quot;{quote.clientName.trim()}&quot; come nuovo cliente</span>
+                          )}
                         </div>
                       )}
                     </div>
-                  )}
-                </div>
 
-                <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Tipo Tariffa</label>
-                  <select 
-                    value={quote.pricingType} 
-                    onChange={e => applyPreset(e.target.value as PricingType)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2.5 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-sm font-medium"
-                  >
-                    <option value="amico">Amico (Prezzo Vivo)</option>
-                    <option value="collega">Collega (Margine Leggero)</option>
-                    <option value="commerciale">Azienda / Commerciale</option>
-                  </select>
-                </div>
-              </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-400 mb-1 flex items-center gap-1">
+                        <Phone className="w-3 h-3 text-emerald-400" /> WhatsApp
+                      </label>
+                      <input 
+                        type="tel" 
+                        value={quote.clientContact || ''} 
+                        onChange={e => updateQuote('clientContact', e.target.value)} 
+                        placeholder="Es. 340 1234567..."
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 focus:border-emerald-500 outline-none text-xs text-white" 
+                      />
+                    </div>
 
-              {/* LINK MAKERWORLD */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs font-medium text-slate-400 flex items-center gap-1.5">
-                    <LinkIcon className="w-3.5 h-3.5 text-emerald-400" /> Link MakerWorld / Modello 3D
-                  </label>
-                  <span className="text-[11px] text-slate-500">Opzionale</span>
-                </div>
-                <div className="relative flex items-center">
-                  <input 
-                    type="url" 
-                    value={quote.makerWorldUrl || ''} 
-                    onChange={e => updateQuote('makerWorldUrl', e.target.value)} 
-                    placeholder="https://makerworld.com/it/models/..."
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-3.5 pr-10 py-2.5 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none text-sm placeholder:text-slate-600" 
-                  />
-                  {quote.makerWorldUrl && (
-                    <a href={quote.makerWorldUrl} target="_blank" rel="noreferrer" className="absolute right-3 p-1 text-slate-400 hover:text-emerald-400">
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                  )}
-                </div>
-              </div>
+                    <div>
+                      <label className="block text-[11px] font-medium text-slate-400 mb-1">Tipo Tariffa</label>
+                      <select 
+                        value={quote.pricingType} 
+                        onChange={e => applyPreset(e.target.value as PricingType)}
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 focus:border-emerald-500 outline-none text-xs font-medium text-white"
+                      >
+                        <option value="amico">Amico (Prezzo Vivo)</option>
+                        <option value="collega">Collega (Margine Leggero)</option>
+                        <option value="commerciale">Azienda / Commerciale</option>
+                      </select>
+                    </div>
+                  </div>
 
-              {/* VIEWER 3D INTERATTIVO STL & 3MF */}
-              <div className="p-3.5 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowStlViewer(!showStlViewer)}
-                    className="text-xs font-semibold text-slate-300 hover:text-emerald-400 transition-colors flex items-center gap-1.5"
-                  >
-                    <BoxIcon className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>
-                      {showStlViewer 
-                        ? 'Nascondi Visualizzatore 3D (.STL / .3MF)' 
-                        : (quote.modelFileName ? `Mostra Modello 3D (${quote.modelFileName})` : 'Mostra Visualizzatore 3D (Carica file .STL o .3MF)')
-                      }
-                    </span>
-                    {showStlViewer ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                  </button>
-
-                  <div className="flex items-center gap-2">
-                    {uploadingModel && (
-                      <span className="text-[11px] text-amber-400 animate-pulse flex items-center gap-1">
-                        Salvataggio file 3D sul server...
-                      </span>
-                    )}
-
-                    {quote.modelFileName && !uploadingModel && (
-                      <div className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-lg text-emerald-400 text-[11px]">
-                        <span className="font-medium truncate max-w-[150px]" title={quote.modelFileName}>
-                          📎 {quote.modelFileName}
+                  {/* MakerWorld Link & Import */}
+                  <div className="space-y-1.5 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80">
+                    <div className="flex items-center justify-between">
+                      <label className="block text-[11px] font-medium text-slate-400 flex items-center gap-1">
+                        <LinkIcon className="w-3 h-3 text-emerald-400" /> Link MakerWorld / Modello 3D
+                      </label>
+                      {quote.makerWorldUrl?.includes('makerworld.com') && (
+                        <span className="text-[10px] text-emerald-400 flex items-center gap-1">
+                          <Sparkles className="w-3 h-3" /> Stima automatica disponibile
                         </span>
-                        <button
-                          type="button"
-                          onClick={handleRemoveModel}
-                          className="hover:text-red-400 ml-1 text-slate-400 font-bold"
-                          title="Rimuovi file 3D da questo preventivo"
-                        >
-                          ×
-                        </button>
+                      )}
+                    </div>
+
+                    <div className="flex gap-2">
+                      <div className="relative flex-1 flex items-center">
+                        <input 
+                          type="url" 
+                          value={quote.makerWorldUrl || ''} 
+                          onChange={e => {
+                            updateQuote('makerWorldUrl', e.target.value);
+                            setMakerWorldError(null);
+                          }} 
+                          onKeyDown={e => {
+                            if (e.key === 'Enter' && quote.makerWorldUrl?.includes('makerworld.com')) {
+                              e.preventDefault();
+                              handleFetchMakerWorld();
+                            }
+                          }}
+                          placeholder="https://makerworld.com/it/models/..."
+                          className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-3 pr-8 py-1.5 focus:border-emerald-500 outline-none text-xs text-white placeholder:text-slate-600" 
+                        />
+                        {quote.makerWorldUrl && (
+                          <a href={quote.makerWorldUrl} target="_blank" rel="noreferrer" className="absolute right-2 p-1 text-slate-400 hover:text-emerald-400" title="Apri su MakerWorld">
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        )}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleFetchMakerWorld()}
+                        disabled={loadingMakerWorld || !quote.makerWorldUrl?.includes('makerworld.com')}
+                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white text-xs font-bold rounded-lg transition-all flex items-center gap-1 shadow-sm whitespace-nowrap cursor-pointer disabled:cursor-not-allowed"
+                      >
+                        {loadingMakerWorld ? (
+                          <>
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                            <span>Analisi...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-3 h-3" />
+                            <span>Importa Stima</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+
+                    {makerWorldError && (
+                      <div className="p-2 bg-red-950/40 border border-red-800/60 rounded-lg text-[11px] text-red-300 flex items-center gap-1.5">
+                        <AlertCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+                        <span>{makerWorldError}</span>
                       </div>
                     )}
-                    <span className="text-[10px] text-slate-500 font-mono hidden sm:inline">Three.js WebGL</span>
+
+                    {makerWorldInfo && (
+                      <div className="p-2.5 bg-emerald-950/30 border border-emerald-800/50 rounded-lg space-y-1.5">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            {makerWorldInfo.coverUrl && (
+                              <img 
+                                src={makerWorldInfo.coverUrl} 
+                                alt={makerWorldInfo.modelTitle} 
+                                className="w-8 h-8 object-cover rounded-md border border-emerald-700/50 flex-shrink-0 bg-slate-900" 
+                              />
+                            )}
+                            <div className="min-w-0">
+                              <h4 className="text-xs font-bold text-white truncate">
+                                {makerWorldInfo.modelTitle}
+                              </h4>
+                              <span className="text-[10px] text-slate-400 truncate block">di {makerWorldInfo.authorName}</span>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={() => setMakerWorldInfo(null)}
+                            className="p-1 text-slate-400 hover:text-white rounded"
+                            title="Chiudi"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+
+                        {makerWorldInfo.selectedProfile && (
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[11px]">
+                            <div className="bg-slate-900/80 p-1.5 rounded border border-slate-800">
+                              <span className="text-[9px] text-slate-400 block">Tempo stimato:</span>
+                              <span className="font-mono font-bold text-emerald-300">
+                                {makerWorldInfo.selectedProfile.printHours}h {makerWorldInfo.selectedProfile.printMinutes}m
+                              </span>
+                            </div>
+                            <div className="bg-slate-900/80 p-1.5 rounded border border-slate-800">
+                              <span className="text-[9px] text-slate-400 block">Filamento:</span>
+                              <span className="font-mono font-bold text-emerald-300">
+                                ~{makerWorldInfo.selectedProfile.weightGrams}g
+                              </span>
+                            </div>
+                            <div className="bg-slate-900/80 p-1.5 rounded border border-slate-800">
+                              <span className="text-[9px] text-slate-400 block">Materiale:</span>
+                              <span className="font-bold text-white truncate block">
+                                {makerWorldInfo.selectedProfile.material}
+                              </span>
+                            </div>
+                            <div className="bg-slate-900/80 p-1.5 rounded border border-slate-800">
+                              <span className="text-[9px] text-slate-400 block">Multi-Colore:</span>
+                              <span className="font-bold text-white">
+                                {makerWorldInfo.selectedProfile.needAms ? '🎨 Sì (AMS)' : '⚪ Singolo'}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {makerWorldInfo.availableProfiles.length > 1 && (
+                          <div className="flex items-center gap-1.5 text-xs pt-1">
+                            <span className="text-slate-400 text-[10px] whitespace-nowrap">Profilo:</span>
+                            <select
+                              value={makerWorldInfo.selectedProfile?.id || ''}
+                              onChange={e => handleSelectMakerWorldProfile(Number(e.target.value))}
+                              className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-0.5 text-xs text-white focus:border-emerald-500 outline-none"
+                            >
+                              {makerWorldInfo.availableProfiles.map(p => (
+                                <option key={p.id} value={p.id}>
+                                  {p.title} — {p.printHours}h {p.printMinutes}m ({p.weightGrams}g, {p.material})
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Slicer File Import */}
+                  <div className="p-2.5 bg-slate-950/60 border border-dashed border-cyan-500/30 hover:border-cyan-500/60 rounded-xl transition-all">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex-shrink-0">
+                          <FileCode2 className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="text-xs font-bold text-white block leading-tight">Importa da Slicer (.3mf / .gcode)</span>
+                          <span className="text-[10px] text-slate-400 truncate block">
+                            Bambu Studio, OrcaSlicer, PrusaSlicer, Cura
+                          </span>
+                        </div>
+                      </div>
+
+                      <label className="cursor-pointer px-3 py-1 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shadow-sm flex-shrink-0">
+                        <UploadCloud className="w-3 h-3" />
+                        <span>{parsingSlicer ? 'Lettura...' : 'Carica File'}</span>
+                        <input 
+                          type="file" 
+                          accept=".3mf,.gcode,.gco,.g" 
+                          onChange={handleSlicerFile} 
+                          className="hidden" 
+                          disabled={parsingSlicer}
+                        />
+                      </label>
+                    </div>
+
+                    {slicerFeedback && (
+                      <div className={`mt-2 p-2 rounded-lg text-[11px] flex items-center gap-1.5 ${
+                        slicerFeedback.type === 'success' 
+                          ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400' 
+                          : 'bg-red-500/10 border border-red-500/30 text-red-400'
+                      }`}>
+                        {slicerFeedback.type === 'success' ? <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" /> : <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />}
+                        <span>{slicerFeedback.message}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Filamento & Materiale */}
+                  <div className="p-2.5 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5 uppercase tracking-wider">
+                        <Layers className="w-3.5 h-3.5" /> Filamento & Peso
+                      </h3>
+
+                      {spools.length > 0 && (
+                        <div className="flex items-center gap-1 text-[11px]">
+                          <span className="text-slate-500">Bobina:</span>
+                          <select 
+                            value={quote.spoolId || ""}
+                            onChange={(e) => {
+                              const chosen = spools.find(s => s.id === e.target.value);
+                              if (chosen) {
+                                updateQuote('spoolId', chosen.id);
+                                updateQuote('material', `${chosen.brand} ${chosen.material} (${chosen.color})`);
+                                updateQuote('spoolCost', chosen.cost);
+                              }
+                            }}
+                            className="bg-slate-900 border border-emerald-500/40 text-emerald-300 rounded px-2 py-0.5 text-xs outline-none cursor-pointer max-w-[200px] truncate"
+                          >
+                            <option value="">Manuale</option>
+                            {spools.map(s => (
+                              <option key={s.id} value={s.id}>
+                                {s.brand} - {s.material} {s.color} ({s.weightRemaining}g)
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div>
+                        <label className="block text-[11px] text-slate-400 mb-0.5">Nome Materiale</label>
+                        <input 
+                          type="text" 
+                          value={quote.material}
+                          onChange={e => updateQuote('material', e.target.value)}
+                          className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-white outline-none" 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-slate-400 mb-0.5">Costo Bobina (€/kg)</label>
+                        <input 
+                          type="number" 
+                          step="0.10" 
+                          value={quote.spoolCost} 
+                          onChange={e => updateQuote('spoolCost', parseFloat(e.target.value) || 0)} 
+                          className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-white outline-none" 
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-slate-400 mb-0.5">Peso Pezzo (g netti)</label>
+                        <input 
+                          type="number" 
+                          value={quote.weight} 
+                          onChange={e => updateQuote('weight', parseFloat(e.target.value) || 0)} 
+                          className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-white outline-none" 
+                        />
+                      </div>
+                    </div>
+
+                    {/* AMS / Multi-colore */}
+                    <div className="pt-1 border-t border-slate-800/60">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" checked={quote.multiColor} onChange={e => updateQuote('multiColor', e.target.checked)} className="w-3.5 h-3.5 rounded border-slate-700 bg-slate-900 text-emerald-500 focus:ring-emerald-500" />
+                        <span className="text-xs font-medium text-slate-300">Stampa Multi-colore (AMS / Spurghi)</span>
+                      </label>
+                      
+                      {quote.multiColor && (
+                        <div className="grid grid-cols-2 gap-2 mt-2 p-2 bg-slate-900/60 rounded-lg border border-slate-800/60">
+                          <div>
+                            <label className="block text-[10px] text-slate-400 mb-0.5">Cambi Filamento</label>
+                            <input type="number" value={quote.colorChanges} onChange={e => updateQuote('colorChanges', parseInt(e.target.value) || 0)} className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-white outline-none" />
+                          </div>
+                          <div>
+                            <label className="block text-[10px] text-slate-400 mb-0.5">Torre Spurgo (g)</label>
+                            <input type="number" value={quote.purgeWeight} onChange={e => updateQuote('purgeWeight', parseFloat(e.target.value) || 0)} className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-white outline-none" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
+              )}
 
-                {showStlViewer && (
-                  <div className="space-y-2 pt-1">
+              {/* TAB 2: TEMPI & TARIFFE */}
+              {calcTab === 'costs' && (
+                <div className="space-y-3">
+                  {/* Tempi Lavorazione */}
+                  <div className="p-3 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-2">
+                    <h3 className="text-xs font-semibold text-blue-400 flex items-center gap-1.5 uppercase tracking-wider">
+                      <Clock className="w-3.5 h-3.5"/> Tempi di Produzione
+                    </h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <div>
+                        <label className="block text-[11px] text-slate-400 mb-0.5">Ore Stampa</label>
+                        <input type="number" value={quote.hours} onChange={e => updateQuote('hours', parseInt(e.target.value) || 0)} className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-white outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-slate-400 mb-0.5">Minuti Stampa</label>
+                        <input type="number" max="59" value={quote.mins} onChange={e => updateQuote('mins', parseInt(e.target.value) || 0)} className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-white outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-slate-400 mb-0.5">Prep/Slicing (min)</label>
+                        <input type="number" value={quote.prepMins} onChange={e => updateQuote('prepMins', parseInt(e.target.value) || 0)} className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-white outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-slate-400 mb-0.5">Post-process (min)</label>
+                        <input type="number" value={quote.postMins} onChange={e => updateQuote('postMins', parseInt(e.target.value) || 0)} className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-white outline-none" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Servizi & Sconto */}
+                  <div className="p-3 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-2">
+                    <h3 className="text-xs font-semibold text-purple-400 flex items-center gap-1.5 uppercase tracking-wider">
+                      Servizi Aggiuntivi & Sconto
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div>
+                        <label className="block text-[11px] text-slate-400 mb-0.5">Disegno CAD / Reverse (€)</label>
+                        <input type="number" value={quote.cadCost} onChange={e => updateQuote('cadCost', parseFloat(e.target.value) || 0)} className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-white outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-slate-400 mb-0.5">Supplemento Urgenza (€)</label>
+                        <input type="number" value={quote.urgencyCost} onChange={e => updateQuote('urgencyCost', parseFloat(e.target.value) || 0)} className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-white outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] text-emerald-400 mb-0.5 font-bold">Sconto Finale (%)</label>
+                        <input type="number" value={quote.discount} onChange={e => updateQuote('discount', parseFloat(e.target.value) || 0)} className="w-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 rounded px-2.5 py-1 text-xs outline-none font-bold" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Riepilogo Tariffe Macchina in uso */}
+                  <div className="p-3 bg-slate-950/40 border border-slate-800/60 rounded-xl text-xs space-y-1.5">
+                    <span className="font-bold text-slate-300 block text-[11px] uppercase tracking-wider">Parametri Macchinario Applicati:</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-slate-400 text-[11px]">
+                      <div>Energia: <strong className="text-white">€{settings.powerCost}/kWh ({settings.watt}W)</strong></div>
+                      <div>Ammortamento: <strong className="text-white">€{settings.wearCost}/h</strong></div>
+                      <div>Manodopera: <strong className="text-white">€{settings.laborRate}/h</strong></div>
+                      <div>Rischio scarto: <strong className="text-white">{settings.risk}%</strong></div>
+                      <div>Margine applicato: <strong className="text-white">{settings.markup}%</strong></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 3: HARDWARE BOM & 3D VIEWER */}
+              {calcTab === 'extra' && (
+                <div className="space-y-3">
+                  {/* Hardware BOM */}
+                  <div className="p-3 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-2.5">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <h3 className="text-xs font-semibold text-purple-400 flex items-center gap-1.5 uppercase tracking-wider">
+                        <Wrench className="w-3.5 h-3.5"/> Hardware & Viteria (BOM)
+                      </h3>
+
+                      <div className="flex items-center gap-1.5">
+                        {hardwareStock.length > 0 && (
+                          <select 
+                            onChange={(e) => {
+                              const chosen = hardwareStock.find(h => h.id === e.target.value);
+                              if (chosen) addBomItem(chosen);
+                              e.target.value = "";
+                            }}
+                            defaultValue=""
+                            className="bg-slate-900 border border-purple-500/40 text-purple-300 rounded px-2 py-0.5 text-xs outline-none cursor-pointer max-w-[150px] truncate"
+                          >
+                            <option value="" disabled>+ Da magazzino...</option>
+                            {hardwareStock.map(h => (
+                              <option key={h.id} value={h.id}>{h.name} (€{h.cost.toFixed(2)})</option>
+                            ))}
+                          </select>
+                        )}
+
+                        <button 
+                          onClick={() => addBomItem()} 
+                          className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors"
+                        >
+                          <Plus className="w-3 h-3" /> Riga Libera
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {quote.extraBom.length === 0 ? (
+                      <p className="text-xs text-slate-500 py-2 text-center">Nessuna viteria o inserto aggiunto a questo preventivo.</p>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {quote.extraBom.map((item, index) => (
+                          <div key={index} className="flex items-center gap-1.5">
+                            <input type="text" value={item.name} onChange={e => updateBomItem(index, 'name', e.target.value)} placeholder="Descrizione" className="flex-1 bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-white outline-none" />
+                            <input type="number" value={item.qty} onChange={e => updateBomItem(index, 'qty', parseInt(e.target.value) || 0)} placeholder="Qtà" className="w-14 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white text-center outline-none" />
+                            <input type="number" step="0.01" value={item.cost} onChange={e => updateBomItem(index, 'cost', parseFloat(e.target.value) || 0)} placeholder="€ cad." className="w-16 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white text-center outline-none" />
+                            <button onClick={() => removeBomItem(index)} className="p-1 text-slate-500 hover:text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 3D Viewer Three.js */}
+                  <div className="p-3 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-2">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                        <BoxIcon className="w-3.5 h-3.5 text-emerald-400" />
+                        Visualizzatore 3D (.STL / .3MF)
+                      </span>
+
+                      <div className="flex items-center gap-2">
+                        {uploadingModel && (
+                          <span className="text-[11px] text-amber-400 animate-pulse">
+                            Caricamento file...
+                          </span>
+                        )}
+
+                        {quote.modelFileName && !uploadingModel && (
+                          <div className="flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded text-emerald-400 text-[11px]">
+                            <span className="font-medium truncate max-w-[130px]" title={quote.modelFileName}>
+                              📎 {quote.modelFileName}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={handleRemoveModel}
+                              className="hover:text-red-400 text-slate-400 font-bold ml-1"
+                              title="Rimuovi file"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
                     <StlViewer 
-                      height={280}
+                      height={230}
                       url={quote.modelUrl}
                       fileName={quote.modelFileName}
                       initialColor={quote.material.includes('PLA') ? '#10b981' : quote.material.includes('PETG') ? '#06b6d4' : '#a855f7'}
                       onFileSelected={handleModelUpload}
                     />
-                    <p className="text-[11px] text-slate-500 leading-tight">
-                      💡 Il file 3D caricato (<strong>.STL</strong> o <strong>.3MF</strong>) viene memorizzato nel preventivo e visualizzato al cliente nella schermata di tracking dell&apos;ordine.
+                    <p className="text-[10px] text-slate-500 leading-tight">
+                      💡 Il file 3D caricato viene memorizzato nel preventivo e visualizzato al cliente nel tracking ordine.
                     </p>
                   </div>
-                )}
-              </div>
-
-              {/* SEZIONE FILAMENTO */}
-              <div className="pt-2 border-t border-slate-800/80">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3 gap-2">
-                  <h3 className="text-xs font-semibold text-emerald-400 flex items-center gap-2 uppercase tracking-wider">
-                    <Layers className="w-4 h-4" /> Filamento & Peso
-                  </h3>
-
-                  {spools.length > 0 && (
-                    <div className="flex items-center gap-2 text-xs">
-                      <span className="text-slate-500">Bobina reale:</span>
-                      <select 
-                        value={quote.spoolId || ""}
-                        onChange={(e) => {
-                          const chosen = spools.find(s => s.id === e.target.value);
-                          if (chosen) {
-                            updateQuote('spoolId', chosen.id);
-                            updateQuote('material', `${chosen.brand} ${chosen.material} (${chosen.color})`);
-                            updateQuote('spoolCost', chosen.cost);
-                          }
-                        }}
-                        className="bg-slate-950 border border-emerald-500/40 text-emerald-300 rounded-lg px-2.5 py-1 text-xs outline-none cursor-pointer"
-                      >
-                        <option value="">Nessuna / Manuale</option>
-                        {spools.map(s => (
-                          <option key={s.id} value={s.id}>
-                            {s.brand} - {s.material} {s.color} ({s.weightRemaining}g rimasti)
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-xs text-slate-400 mb-1">Nome Materiale / Profilo</label>
-                    <input 
-                      type="text" 
-                      value={quote.material}
-                      onChange={e => updateQuote('material', e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm outline-none" 
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-400 mb-1">Costo Bobina (€/kg)</label>
-                    <input 
-                      type="number" 
-                      step="0.10" 
-                      value={quote.spoolCost} 
-                      onChange={e => updateQuote('spoolCost', parseFloat(e.target.value) || 0)} 
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm outline-none" 
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-400 mb-1">Peso Pezzo (grammi netti)</label>
-                    <input 
-                      type="number" 
-                      value={quote.weight} 
-                      onChange={e => updateQuote('weight', parseFloat(e.target.value) || 0)} 
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm outline-none" 
-                    />
-                  </div>
-                </div>
-
-                <div className="pt-3">
-                  <label className="flex items-center gap-2 cursor-pointer mb-3">
-                    <input type="checkbox" checked={quote.multiColor} onChange={e => updateQuote('multiColor', e.target.checked)} className="w-4 h-4 rounded border-slate-700 bg-slate-900 text-emerald-500 focus:ring-emerald-500" />
-                    <span className="text-sm font-medium text-slate-300">Stampa Multi-colore (AMS / Spurghi)</span>
-                  </label>
-                  
-                  {quote.multiColor && (
-                    <div className="grid grid-cols-2 gap-4 p-4 bg-slate-950/50 rounded-lg border border-slate-800/50">
-                      <div>
-                        <label className="block text-xs text-slate-400 mb-1">Cambi Filamento</label>
-                        <input type="number" value={quote.colorChanges} onChange={e => updateQuote('colorChanges', parseInt(e.target.value) || 0)} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm outline-none" />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-slate-400 mb-1">Torre Spurgo (g)</label>
-                        <input type="number" value={quote.purgeWeight} onChange={e => updateQuote('purgeWeight', parseFloat(e.target.value) || 0)} className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm outline-none" />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* TEMPI SLICER */}
-              <div className="pt-2 border-t border-slate-800/80">
-                <h3 className="text-xs font-semibold text-blue-400 flex items-center gap-2 uppercase tracking-wider mb-3">
-                  <Clock className="w-4 h-4"/> Tempi di Lavorazione
-                </h3>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-xs text-slate-400 mb-1">Ore Stampa</label>
-                    <input type="number" value={quote.hours} onChange={e => updateQuote('hours', parseInt(e.target.value) || 0)} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm outline-none" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-400 mb-1">Minuti Stampa</label>
-                    <input type="number" max="59" value={quote.mins} onChange={e => updateQuote('mins', parseInt(e.target.value) || 0)} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm outline-none" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-400 mb-1">Prep / Slicing (min)</label>
-                    <input type="number" value={quote.prepMins} onChange={e => updateQuote('prepMins', parseInt(e.target.value) || 0)} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm outline-none" />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-slate-400 mb-1">Post-processing (min)</label>
-                    <input type="number" value={quote.postMins} onChange={e => updateQuote('postMins', parseInt(e.target.value) || 0)} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm outline-none" />
-                  </div>
-                </div>
-              </div>
-
-              {/* HARDWARE EXTRA */}
-              <div className="space-y-3 pt-2 border-t border-slate-800/80">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                  <h3 className="text-xs font-semibold text-purple-400 flex items-center gap-2 uppercase tracking-wider">
-                    <Wrench className="w-4 h-4"/> Hardware & Viteria (BOM)
-                  </h3>
-
-                  <div className="flex items-center gap-2">
-                    {hardwareStock.length > 0 && (
-                      <select 
-                        onChange={(e) => {
-                          const chosen = hardwareStock.find(h => h.id === e.target.value);
-                          if (chosen) addBomItem(chosen);
-                          e.target.value = "";
-                        }}
-                        defaultValue=""
-                        className="bg-slate-950 border border-purple-500/40 text-purple-300 rounded-lg px-2.5 py-1 text-xs outline-none cursor-pointer"
-                      >
-                        <option value="" disabled>+ Dal cassetto...</option>
-                        {hardwareStock.map(h => (
-                          <option key={h.id} value={h.id}>{h.name} (€{h.cost.toFixed(2)})</option>
-                        ))}
-                      </select>
-                    )}
-
-                    <button 
-                      onClick={() => addBomItem()} 
-                      className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1 rounded-lg flex items-center gap-1 transition-colors"
-                    >
-                      <Plus className="w-3 h-3" /> Riga Libera
-                    </button>
-                  </div>
-                </div>
-                
-                {quote.extraBom.length > 0 && (
-                  <div className="space-y-2">
-                    {quote.extraBom.map((item, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <input type="text" value={item.name} onChange={e => updateBomItem(index, 'name', e.target.value)} placeholder="Descrizione" className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs outline-none" />
-                        <input type="number" value={item.qty} onChange={e => updateBomItem(index, 'qty', parseInt(e.target.value) || 0)} placeholder="Qtà" className="w-16 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-center outline-none" />
-                        <input type="number" step="0.01" value={item.cost} onChange={e => updateBomItem(index, 'cost', parseFloat(e.target.value) || 0)} placeholder="€ cad." className="w-20 bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-center outline-none" />
-                        <button onClick={() => removeBomItem(index)} className="p-1.5 text-slate-500 hover:text-red-400 transition-colors"><Trash2 className="w-4 h-4" /></button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* SERVIZI E SCONTO */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t border-slate-800/80">
-                 <div>
-                    <label className="block text-xs text-slate-400 mb-1">Disegno CAD / Reverse (€)</label>
-                    <input type="number" value={quote.cadCost} onChange={e => updateQuote('cadCost', parseFloat(e.target.value) || 0)} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm outline-none" />
-                 </div>
-                 <div>
-                    <label className="block text-xs text-slate-400 mb-1">Supplemento Urgenza (€)</label>
-                    <input type="number" value={quote.urgencyCost} onChange={e => updateQuote('urgencyCost', parseFloat(e.target.value) || 0)} className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm outline-none" />
-                 </div>
-                 <div>
-                    <label className="block text-xs text-emerald-400 mb-1">Sconto Finale (%)</label>
-                    <input type="number" value={quote.discount} onChange={e => updateQuote('discount', parseFloat(e.target.value) || 0)} className="w-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-lg px-3 py-2 text-sm outline-none font-bold" />
-                 </div>
-              </div>
+              )}
 
             </div>
           </div>
 
-          {/* RIGHT: RIEPILOGO STICKY & SALVATAGGIO */}
-          <div className="lg:col-span-4 relative">
-            <div className="sticky top-20 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-6">
-              
-              <div className="flex justify-between items-center pb-4 border-b border-slate-800">
+          {/* RIGHT: RIEPILOGO COSTI & AZIONI RAPIDE */}
+          <div className="lg:col-span-4 flex flex-col min-h-0 bg-slate-900 border border-slate-800 rounded-xl p-3 justify-between overflow-y-auto">
+            <div className="space-y-3">
+              <div className="flex justify-between items-center pb-2 border-b border-slate-800">
                 <div>
-                  <h2 className="text-lg font-bold text-white">Riepilogo Costi</h2>
-                  <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Tariffa {quote.pricingType}</span>
+                  <h2 className="text-sm font-bold text-white leading-tight">Riepilogo Costi</h2>
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Tariffa {quote.pricingType}</span>
                 </div>
                 <button 
                   onClick={saveCurrentQuote}
-                  className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs rounded-xl flex items-center gap-1.5 transition-colors shadow-md shadow-emerald-950"
+                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs rounded-lg flex items-center gap-1 transition-colors shadow-sm"
                 >
                   <Save className="w-3.5 h-3.5" />
-                  {savedSuccess ? 'Salvato!' : quote.id ? 'Aggiorna Modifiche' : 'Salva nei Lavori'}
+                  {savedSuccess ? 'Salvato!' : quote.id ? 'Aggiorna' : 'Salva Lavoro'}
                 </button>
               </div>
               
-              <div className="space-y-3 text-sm">
+              <div className="space-y-1.5 text-xs">
                 <div className="flex justify-between items-center text-slate-300">
                   <span>Filamento ({(parseFloat(quote.weight.toString()) || 0) + (parseFloat(quote.purgeWeight.toString()) || 0)}g)</span>
                   <span className="font-medium">€{totals.materialCost.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center text-slate-300">
-                  <span>Energia & Consumo Macchina</span>
+                  <span>Energia & Macchina</span>
                   <span className="font-medium">€{(totals.energyCost + totals.wearCost).toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between items-center text-slate-300">
@@ -1064,115 +1434,123 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                 </div>
                 {totals.extraHardwareCost > 0 && (
                   <div className="flex justify-between items-center text-slate-300">
-                    <span>Componenti Hardware Extra</span>
+                    <span>Hardware Extra</span>
                     <span className="font-medium">€{totals.extraHardwareCost.toFixed(2)}</span>
                   </div>
                 )}
                 {totals.servicesCost > 0 && (
                   <div className="flex justify-between items-center text-slate-300">
-                    <span>Servizi Extra (CAD/Urgenza)</span>
+                    <span>Servizi (CAD/Urgenza)</span>
                     <span className="font-medium">€{totals.servicesCost.toFixed(2)}</span>
                   </div>
                 )}
                 
                 {!isPrivacyMode && (
-                  <div className="pt-3 border-t border-slate-800">
-                    <div className="flex justify-between items-center text-slate-400 text-xs mb-1">
-                      <span>Subtotale Costi Vivi</span>
+                  <div className="pt-2 border-t border-slate-800 text-[11px]">
+                    <div className="flex justify-between items-center text-slate-400 mb-0.5">
+                      <span>Costi Vivi</span>
                       <span>€{totals.subtotalVivo.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between items-center text-slate-400 text-xs mb-1">
-                      <span>Quota Rischio ({settings.risk}%)</span>
+                    <div className="flex justify-between items-center text-slate-400 mb-0.5">
+                      <span>Rischio ({settings.risk}%)</span>
                       <span>+ €{(totals.costWithRisk - totals.subtotalVivo).toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between items-center text-slate-400 text-xs">
-                      <span>Margine Guadagno ({settings.markup}%)</span>
+                    <div className="flex justify-between items-center text-slate-400">
+                      <span>Margine ({settings.markup}%)</span>
                       <span>+ €{(totals.baseFinal - totals.costWithRisk).toFixed(2)}</span>
                     </div>
                   </div>
                 )}
 
                 {totals.discountAmount > 0 && (
-                  <div className="flex justify-between items-center text-emerald-400 font-medium pt-2 border-t border-slate-800">
+                  <div className="flex justify-between items-center text-emerald-400 font-medium pt-1.5 border-t border-slate-800">
                     <span>Sconto Applicato</span>
                     <span>- €{totals.discountAmount.toFixed(2)}</span>
                   </div>
                 )}
               </div>
 
-              <div className="pt-4 border-t border-slate-700">
-                <div className="flex justify-between items-baseline mb-1">
-                  <span className="text-slate-400 text-sm font-medium">Prezzo Finale</span>
-                  <span className="text-4xl font-bold text-white tracking-tight">€{totals.finalPrice.toFixed(2)}</span>
+              <div className="pt-2 border-t border-slate-800">
+                <div className="flex justify-between items-baseline">
+                  <span className="text-slate-400 text-xs font-medium">Prezzo Finale</span>
+                  <span className="text-2xl font-black text-white tracking-tight">€{totals.finalPrice.toFixed(2)}</span>
                 </div>
 
                 {!isPrivacyMode && (
-                  <div className="flex justify-between items-center text-xs text-emerald-400/90 bg-emerald-500/10 p-2 rounded-lg border border-emerald-500/20">
-                    <span>Guadagno netto stimato per te:</span>
-                    <span className="font-bold">€{totals.estimatedProfit.toFixed(2)}</span>
+                  <div className="flex justify-between items-center text-[11px] text-emerald-400/90 bg-emerald-500/10 p-1.5 rounded-md border border-emerald-500/20 mt-1">
+                    <span>Utile netto stimato:</span>
+                    <span className="font-bold font-mono">€{totals.estimatedProfit.toFixed(2)}</span>
                   </div>
                 )}
               </div>
+            </div>
 
-              <div className="space-y-2 pt-2">
+            <div className="space-y-1.5 pt-3 border-t border-slate-800">
+              <a 
+                href={getWhatsAppUrl({
+                  phone: quote.clientContact,
+                  clientName: quote.clientName,
+                  projectName: quote.name,
+                  material: quote.material,
+                  totalCalculated: totals.finalPrice,
+                  orderCode: quote.id,
+                  status: 'in_attesa'
+                })}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 text-xs transition-all shadow-sm"
+              >
+                <MessageSquare className="w-3.5 h-3.5" /> Invia WhatsApp
+              </a>
+
+              <button 
+                onClick={handleExportText}
+                className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 text-xs transition-colors"
+              >
+                {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
+                {copied ? 'Copiato!' : 'Copia Testo Chat'}
+              </button>
+
+              <div className="grid grid-cols-2 gap-1.5">
                 <button 
-                  onClick={handleExportText}
-                  className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-sm transition-colors"
+                  onClick={() => {
+                    const currentId = quote.id || crypto.randomUUID();
+                    if (!quote.id) setQuote(prev => ({ ...prev, id: currentId }));
+                    setActiveParcelLabel({
+                      type: 'parcel',
+                      orderId: currentId,
+                      clientName: quote.clientName || 'Cliente',
+                      projectName: quote.name || 'Progetto 3D',
+                      material: quote.material,
+                      savedAt: new Date().toLocaleDateString('it-IT'),
+                      totalCalculated: totals.finalPrice
+                    });
+                  }}
+                  className="bg-slate-950 border border-slate-800 hover:bg-slate-800 text-cyan-400 font-medium py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 text-[11px] transition-colors"
                 >
-                  {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
-                  {copied ? 'Copiato negli Appunti!' : 'Copia Riepilogo per WhatsApp'}
+                  <QrCode className="w-3 h-3 text-cyan-400" /> Etichetta QR
                 </button>
+
                 <button 
                   onClick={() => window.print()}
-                  className="w-full bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 font-medium py-2.5 px-4 rounded-xl flex items-center justify-center gap-2 text-sm transition-colors"
+                  className="bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-400 font-medium py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 text-[11px] transition-colors"
                 >
-                  <FileText className="w-4 h-4 text-emerald-400" /> Stampa Ricevuta PDF Minimale
+                  <FileText className="w-3 h-3" /> Ricevuta PDF
                 </button>
               </div>
-
             </div>
+
           </div>
 
         </div>
 
-        {/* FLOATING BOTTOM BAR PER DISPOSITIVI MOBILI (visibile solo su < lg) */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-4 py-3 shadow-2xl pb-safe">
-          <div className="max-w-md mx-auto flex items-center justify-between gap-3">
-            <div>
-              <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider block">
-                Prezzo Stimato
-              </span>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-xl font-bold text-white tracking-tight">€{totals.finalPrice.toFixed(2)}</span>
-                {!isPrivacyMode && totals.estimatedProfit > 0 && (
-                  <span className="text-[10px] text-emerald-400 font-mono font-medium">
-                    (+€{totals.estimatedProfit.toFixed(2)})
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button 
-                type="button"
-                onClick={handleExportText}
-                className="p-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition-colors border border-slate-700/60"
-                title="Copia riepilogo WhatsApp"
-              >
-                {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
-              </button>
-
-              <button 
-                type="button"
-                onClick={saveCurrentQuote}
-                className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl flex items-center gap-1.5 transition-colors shadow-lg shadow-emerald-950 whitespace-nowrap"
-              >
-                <Save className="w-4 h-4" />
-                <span>{savedSuccess ? 'Salvato!' : quote.id ? 'Aggiorna' : 'Salva Lavoro'}</span>
-              </button>
-            </div>
-          </div>
-        </div>
+        {/* MODAL ETICHETTA QR PACCO */}
+        {activeParcelLabel && (
+          <QrLabelModal 
+            data={activeParcelLabel} 
+            onClose={() => setActiveParcelLabel(null)} 
+          />
+        )}
 
       </div>
     </div>

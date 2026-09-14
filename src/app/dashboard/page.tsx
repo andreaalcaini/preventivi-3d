@@ -88,17 +88,17 @@ export default function DashboardPage() {
   const maxRevenue = trends.length > 0 ? Math.max(...trends.map(t => t.revenue), 10) : 10;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 p-4 md:p-8 font-sans">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="h-full max-h-full overflow-hidden bg-slate-950 text-slate-200 p-2 sm:p-3 font-sans flex flex-col">
+      <div className="max-w-7xl mx-auto w-full flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden">
         
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 flex-shrink-0">
           <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
-              <BarChart3 className="w-6 h-6 text-emerald-400" />
+            <h1 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-emerald-400" />
               Dashboard Finanziaria & Analytics Laboratorio
             </h1>
-            <p className="text-slate-400 text-sm">
+            <p className="text-slate-400 text-xs">
               Monitora l&apos;andamento dei ricavi, i margini netti e i materiali più consumati per pianificare i riordini
             </p>
           </div>
@@ -106,7 +106,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2">
             <Link
               href="/clienti"
-              className="px-3.5 py-2 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition-all flex items-center gap-1.5"
+              className="px-3 py-1.5 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 text-xs font-semibold rounded-xl transition-all flex items-center gap-1.5"
             >
               <span>Rubrica Clienti</span>
               <ArrowUpRight className="w-3.5 h-3.5" />
@@ -115,14 +115,14 @@ export default function DashboardPage() {
         </div>
 
         {loading ? (
-          <div className="py-24 text-center text-slate-500 text-xs flex flex-col items-center gap-3">
+          <div className="flex-1 flex flex-col items-center justify-center text-slate-500 text-xs gap-3">
             <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
             <span>Elaborazione statistiche del laboratorio...</span>
           </div>
         ) : (
-          <>
+          <div className="flex-1 min-h-0 overflow-y-auto pr-1 space-y-3">
             {/* KPI Cards Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               
               {/* 1. Fatturato */}
               <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-1">
@@ -403,7 +403,7 @@ export default function DashboardPage() {
                 </div>
               )}
             </div>
-          </>
+          </div>
         )}
 
       </div>

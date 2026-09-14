@@ -133,15 +133,15 @@ function OrdineClienteContent() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto w-full">
+    <div className="max-w-3xl mx-auto w-full pb-2">
       
-      <header className="flex justify-between items-center pb-6 border-b border-slate-800/80 mb-8">
-        <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400">
-            <Package className="w-6 h-6" />
+      <header className="flex justify-between items-center pb-3 border-b border-slate-800/80 mb-4">
+        <div className="flex items-center gap-2.5">
+          <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400">
+            <Package className="w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white tracking-tight">Portale Ordini Stampa 3D</h1>
+            <h1 className="text-lg font-bold text-white tracking-tight">Portale Ordini Stampa 3D</h1>
             <p className="text-slate-400 text-xs">Traccia lo stato di produzione del tuo pezzo e il totale dovuto</p>
           </div>
         </div>
@@ -157,7 +157,7 @@ function OrdineClienteContent() {
       </header>
 
       {/* Barra Ricerca Codice Univoco */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 md:p-6 shadow-xl mb-8">
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl mb-4">
         <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="w-4 h-4 text-slate-500 absolute left-4 top-3.5" />
@@ -604,13 +604,15 @@ function OrdineClienteContent() {
 
 export default function OrdineClientePage() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 font-sans p-4 md:p-8 flex flex-col justify-between">
-      <Suspense fallback={<div className="max-w-3xl mx-auto text-xs text-slate-500 py-12 text-center">Caricamento portale...</div>}>
-        <OrdineClienteContent />
+    <div className="h-full max-h-full overflow-hidden bg-slate-950 text-slate-200 font-sans p-2 sm:p-4 flex flex-col justify-between">
+      <Suspense fallback={<div className="max-w-3xl mx-auto text-xs text-slate-500 py-6 text-center">Caricamento portale...</div>}>
+        <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+          <OrdineClienteContent />
+        </div>
       </Suspense>
 
       {/* Footer */}
-      <footer className="max-w-3xl mx-auto w-full pt-12 pb-4 text-center text-xs text-slate-600 border-t border-slate-900 mt-12">
+      <footer className="max-w-3xl mx-auto w-full pt-2 pb-2 text-center text-[11px] text-slate-600 border-t border-slate-900 flex-shrink-0">
         <p>PrintQuote Lab • Sistema di gestione e preventivazione per maker di stampa 3D FDM</p>
       </footer>
     </div>

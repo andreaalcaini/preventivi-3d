@@ -201,32 +201,32 @@ export default function ManutenzionePage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 p-4 md:p-8 font-sans">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="h-full max-h-full overflow-hidden bg-slate-950 text-slate-200 p-2 sm:p-3 font-sans flex flex-col">
+      <div className="max-w-7xl mx-auto w-full flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden">
         
         {/* Header Sezione */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 flex-shrink-0">
           <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
-              <Wrench className="w-6 h-6 text-emerald-400" />
+            <h1 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+              <Wrench className="w-5 h-5 text-emerald-400" />
               Registro Manutenzioni & Usura Nozzle
             </h1>
-            <p className="text-slate-400 text-sm">
+            <p className="text-slate-400 text-xs">
               Monitora l&apos;usura degli estrusori, programma la lubrificazione e registra la flotta stampanti
             </p>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 sm:gap-3 w-full md:w-auto">
-            <div className="bg-slate-900 border border-slate-800 px-4 py-2 rounded-xl text-center md:text-left flex-1 sm:flex-initial shadow-sm">
-              <span className="text-[11px] text-slate-400 block">Ore Totali Flotta</span>
-              <span className="text-base font-bold text-emerald-400">{totalFleetHours.toFixed(1)} h</span>
+          <div className="flex flex-row items-center gap-2.5">
+            <div className="bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl text-center shadow-sm">
+              <span className="text-[10px] text-slate-400 block">Ore Flotta</span>
+              <span className="text-sm font-bold text-emerald-400">{totalFleetHours.toFixed(1)} h</span>
             </div>
 
             <button
               onClick={handleOpenAddModal}
-              className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-emerald-950 flex items-center justify-center gap-1.5"
+              className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-emerald-950 flex items-center justify-center gap-1.5"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3.5 h-3.5" />
               <span>Aggiungi Stampante</span>
             </button>
           </div>
@@ -234,11 +234,12 @@ export default function ManutenzionePage() {
 
         {/* Elenco Stampanti */}
         {printers.length === 0 ? (
-          <div className="p-12 text-center bg-slate-900/50 border border-slate-800 rounded-2xl text-slate-500 text-sm">
+          <div className="p-8 text-center bg-slate-900/50 border border-slate-800 rounded-2xl text-slate-500 text-sm">
             Nessuna stampante registrata nel laboratorio. Clicca su &quot;Aggiungi Stampante&quot; per iniziare.
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {printers.map((printer) => {
               // Calcoli usura Nozzle
               const nozzleHours = Math.max(0, +(printer.totalPrintHours - printer.nozzleInstalledAtHours).toFixed(1));
@@ -492,6 +493,7 @@ export default function ManutenzionePage() {
                 </div>
               );
             })}
+            </div>
           </div>
         )}
 

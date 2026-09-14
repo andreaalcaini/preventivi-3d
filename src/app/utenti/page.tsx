@@ -160,58 +160,58 @@ export default function UtentiPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 p-4 md:p-8 font-sans">
-      <div className="max-w-5xl mx-auto space-y-6">
+    <div className="h-full max-h-full overflow-hidden bg-slate-950 text-slate-200 p-2 sm:p-3 font-sans flex flex-col">
+      <div className="max-w-5xl mx-auto w-full flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden">
         
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 flex-shrink-0">
           <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
-              <Shield className="w-6 h-6 text-emerald-400" />
+            <h1 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+              <Shield className="w-5 h-5 text-emerald-400" />
               Gestione Utenti & Team
             </h1>
-            <p className="text-slate-400 text-sm">Crea e gestisci gli account operatori per l&apos;accesso al laboratorio</p>
+            <p className="text-slate-400 text-xs">Crea e gestisci gli account operatori per l&apos;accesso al laboratorio</p>
           </div>
 
           <button
             onClick={() => setAddModalOpen(true)}
-            className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-950 w-full sm:w-auto"
+            className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-950"
           >
-            <UserPlus className="w-4 h-4" />
+            <UserPlus className="w-3.5 h-3.5" />
             <span>Aggiungi Nuovo Utente</span>
           </button>
         </div>
 
         {/* Notifiche */}
         {error && (
-          <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs flex items-center gap-2">
+          <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs flex items-center gap-2 flex-shrink-0">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {success && (
-          <div className="p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-xs flex items-center gap-2">
+          <div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-xl text-emerald-400 text-xs flex items-center gap-2 flex-shrink-0">
             <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
             <span>{success}</span>
           </div>
         )}
 
         {/* Tabella Utenti */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-          <div className="p-4 md:p-6 border-b border-slate-800 flex justify-between items-center">
-            <h2 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl flex-1 min-h-0 flex flex-col">
+          <div className="p-3 sm:p-4 border-b border-slate-800 flex justify-between items-center flex-shrink-0">
+            <h2 className="text-xs sm:text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
               <Users className="w-4 h-4 text-emerald-400" /> Elenco Account ({users.length})
             </h2>
-            <span className="text-xs text-slate-500">Credenziali conservate in modo sicuro su disco</span>
+            <span className="text-[11px] text-slate-500">Credenziali conservate in modo sicuro su disco</span>
           </div>
 
           {loading ? (
-            <div className="p-12 text-center text-slate-500 text-xs">Caricamento utenti in corso...</div>
+            <div className="p-12 text-center text-slate-500 text-xs flex-1 flex items-center justify-center">Caricamento utenti in corso...</div>
           ) : users.length === 0 ? (
-            <div className="p-12 text-center text-slate-500 text-xs">Nessun utente registrato.</div>
+            <div className="p-12 text-center text-slate-500 text-xs flex-1 flex items-center justify-center">Nessun utente registrato.</div>
           ) : (
-            <div className="divide-y divide-slate-800/80">
+            <div className="flex-1 min-h-0 overflow-y-auto divide-y divide-slate-800/80">
               {users.map((u) => {
                 const isSelf = currentUserId === u.id;
                 return (

@@ -3,9 +3,12 @@
 import React, { useState, useEffect, useMemo, useSyncExternalStore } from 'react';
 import { 
   FolderKanban, Search, Trash2, ExternalLink, 
-  Share2, CheckCircle2, User, Box, Check, Pencil, Link as LinkIcon
+  Share2, CheckCircle2, User, Box, Check, Pencil, Link as LinkIcon,
+  MessageSquare, QrCode
 } from 'lucide-react';
 import Link from 'next/link';
+import { getWhatsAppUrl } from '@/lib/whatsapp';
+import QrLabelModal, { ParcelLabelData } from '@/components/QrLabelModal';
 
 export type JobStatus = 'richiesta' | 'in_attesa' | 'in_stampa' | 'pronto' | 'saldato';
 type PricingType = 'amico' | 'collega' | 'commerciale' | 'richiesta_cliente';
@@ -74,8 +77,11 @@ export default function PreventiviPage() {
   const [quotes, setQuotes] = useState<SavedQuote[]>([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | JobStatus>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 6;
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null);
+  const [activeParcelLabel, setActiveParcelLabel] = useState<ParcelLabelData | null>(null);
 
   const rawPrivacy = useSyncExternalStore(
     subscribeToStorage,
@@ -205,79 +211,88 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
     });
   }, [quotes, statusFilter, search]);
 
+  const totalPages = Math.max(1, Math.ceil(filteredQuotes.length / pageSize));
+  const paginatedQuotes = useMemo(() => {
+    return filteredQuotes.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  }, [filteredQuotes, currentPage, pageSize]);
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 p-4 md:p-8 font-sans">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="h-full max-h-full overflow-hidden bg-slate-950 text-slate-200 p-2 sm:p-3 font-sans flex flex-col">
+      <div className="max-w-7xl mx-auto w-full flex-1 min-h-0 flex flex-col gap-2 overflow-hidden">
         
         {/* HEADER & METRICHE */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div className="flex-shrink-0 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
-            <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
-              <FolderKanban className="w-6 h-6 text-emerald-400" />
+            <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight flex items-center gap-2">
+              <FolderKanban className="w-5 h-5 text-emerald-400" />
               Gestione Lavori & Coda Stampe
             </h1>
-            <p className="text-slate-400 text-sm">Traccia avanzamento commesse e modifica preventivi esistenti</p>
+            <p className="text-slate-400 text-xs">Traccia avanzamento commesse e modifica preventivi esistenti</p>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 w-full md:w-auto">
-            <div className="bg-slate-900 border border-slate-800 p-2.5 sm:px-4 sm:py-2.5 rounded-xl text-center md:text-left">
-              <span className="text-[10px] sm:text-[11px] text-slate-400 block truncate">Da Saldare</span>
-              <span className="text-sm sm:text-lg font-bold text-amber-400">€{stats.pendingValue.toFixed(2)}</span>
+          <div className="grid grid-cols-3 gap-2 w-full sm:w-auto">
+            <div className="bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl text-center sm:text-left">
+              <span className="text-[10px] text-slate-400 block truncate">Da Saldare</span>
+              <span className="text-xs sm:text-sm font-bold text-amber-400">€{stats.pendingValue.toFixed(2)}</span>
             </div>
-            <div className="bg-slate-900 border border-slate-800 p-2.5 sm:px-4 sm:py-2.5 rounded-xl text-center md:text-left">
-              <span className="text-[10px] sm:text-[11px] text-slate-400 block truncate">In Stampa</span>
-              <span className="text-sm sm:text-lg font-bold text-blue-400">{stats.printingCount} pezzi</span>
+            <div className="bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl text-center sm:text-left">
+              <span className="text-[10px] text-slate-400 block truncate">In Stampa</span>
+              <span className="text-xs sm:text-sm font-bold text-blue-400">{stats.printingCount} pezzi</span>
             </div>
-            <div className="bg-slate-900 border border-slate-800 p-2.5 sm:px-4 sm:py-2.5 rounded-xl text-center md:text-left">
-              <span className="text-[10px] sm:text-[11px] text-slate-400 block truncate">Incassato</span>
-              <span className="text-sm sm:text-lg font-bold text-emerald-400">€{stats.completedTotal.toFixed(2)}</span>
+            <div className="bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl text-center sm:text-left">
+              <span className="text-[10px] text-slate-400 block truncate">Incassato</span>
+              <span className="text-xs sm:text-sm font-bold text-emerald-400">€{stats.completedTotal.toFixed(2)}</span>
             </div>
           </div>
         </div>
 
         {/* Banner Nuove Richieste dal Portale Clienti */}
         {quotes.filter(q => q.status === 'richiesta').length > 0 && (
-          <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-lg shadow-amber-950/20">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-500/20 text-amber-300 rounded-xl text-lg">
-                🔔
-              </div>
+          <div className="flex-shrink-0 p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center justify-between gap-3 shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="text-base">🔔</span>
               <div>
-                <h3 className="font-bold text-amber-300 text-sm">
-                  {quotes.filter(q => q.status === 'richiesta').length} {quotes.filter(q => q.status === 'richiesta').length === 1 ? 'Nuova Richiesta di Preventivo' : 'Nuove Richieste di Preventivo'} dal Portale Clienti!
+                <h3 className="font-bold text-amber-300 text-xs">
+                  {quotes.filter(q => q.status === 'richiesta').length} Nuove Richieste dal Portale Clienti!
                 </h3>
-                <p className="text-xs text-amber-400/80">
-                  I clienti hanno inviato una richiesta da /richiedi-preventivo. Aprila nel calcolatore per impostare peso e tempo.
+                <p className="text-[11px] text-amber-400/80">
+                  Apri le richieste nel calcolatore per impostare peso e tempi di stampa.
                 </p>
               </div>
             </div>
             <button
-              onClick={() => setStatusFilter('richiesta')}
-              className="px-3.5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition-all whitespace-nowrap shadow-sm self-end sm:self-auto"
+              onClick={() => {
+                setStatusFilter('richiesta');
+                setCurrentPage(1);
+              }}
+              className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg transition-all whitespace-nowrap shadow-sm flex-shrink-0"
             >
-              Visualizza Richieste ({quotes.filter(q => q.status === 'richiesta').length})
+              Vedi Richieste ({quotes.filter(q => q.status === 'richiesta').length})
             </button>
           </div>
         )}
 
         {/* BARRA FILTRI RESPONSIVE */}
-        <div className="bg-slate-900 border border-slate-800 p-3 sm:p-4 rounded-2xl flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
-          <div className="relative w-full lg:w-80">
-            <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-3" />
+        <div className="flex-shrink-0 bg-slate-900 border border-slate-800 p-2 rounded-xl flex flex-col lg:flex-row gap-2 items-stretch lg:items-center justify-between">
+          <div className="relative w-full lg:w-72">
+            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
             <input 
               type="text" 
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={e => {
+                setSearch(e.target.value);
+                setCurrentPage(1);
+              }}
               placeholder="Cerca per pezzo, cliente, materiale..." 
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
+              className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
             />
           </div>
 
-          <div className="flex gap-1.5 overflow-x-auto w-full lg:w-auto pb-1 lg:pb-0">
+          <div className="flex gap-1 overflow-x-auto w-full lg:w-auto pb-0.5 lg:pb-0">
             {quotes.filter(q => q.status === 'richiesta').length > 0 && (
               <button 
-                onClick={() => setStatusFilter('richiesta')} 
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold border whitespace-nowrap transition-all ${
+                onClick={() => { setStatusFilter('richiesta'); setCurrentPage(1); }} 
+                className={`px-2.5 py-1 rounded-lg text-xs font-bold border whitespace-nowrap transition-all ${
                   statusFilter === 'richiesta' 
                     ? 'bg-amber-500/20 border-amber-500 text-amber-300 ring-1 ring-amber-500/40' 
                     : 'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20'
@@ -286,11 +301,11 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
                 🔔 Richieste ({quotes.filter(q => q.status === 'richiesta').length})
               </button>
             )}
-            <button onClick={() => setStatusFilter('all')} className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap border transition-all ${statusFilter === 'all' ? 'bg-slate-800 border-slate-700 text-white' : 'border-transparent text-slate-400 hover:text-slate-200'}`}>Tutti ({quotes.length})</button>
-            <button onClick={() => setStatusFilter('in_attesa')} className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap border transition-all ${statusFilter === 'in_attesa' ? 'bg-amber-500/20 border-amber-500/40 text-amber-300' : 'border-transparent text-slate-400 hover:text-amber-400'}`}>In Attesa</button>
-            <button onClick={() => setStatusFilter('in_stampa')} className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap border transition-all ${statusFilter === 'in_stampa' ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' : 'border-transparent text-slate-400 hover:text-blue-400'}`}>In Stampa</button>
-            <button onClick={() => setStatusFilter('pronto')} className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap border transition-all ${statusFilter === 'pronto' ? 'bg-purple-500/20 border-purple-500/40 text-purple-300' : 'border-transparent text-slate-400 hover:text-purple-400'}`}>Pronti</button>
-            <button onClick={() => setStatusFilter('saldato')} className={`px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap border transition-all ${statusFilter === 'saldato' ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' : 'border-transparent text-slate-400 hover:text-emerald-400'}`}>Saldati</button>
+            <button onClick={() => { setStatusFilter('all'); setCurrentPage(1); }} className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap border transition-all ${statusFilter === 'all' ? 'bg-slate-800 border-slate-700 text-white' : 'border-transparent text-slate-400 hover:text-slate-200'}`}>Tutti ({quotes.length})</button>
+            <button onClick={() => { setStatusFilter('in_attesa'); setCurrentPage(1); }} className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap border transition-all ${statusFilter === 'in_attesa' ? 'bg-amber-500/20 border-amber-500/40 text-amber-300' : 'border-transparent text-slate-400 hover:text-amber-400'}`}>In Attesa</button>
+            <button onClick={() => { setStatusFilter('in_stampa'); setCurrentPage(1); }} className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap border transition-all ${statusFilter === 'in_stampa' ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' : 'border-transparent text-slate-400 hover:text-blue-400'}`}>In Stampa</button>
+            <button onClick={() => { setStatusFilter('pronto'); setCurrentPage(1); }} className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap border transition-all ${statusFilter === 'pronto' ? 'bg-purple-500/20 border-purple-500/40 text-purple-300' : 'border-transparent text-slate-400 hover:text-purple-400'}`}>Pronti</button>
+            <button onClick={() => { setStatusFilter('saldato'); setCurrentPage(1); }} className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap border transition-all ${statusFilter === 'saldato' ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' : 'border-transparent text-slate-400 hover:text-emerald-400'}`}>Saldati</button>
           </div>
         </div>
 
@@ -303,8 +318,9 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredQuotes.map((item) => {
+          <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+              {paginatedQuotes.map((item) => {
               const currentStatus: JobStatus = item.status || 'in_attesa';
               const conf = statusConfig[currentStatus];
               const cardBorder = 
@@ -416,6 +432,42 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
                     </select>
 
                     <div className="flex items-center gap-1">
+                      {/* Tasto Invia su WhatsApp */}
+                      <a
+                        href={getWhatsAppUrl({
+                          phone: item.clientContact,
+                          clientName: item.clientName,
+                          projectName: item.name,
+                          material: item.material,
+                          totalCalculated: item.totalCalculated,
+                          orderCode: item.id,
+                          status: item.status
+                        })}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="p-2 hover:bg-emerald-500/20 text-emerald-400 rounded-lg transition-colors"
+                        title={item.clientContact ? `Invia aggiornamento su WhatsApp a ${item.clientName || 'Cliente'}` : `Invia su WhatsApp`}
+                      >
+                        <MessageSquare className="w-4 h-4" />
+                      </a>
+
+                      {/* Tasto Stampa Etichetta Pacco QR */}
+                      <button
+                        onClick={() => setActiveParcelLabel({
+                          type: 'parcel',
+                          orderId: item.id,
+                          clientName: item.clientName || 'Cliente',
+                          projectName: item.name || 'Progetto 3D',
+                          material: item.material,
+                          savedAt: item.savedAt,
+                          totalCalculated: item.totalCalculated || 0
+                        })}
+                        className="p-2 hover:bg-cyan-500/20 text-cyan-400 rounded-lg transition-colors"
+                        title="Stampa Etichetta Pacco QR per scatola/busta"
+                      >
+                        <QrCode className="w-4 h-4" />
+                      </button>
+
                       {/* Tasto Modifica Preventivo */}
                       <Link
                         href={`/?id=${encodeURIComponent(item.id)}`}
@@ -437,7 +489,7 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
                       <button 
                         onClick={() => handleCopyText(item)}
                         className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
-                        title="Copia testo per WhatsApp"
+                        title="Copia testo per chat"
                       >
                         {copiedId === item.id ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
                       </button>
@@ -455,7 +507,46 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
                 </div>
               );
             })}
+            </div>
           </div>
+        )}
+
+        {/* FOOTER PAGINAZIONE */}
+        {filteredQuotes.length > 0 && (
+          <div className="flex-shrink-0 flex items-center justify-between pt-2 border-t border-slate-800 text-xs text-slate-400">
+            <span>
+              Mostrando <strong className="text-white">{((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, filteredQuotes.length)}</strong> di <strong className="text-white">{filteredQuotes.length}</strong> lavori
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage <= 1}
+                className="px-2.5 py-1 bg-slate-900 border border-slate-800 hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-slate-900 text-slate-300 rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed text-xs"
+              >
+                ← Precedente
+              </button>
+              <span className="font-mono text-slate-300 text-xs">
+                {currentPage} / {totalPages}
+              </span>
+              <button
+                type="button"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages}
+                className="px-2.5 py-1 bg-slate-900 border border-slate-800 hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-slate-900 text-slate-300 rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed text-xs"
+              >
+                Successivo →
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL ETICHETTA QR PACCO */}
+        {activeParcelLabel && (
+          <QrLabelModal 
+            data={activeParcelLabel} 
+            onClose={() => setActiveParcelLabel(null)} 
+          />
         )}
 
       </div>

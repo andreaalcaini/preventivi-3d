@@ -18,7 +18,12 @@ export async function POST(request: NextRequest) {
       makerWorldUrl,
       stlDimensions,
       modelUrl,
-      modelFileName
+      modelFileName,
+      hours,
+      mins,
+      weight,
+      multiColor,
+      totalCalculated
     } = body;
 
     if (!name || !contact || !projectName) {
@@ -47,12 +52,12 @@ export async function POST(request: NextRequest) {
       preferredColor: color || 'Da concordare',
       quantity: Number(quantity) || 1,
       spoolCost: 0,
-      weight: 0,
-      multiColor: false,
-      colorChanges: 0,
-      purgeWeight: 0,
-      hours: 0,
-      mins: 0,
+      weight: Number(weight) || 0,
+      multiColor: Boolean(multiColor),
+      colorChanges: multiColor ? 1 : 0,
+      purgeWeight: multiColor ? Math.round((Number(weight) || 0) * 0.25) : 0,
+      hours: Number(hours) || 0,
+      mins: Number(mins) || 0,
       prepMins: 0,
       postMins: 0,
       extraBom: [],
@@ -60,7 +65,7 @@ export async function POST(request: NextRequest) {
       urgencyCost: 0,
       discount: 0,
       savedAt,
-      totalCalculated: 0,
+      totalCalculated: Number(totalCalculated) || 0,
       estimatedProfit: 0,
       status: 'richiesta',
       stlDimensions: stlDimensions || null,
