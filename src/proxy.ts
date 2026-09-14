@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { verifySessionToken, SESSION_COOKIE_NAME } from '@/lib/auth';
 
 const PUBLIC_PATHS = ['/login', '/ordine', '/richiedi-preventivo'];
-const PUBLIC_API_PREFIXES = ['/api/auth/login', '/api/public/'];
+const PUBLIC_API_PREFIXES = ['/api/auth/login', '/api/public/', '/api/makerworld'];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
