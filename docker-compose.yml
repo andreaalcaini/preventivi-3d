@@ -1,0 +1,12 @@
+services:
+  preventivi-3d:
+    image: ghcr.io/andreaalcaini/preventivi-3d:latest
+    container_name: preventivi-3d
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=3000

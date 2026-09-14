@@ -1,0 +1,55 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# Testing
+/coverage
+
+# Next.js build output
+/.next/
+/out/
+/build
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Environment variables & local secrets
+.env*
+!.env.example
+
+# Vercel & Editor configs
+.vercel
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# OS files
+.DS_Store
+Thumbs.db
+*.pem
+
+# Local Agent / AI configs
+AGENTS.md
+CLAUDE.md
+.claude/
+.cursor/
+
+# Application runtime persistent data & credentials
+/data/*.json
+/data/.session_secret
+/data/*.zip
+!/data/.gitkeep
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
