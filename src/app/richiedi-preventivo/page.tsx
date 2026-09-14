@@ -7,6 +7,7 @@ import {
   ExternalLink, Layers, Sparkles, Lock, ArrowRight, Loader2
 } from 'lucide-react';
 import StlViewer from '@/components/StlViewer';
+import { parseSlicerFile } from '@/lib/slicerParser';
 
 export function calculateClientEstimate(
   hours: number,
@@ -55,6 +56,7 @@ export default function RichiediPreventivoPage() {
 
   // MakerWorld auto-preview state
   const [loadingMw, setLoadingMw] = useState(false);
+  const [mwError, setMwError] = useState('');
   const [mwInfo, setMwInfo] = useState<{
     modelTitle: string;
     coverUrl?: string;
@@ -66,8 +68,24 @@ export default function RichiediPreventivoPage() {
     needAms: boolean;
   } | null>(null);
 
+  // Slicer file auto-preview state (.3mf / .gcode)
+  const [slicerInfo, setSlicerInfo] = useState<{
+    title: string;
+    printHours: number;
+    printMinutes: number;
+    weightGrams: number;
+    material?: string;
+    needAms?: boolean;
+    slicerName?: string;
+  } | null>(null);
+
   const handleMakerWorldUrlChange = async (url: string) => {
     setMakerWorldUrl(url);
+    setMwError('');
+    if (!url.trim()) {
+      setMwInfo(null);
+      return;
+    }
     if (!url.includes('makerworld.com/')) {
       setMwInfo(null);
       return;
@@ -94,26 +112,55 @@ export default function RichiediPreventivoPage() {
         if (!projectName.trim()) {
           setProjectName(data.modelTitle);
         }
+        if (prof.material) {
+          setMaterial(prof.material);
+        }
+      } else {
+        setMwError(data.error || 'Impossibile estrarre le specifiche dal link MakerWorld');
       }
     } catch (e) {
       console.error('Errore anteprima MakerWorld:', e);
+      setMwError('Errore di connessione a MakerWorld');
     } finally {
       setLoadingMw(false);
     }
   };
 
   const numQuantity = Math.max(1, parseInt(quantity, 10) || 1);
+
+  const activeModelInfo = mwInfo ? {
+    title: mwInfo.modelTitle,
+    hours: mwInfo.printHours,
+    mins: mwInfo.printMinutes,
+    weight: mwInfo.weightGrams,
+    material: mwInfo.material,
+    needAms: mwInfo.needAms,
+    badge: 'Profilo MakerWorld',
+    coverUrl: mwInfo.coverUrl,
+    author: mwInfo.authorName
+  } : slicerInfo ? {
+    title: slicerInfo.title,
+    hours: slicerInfo.printHours,
+    mins: slicerInfo.printMinutes,
+    weight: slicerInfo.weightGrams,
+    material: slicerInfo.material || material,
+    needAms: Boolean(slicerInfo.needAms),
+    badge: slicerInfo.slicerName || 'File Slicer .3MF',
+    coverUrl: undefined,
+    author: undefined
+  } : null;
+
   const estimate = useMemo(() => {
-    if (!mwInfo) return null;
+    if (!activeModelInfo) return null;
     return calculateClientEstimate(
-      mwInfo.printHours,
-      mwInfo.printMinutes,
-      mwInfo.weightGrams,
+      activeModelInfo.hours,
+      activeModelInfo.mins,
+      activeModelInfo.weight,
       numQuantity,
-      material || mwInfo.material,
-      mwInfo.needAms
+      material || activeModelInfo.material,
+      activeModelInfo.needAms
     );
-  }, [mwInfo, numQuantity, material]);
+  }, [activeModelInfo, numQuantity, material]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,10 +201,10 @@ export default function RichiediPreventivoPage() {
           stlDimensions,
           modelUrl,
           modelFileName,
-          hours: mwInfo?.printHours || 0,
-          mins: mwInfo?.printMinutes || 0,
-          weight: mwInfo?.weightGrams || 0,
-          multiColor: Boolean(mwInfo?.needAms),
+          hours: activeModelInfo?.hours || 0,
+          mins: activeModelInfo?.mins || 0,
+          weight: activeModelInfo?.weight || 0,
+          multiColor: Boolean(activeModelInfo?.needAms),
           totalCalculated: estimate?.total || 0
         })
       });
@@ -294,25 +341,48 @@ export default function RichiediPreventivoPage() {
                 onDimensionsCalculated={(dim) => {
                   setStlDimensions({ x: dim.x, y: dim.y, z: dim.z });
                 }}
-                onFileSelected={(file) => {
+                onFileSelected={async (file) => {
                   setSelectedFile(file);
+                  const cleanName = file.name.replace(/\.[^/.]+$/, "").replace(/_/g, " ");
                   if (!projectName) {
                     // Imposta il nome progetto dal nome del file
-                    const cleanName = file.name.replace(/\.[^/.]+$/, "").replace(/_/g, " ");
                     setProjectName(cleanName.charAt(0).toUpperCase() + cleanName.slice(1));
+                  }
+                  // Se è un file .3mf o .gcode, analizziamo i metadati di stampa
+                  if (file.name.toLowerCase().endsWith('.3mf') || file.name.toLowerCase().endsWith('.gcode')) {
+                    try {
+                      const parsed = await parseSlicerFile(file);
+                      if (parsed && (parsed.hours > 0 || parsed.mins > 0 || parsed.weightGrams > 0)) {
+                        setSlicerInfo({
+                          title: cleanName,
+                          printHours: parsed.hours,
+                          printMinutes: parsed.mins,
+                          weightGrams: parsed.weightGrams,
+                          material: parsed.material || material,
+                          needAms: Boolean(parsed.multiColor),
+                          slicerName: parsed.slicerName
+                        });
+                        if (parsed.material) {
+                          setMaterial(parsed.material);
+                        }
+                      }
+                    } catch (err) {
+                      console.warn('File 3D non contiene gcode integrato:', err);
+                    }
                   }
                 }}
               />
 
-              {/* Oppure Link Modello Esterno */}
-              <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-2.5">
+              {/* Box Link MakerWorld */}
+              <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-semibold text-slate-300">
-                    Oppure incolla link MakerWorld / Printables / Thingiverse
+                  <label className="block text-xs font-bold text-white flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-emerald-400" />
+                    Incolla Link Modello MakerWorld
                   </label>
                   {makerWorldUrl.includes('makerworld.com/') && (
-                    <span className="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
-                      <Sparkles className="w-3 h-3" /> MakerWorld
+                    <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded font-medium flex items-center gap-1">
+                      MakerWorld Riconosciuto
                     </span>
                   )}
                 </div>
@@ -321,7 +391,7 @@ export default function RichiediPreventivoPage() {
                   type="url"
                   value={makerWorldUrl}
                   onChange={e => handleMakerWorldUrlChange(e.target.value)}
-                  placeholder="https://makerworld.com/it/models/..."
+                  placeholder="Incolla link (es. https://makerworld.com/it/models/...)"
                   className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500"
                 />
 
@@ -329,35 +399,42 @@ export default function RichiediPreventivoPage() {
                 {loadingMw && (
                   <div className="flex items-center gap-2 text-[11px] text-emerald-400 animate-pulse pt-1">
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Rilevamento modello e stima iniziale MakerWorld in corso...</span>
+                    <span>Recupero specifiche modello e calcolo stima in corso...</span>
                   </div>
                 )}
 
+                {/* Feedback errore MakerWorld */}
+                {mwError && (
+                  <p className="text-[11px] text-red-400 bg-red-500/10 border border-red-500/20 p-2 rounded-lg">
+                    {mwError}
+                  </p>
+                )}
+
                 {/* Card Modello Riconosciuto & Stima Istantanea */}
-                {mwInfo && !loadingMw && (
+                {activeModelInfo && !loadingMw && (
                   <div className="p-3.5 bg-gradient-to-b from-emerald-950/60 to-slate-900 border border-emerald-500/40 rounded-xl space-y-2.5 text-xs animate-in fade-in">
                     <div className="flex items-center gap-3">
-                      {mwInfo.coverUrl && (
+                      {activeModelInfo.coverUrl && (
                         <img 
-                          src={mwInfo.coverUrl} 
-                          alt={mwInfo.modelTitle} 
+                          src={activeModelInfo.coverUrl} 
+                          alt={activeModelInfo.title} 
                           className="w-12 h-12 object-cover rounded-lg border border-emerald-700/50 flex-shrink-0 bg-slate-900" 
                         />
                       )}
                       <div className="min-w-0 flex-1">
                         <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-1">
-                          <Sparkles className="w-3 h-3" /> Modello Riconosciuto
+                          <Sparkles className="w-3 h-3" /> {activeModelInfo.badge}
                         </span>
-                        <p className="text-white font-bold truncate text-xs mt-0.5">{mwInfo.modelTitle}</p>
-                        <p className="text-[10px] text-slate-400 truncate">di {mwInfo.authorName}</p>
+                        <p className="text-white font-bold truncate text-xs mt-0.5">{activeModelInfo.title}</p>
+                        {activeModelInfo.author && <p className="text-[10px] text-slate-400 truncate">di {activeModelInfo.author}</p>}
                       </div>
                     </div>
 
                     <div className="pt-2 border-t border-emerald-900/60 flex items-center justify-between">
                       <div className="text-[11px] text-slate-300">
-                        <span>⏱️ ~{mwInfo.printHours}h {mwInfo.printMinutes}m</span>
+                        <span>⏱️ ~{activeModelInfo.hours}h {activeModelInfo.mins}m</span>
                         <span className="mx-1.5">•</span>
-                        <span>⚖️ ~{mwInfo.weightGrams}g</span>
+                        <span>⚖️ ~{activeModelInfo.weight}g</span>
                       </div>
                       {estimate && (
                         <div className="text-right">
@@ -371,8 +448,8 @@ export default function RichiediPreventivoPage() {
                   </div>
                 )}
 
-                <p className="text-[11px] text-slate-500">
-                  Se il modello è già su MakerWorld, recuperiamo in automatico la stima del profilo di stampa (tempo, peso e materiale).
+                <p className="text-[11px] text-slate-500 leading-relaxed">
+                  Incollando un link MakerWorld, il sistema estrae in automatico tempo di stampa, grammi di filamento e materiale per fornirti una <strong>stima immediata e trasparente</strong>.
                 </p>
               </div>
             </div>
@@ -500,15 +577,15 @@ export default function RichiediPreventivoPage() {
                   />
                 </div>
 
-                {/* BOX RIEPILOGO STIMA MAKERWORLD */}
-                {mwInfo && estimate && (
+                {/* BOX RIEPILOGO STIMA (SEMPRE VISIBILE) */}
+                {activeModelInfo && estimate ? (
                   <div className="p-4 bg-gradient-to-br from-emerald-950/60 via-slate-900 to-slate-950 border-2 border-emerald-500/50 rounded-2xl space-y-3 shadow-xl animate-in fade-in duration-200">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
                         <Sparkles className="w-4 h-4 text-emerald-400" /> Stima Preventivo Istantanea
                       </span>
                       <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-semibold border border-emerald-500/30">
-                        Profilo MakerWorld
+                        {activeModelInfo.badge}
                       </span>
                     </div>
 
@@ -524,15 +601,39 @@ export default function RichiediPreventivoPage() {
                       </div>
 
                       <div className="text-xs text-slate-300 space-y-1 sm:text-right bg-slate-900/80 px-3 py-2 rounded-xl border border-slate-800 w-full sm:w-auto">
-                        <div>⏱️ Stampa: <strong className="text-white font-mono">{mwInfo.printHours}h {mwInfo.printMinutes}m</strong> {numQuantity > 1 ? `x ${numQuantity}pz` : ''}</div>
-                        <div>⚖️ Filamento: <strong className="text-white font-mono">{mwInfo.weightGrams * numQuantity}g</strong> ({material || mwInfo.material})</div>
-                        {mwInfo.needAms && <div className="text-amber-300 text-[11px]">🎨 Multi-colore con AMS</div>}
+                        <div>⏱️ Stampa: <strong className="text-white font-mono">{activeModelInfo.hours}h {activeModelInfo.mins}m</strong> {numQuantity > 1 ? `x ${numQuantity}pz` : ''}</div>
+                        <div>⚖️ Filamento: <strong className="text-white font-mono">{activeModelInfo.weight * numQuantity}g</strong> ({material || activeModelInfo.material})</div>
+                        {activeModelInfo.needAms && <div className="text-amber-300 text-[11px]">🎨 Multi-colore con AMS</div>}
                       </div>
                     </div>
 
                     <p className="text-[11px] text-slate-400 italic pt-1 border-t border-slate-800/80 leading-relaxed">
-                      💡 <strong>Stima automatica trasparente:</strong> calcolata all&apos;istante in base ai parametri del modello MakerWorld (tempo, peso e materiale). Il laboratorio verificherà e confermerà l&apos;importo prima di avviare la stampa.
+                      💡 <strong>Stima trasparente:</strong> calcolata all&apos;istante in base ai parametri del modello (tempo, peso e materiale). Il laboratorio verificherà e confermerà l&apos;importo prima di avviare la stampa.
                     </p>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-slate-950/70 border border-dashed border-slate-800 rounded-2xl space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4 text-emerald-400/60" /> Stima Preventivo Istantanea
+                      </span>
+                      <span className="text-[10px] bg-slate-900 text-slate-500 px-2.5 py-0.5 rounded-full border border-slate-800">
+                        In attesa di modello
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-400 leading-relaxed">
+                      Incolla un <strong>link MakerWorld</strong> nel campo a sinistra oppure carica un file <strong>.3MF</strong> per calcolare all&apos;istante la stima dei costi e dei tempi di stampa.
+                    </p>
+                    <div className="pt-1">
+                      <button
+                        type="button"
+                        onClick={() => handleMakerWorldUrlChange('https://makerworld.com/it/models/2464216-bambu-lab-a1-series-ams-hub-mount-bracket?from=recommend#profileId-2705075')}
+                        className="text-xs text-emerald-400 hover:text-emerald-300 font-medium bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-lg transition-colors inline-flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Clicca qui per fare una prova con un modello MakerWorld</span>
+                      </button>
+                    </div>
                   </div>
                 )}
 
@@ -546,7 +647,7 @@ export default function RichiediPreventivoPage() {
                     <span>
                       {loading 
                         ? 'Invio in corso...' 
-                        : (mwInfo && estimate) 
+                        : (activeModelInfo && estimate) 
                           ? `Invia Richiesta con Stima (~€${estimate.total.toFixed(2)})` 
                           : 'Invia Richiesta di Preventivo'}
                     </span>
