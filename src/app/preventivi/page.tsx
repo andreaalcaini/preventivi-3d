@@ -43,6 +43,8 @@ interface SavedQuote {
   cadCost: number;
   urgencyCost: number;
   discount: number;
+  roundingMode?: 'none' | 'excess' | 'defect' | 'nearest';
+  roundingStep?: number;
   savedAt: string;
   totalCalculated: number;
   estimatedProfit: number;
@@ -366,6 +368,11 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
                         )}
                         {!isPrivacyMode && item.estimatedProfit > 0 && (
                           <span className="text-[10px] text-emerald-400/90 font-medium">netto: €{item.estimatedProfit?.toFixed(2)}</span>
+                        )}
+                        {item.roundingMode && item.roundingMode !== 'none' && (
+                          <span className="text-[9px] text-purple-300 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20 block text-right mt-0.5 font-medium">
+                            {item.roundingMode === 'excess' ? '⬆️' : item.roundingMode === 'defect' ? '⬇️' : '≈'} Arrot. (€{(item.roundingStep ?? 0.50).toFixed(2)})
+                          </span>
                         )}
                       </div>
                     </div>

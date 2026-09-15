@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Box, Plus, Trash2, Layers, Wrench, Search, 
   CheckCircle2, Scale, Pencil, X, AlertTriangle, 
-  Info, Sparkles, RefreshCw, SlidersHorizontal, QrCode
+  Info, Sparkles, RefreshCw, SlidersHorizontal, QrCode,
+  Printer, CheckSquare
 } from 'lucide-react';
 import { 
   SPOOL_TARE_PRESETS, 
@@ -13,6 +14,7 @@ import {
   SpoolTarePreset 
 } from '@/data/spoolTares';
 import QrLabelModal, { SpoolLabelData } from '@/components/QrLabelModal';
+import BatchLabelModal from '@/components/BatchLabelModal';
 
 export interface Spool {
   id: string;
@@ -71,6 +73,8 @@ export default function MagazzinoPage() {
   const [activeTareModel, setActiveTareModel] = useState<string>('Personalizzata');
   const [tareSearchFilter, setTareSearchFilter] = useState('');
   const [activeSpoolLabel, setActiveSpoolLabel] = useState<SpoolLabelData | null>(null);
+  const [showBatchLabels, setShowBatchLabels] = useState(false);
+  const [selectedSpoolIds, setSelectedSpoolIds] = useState<string[]>([]);
 
   // Form nuovo componente hardware
   const [newHardware, setNewHardware] = useState<Omit<HardwareItem, 'id'>>({
@@ -548,6 +552,22 @@ export default function MagazzinoPage() {
                     </strong>
                   </div>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowBatchLabels(true)}
+                  className="px-3 py-1.5 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm flex-shrink-0 cursor-pointer"
+                  title="Stampa foglio unico A4 con etichette multiple (anti-spreco carta)"
+                >
+                  <Printer className="w-3.5 h-3.5 text-cyan-400" />
+                  <span className="hidden sm:inline">Stampa Foglio A4</span>
+                  <span className="sm:hidden">Foglio A4</span>
+                  {selectedSpoolIds.length > 0 && (
+                    <span className="bg-cyan-500 text-slate-950 px-1.5 py-0.2 rounded-full text-[10px] font-bold">
+                      {selectedSpoolIds.length}
+                    </span>
+                  )}
+                </button>
               </div>
 
               {/* GRIGLIA CARDS DELLE BOBINE */}
@@ -684,11 +704,29 @@ export default function MagazzinoPage() {
 
                             <button
                               onClick={() => openEditModal(spool)}
-                              className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
+                              className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                               title="Modifica tutti i parametri della bobina"
                             >
                               <Pencil className="w-3.5 h-3.5 text-slate-400" />
                               <span>Modifica</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedSpoolIds(prev => 
+                                  prev.includes(spool.id) ? prev.filter(id => id !== spool.id) : [...prev, spool.id]
+                                );
+                              }}
+                              className={`px-2 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer ${
+                                selectedSpoolIds.includes(spool.id)
+                                  ? 'bg-cyan-500/25 border-cyan-500 text-cyan-300'
+                                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                              }`}
+                              title={selectedSpoolIds.includes(spool.id) ? "Rimuovi da selezione foglio A4" : "Seleziona per stampa foglio A4"}
+                            >
+                              <CheckSquare className="w-3.5 h-3.5" />
+                              <span className="hidden sm:inline">{selectedSpoolIds.includes(spool.id) ? 'Selezionata' : 'Foglio'}</span>
                             </button>
                           </div>
 
@@ -1296,6 +1334,15 @@ export default function MagazzinoPage() {
           <QrLabelModal 
             data={activeSpoolLabel} 
             onClose={() => setActiveSpoolLabel(null)} 
+          />
+        )}
+
+        {/* MODALE STAMPA FOGLIO A4 ETICHETTE MULTIPLE */}
+        {showBatchLabels && (
+          <BatchLabelModal
+            spools={inventory.spools}
+            preselectedIds={selectedSpoolIds.length > 0 ? selectedSpoolIds : undefined}
+            onClose={() => setShowBatchLabels(false)}
           />
         )}
 

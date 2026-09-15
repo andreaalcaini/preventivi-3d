@@ -8,7 +8,7 @@ import {
   Box as BoxIcon, ChevronDown, ChevronUp
 } from 'lucide-react';
 import Link from 'next/link';
-import StlViewer from '@/components/StlViewer';
+import MakerWorldModelViewer from '@/components/MakerWorldModelViewer';
 
 interface PublicOrder {
   id: string;
@@ -90,8 +90,8 @@ function OrdineClienteContent() {
         setTotalAll(typeof data.totalAll === 'number' ? data.totalAll : (data.order?.totalCalculated || 0));
         setClientName(data.clientName || orderList[0]?.clientName || 'Cliente');
 
-        // Se è presente un modello 3D allegato per il singolo ordine, apri l'anteprima
-        if (orderList.length === 1 && orderList[0].modelUrl) {
+        // Se è presente un modello 3D allegato o link MakerWorld per il singolo ordine, apri l'anteprima
+        if (orderList.length === 1 && (orderList[0].modelUrl || orderList[0].makerWorldUrl)) {
           setShow3dViewer(true);
         }
       }
@@ -327,7 +327,9 @@ function OrdineClienteContent() {
                   >
                     <BoxIcon className="w-3.5 h-3.5 text-emerald-400" />
                     <span>
-                      {order.modelUrl 
+                      {order.makerWorldUrl 
+                        ? (show3dViewer ? 'Nascondi Anteprima Modello 3D / MakerWorld' : 'Visualizza Anteprima Modello 3D (Piatti & Foto MakerWorld)')
+                        : order.modelUrl 
                         ? (show3dViewer ? 'Nascondi Modello 3D del Pezzo' : `Visualizza Modello 3D di Produzione (${order.modelFileName || 'STL/3MF'})`)
                         : (show3dViewer ? 'Nascondi Visualizzatore 3D' : 'Visualizzatore 3D (Carica file .STL o .3MF per ispezione)')
                       }
@@ -346,17 +348,29 @@ function OrdineClienteContent() {
                         <span>Scarica {order.modelFileName?.toLowerCase().endsWith('.3mf') ? '.3MF' : '.STL'}</span>
                       </a>
                     )}
-                    <span className="text-[10px] text-slate-500 font-mono">Three.js WebGL</span>
+                    {order.makerWorldUrl && (
+                      <a
+                        href={order.makerWorldUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[11px] text-emerald-400 hover:underline flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20"
+                      >
+                        <span>MakerWorld</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    )}
                   </div>
                 </div>
 
                 {show3dViewer && (
                   <div className="pt-1">
-                    <StlViewer 
-                      url={order.modelUrl}
-                      fileName={order.modelFileName}
+                    <MakerWorldModelViewer 
+                      makerWorldUrl={order.makerWorldUrl}
+                      modelUrl={order.modelUrl}
+                      modelFileName={order.modelFileName}
+                      modelTitle={order.name || order.id}
+                      material={order.material || 'PLA'}
                       height={320}
-                      initialColor={order.material?.includes('PLA') ? '#10b981' : '#06b6d4'}
                       allowUpload={!order.modelUrl}
                     />
                   </div>
@@ -537,32 +551,40 @@ function OrdineClienteContent() {
                       </a>
                     )}
 
-                    {order.modelUrl && (
+                    {(order.modelUrl || order.makerWorldUrl) && (
                       <button
                         type="button"
                         onClick={() => setExpandedViewerId(expandedViewerId === order.id ? null : order.id)}
                         className={`text-[11px] font-semibold flex items-center gap-1.5 px-2.5 py-1 rounded-lg border transition-colors ${
-                          order.makerWorldUrl ? '' : 'ml-auto'
-                        } ${
                           expandedViewerId === order.id 
                             ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' 
                             : 'bg-slate-950 hover:bg-slate-800 text-slate-300 border-slate-800'
                         }`}
                       >
                         <BoxIcon className="w-3 h-3 text-emerald-400" />
-                        <span>{expandedViewerId === order.id ? 'Chiudi 3D' : `Vedi Modello 3D (${order.modelFileName || 'Allegato'})`}</span>
+                        <span>
+                          {expandedViewerId === order.id 
+                            ? 'Chiudi Anteprima' 
+                            : (order.makerWorldUrl 
+                                ? 'Vedi Anteprima 3D / MakerWorld' 
+                                : `Vedi Modello 3D (${order.modelFileName || 'Allegato'})`
+                              )
+                          }
+                        </span>
                       </button>
                     )}
                   </div>
 
                   {/* Viewer 3D Espandibile nel Multi-ordine */}
-                  {order.modelUrl && expandedViewerId === order.id && (
+                  {(order.modelUrl || order.makerWorldUrl) && expandedViewerId === order.id && (
                     <div className="pt-2 border-t border-slate-800">
-                      <StlViewer
-                        url={order.modelUrl}
-                        fileName={order.modelFileName}
+                      <MakerWorldModelViewer
+                        makerWorldUrl={order.makerWorldUrl}
+                        modelUrl={order.modelUrl}
+                        modelFileName={order.modelFileName}
+                        modelTitle={order.name || order.id}
+                        material={order.material || 'PLA'}
                         height={260}
-                        initialColor={order.material?.includes('PLA') ? '#10b981' : '#06b6d4'}
                         allowUpload={false}
                       />
                     </div>

@@ -7,10 +7,11 @@ import {
   Save, FolderOpen, FilePlus2, ExternalLink, Link as LinkIcon,
   User, UserPlus, Layers, FileText, Pencil, X, Box as BoxIcon,
   MessageSquare, Phone, QrCode, FileCode2, UploadCloud, AlertCircle,
-  Sparkles, RefreshCw, Loader2
+  Sparkles, RefreshCw, Loader2, SlidersHorizontal, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import Link from 'next/link';
 import StlViewer from '@/components/StlViewer';
+import MakerWorldModelViewer from '@/components/MakerWorldModelViewer';
 import { parseSlicerFile } from '@/lib/slicerParser';
 import { getWhatsAppUrl } from '@/lib/whatsapp';
 import QrLabelModal, { ParcelLabelData } from '@/components/QrLabelModal';
@@ -22,6 +23,7 @@ interface BomItem {
 }
 
 type PricingType = 'amico' | 'collega' | 'commerciale';
+export type RoundingMode = 'none' | 'excess' | 'defect' | 'nearest';
 
 interface QuoteState {
   id: string;
@@ -45,6 +47,8 @@ interface QuoteState {
   cadCost: number;
   urgencyCost: number;
   discount: number;
+  roundingMode?: RoundingMode;
+  roundingStep?: number;
   modelUrl?: string;
   modelFileName?: string;
 }
@@ -64,6 +68,8 @@ interface AppSettings {
   laborRate: number;
   risk: number;
   markup: number;
+  defaultRoundingMode?: RoundingMode;
+  defaultRoundingStep?: number;
 }
 
 interface SpoolInventory {
@@ -88,7 +94,9 @@ const defaultSettings: AppSettings = {
   wearCost: 0.50,
   laborRate: 15.00,
   risk: 10,
-  markup: 30
+  markup: 30,
+  defaultRoundingMode: 'none',
+  defaultRoundingStep: 0.50
 };
 
 const emptyQuote: QuoteState = {
@@ -113,6 +121,8 @@ const emptyQuote: QuoteState = {
   cadCost: 0,
   urgencyCost: 0,
   discount: 0,
+  roundingMode: 'none',
+  roundingStep: 0.50,
   modelUrl: '',
   modelFileName: ''
 };
@@ -153,10 +163,14 @@ export default function QuoteCalculator() {
     modelTitle: string;
     coverUrl?: string;
     authorName?: string;
+    pictures?: Array<{ url: string; name?: string }>;
     selectedProfile: any;
     availableProfiles: any[];
   } | null>(null);
   const [makerWorldError, setMakerWorldError] = useState<string | null>(null);
+  const [modelViewMode, setModelViewMode] = useState<'mesh' | 'plate' | 'gallery'>('plate');
+  const [activePlateIndex, setActivePlateIndex] = useState<number>(1);
+  const [activeGalleryIndex, setActiveGalleryIndex] = useState<number>(0);
 
   const [clientDropdownOpen, setClientDropdownOpen] = useState(false);
   const clientInputContainerRef = useRef<HTMLDivElement>(null);
@@ -232,6 +246,8 @@ export default function QuoteCalculator() {
                   cadCost: target.cadCost || 0,
                   urgencyCost: target.urgencyCost || 0,
                   discount: target.discount || 0,
+                  roundingMode: target.roundingMode || 'none',
+                  roundingStep: target.roundingStep !== undefined ? target.roundingStep : 0.50,
                   modelUrl: target.modelUrl || '',
                   modelFileName: target.modelFileName || ''
                 });
@@ -272,8 +288,9 @@ export default function QuoteCalculator() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const updateSetting = (key: keyof AppSettings, value: string | number) => {
-    const newSettings: AppSettings = { ...settings, [key]: parseFloat(value.toString()) || 0 };
+  const updateSetting = (key: keyof AppSettings, value: any) => {
+    const val = key === 'defaultRoundingMode' ? value : (parseFloat(value.toString()) || 0);
+    const newSettings: AppSettings = { ...settings, [key]: val };
     setSettingsOverride(newSettings);
     localStorage.setItem('3dQuoteSettings', JSON.stringify(newSettings));
     window.dispatchEvent(new Event('storage'));
@@ -300,13 +317,35 @@ export default function QuoteCalculator() {
     
     const baseFinal = costWithRisk * (1 + (settings.markup / 100));
     const discountAmount = baseFinal * ((parseFloat(quote.discount.toString()) || 0) / 100);
-    const finalPrice = Math.max(0, baseFinal - discountAmount);
+    const unroundedPrice = Math.max(0, baseFinal - discountAmount);
+
+    // Calcolo Arrotondamento (per eccesso, per scarto o al più vicino)
+    const mode: RoundingMode = quote.roundingMode || settings.defaultRoundingMode || 'none';
+    const step = Math.max(0.01, parseFloat(quote.roundingStep?.toString() || settings.defaultRoundingStep?.toString() || '0.50') || 0.50);
+
+    let finalPrice = unroundedPrice;
+    let roundingDelta = 0;
+
+    if (mode !== 'none' && unroundedPrice > 0 && step > 0) {
+      const eps = 1e-9;
+      if (mode === 'excess') {
+        finalPrice = Math.ceil((unroundedPrice - eps) / step) * step;
+      } else if (mode === 'defect') {
+        finalPrice = Math.floor((unroundedPrice + eps) / step) * step;
+      } else if (mode === 'nearest') {
+        finalPrice = Math.round(unroundedPrice / step) * step;
+      }
+      finalPrice = Math.max(0, Math.round(finalPrice * 100) / 100);
+      roundingDelta = Math.round((finalPrice - unroundedPrice) * 100) / 100;
+    } else {
+      finalPrice = Math.round(unroundedPrice * 100) / 100;
+    }
 
     const estimatedProfit = Math.max(0, finalPrice - (materialCost + energyCost + wearCost + extraHardwareCost));
 
     return {
       materialCost, energyCost, wearCost, laborCost, extraHardwareCost, servicesCost,
-      subtotalVivo, costWithRisk, baseFinal, discountAmount, finalPrice, estimatedProfit, printTimeHours
+      subtotalVivo, costWithRisk, baseFinal, discountAmount, unroundedPrice, roundingDelta, finalPrice, estimatedProfit, printTimeHours
     };
   };
 
@@ -343,6 +382,7 @@ export default function QuoteCalculator() {
           modelUrl: data.url,
           modelFileName: data.fileName
         }));
+        setModelViewMode('mesh');
       } else {
         console.error('Errore risposta server upload:', data.error);
       }
@@ -359,6 +399,9 @@ export default function QuoteCalculator() {
       modelUrl: '',
       modelFileName: ''
     }));
+    if (makerWorldInfo?.selectedProfile?.plates?.length) {
+      setModelViewMode('plate');
+    }
   };
 
   const handleSlicerFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -416,9 +459,17 @@ export default function QuoteCalculator() {
         modelTitle: data.modelTitle,
         coverUrl: data.coverUrl,
         authorName: data.authorName,
+        pictures: data.pictures || [],
         selectedProfile: data.selectedProfile,
         availableProfiles: data.availableProfiles || []
       });
+
+      if (data.selectedProfile?.plates && data.selectedProfile.plates.length > 0) {
+        setActivePlateIndex(data.selectedProfile.plates[0].index);
+        if (!quote.modelUrl) {
+          setModelViewMode('plate');
+        }
+      }
 
       const prof = data.selectedProfile;
       if (prof) {
@@ -448,6 +499,9 @@ export default function QuoteCalculator() {
     if (!target) return;
 
     setMakerWorldInfo(prev => prev ? { ...prev, selectedProfile: target } : null);
+    if (target.plates && target.plates.length > 0) {
+      setActivePlateIndex(target.plates[0].index);
+    }
     setQuote(prev => ({
       ...prev,
       hours: target.printHours,
@@ -831,7 +885,7 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                     </span>
                     <span className="text-[10px] text-slate-500">Salvati in memoria</span>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
                     <div>
                       <label className="block text-[10px] text-slate-400 mb-0.5 truncate">Energia (€/kWh)</label>
                       <input type="number" step="0.01" value={settings.powerCost} onChange={e => updateSetting('powerCost', e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs outline-none text-white" />
@@ -855,6 +909,30 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                     <div>
                       <label className="block text-[10px] text-slate-400 mb-0.5 truncate">Margine (%)</label>
                       <input type="number" value={settings.markup} onChange={e => updateSetting('markup', e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs outline-none text-white" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-slate-400 mb-0.5 truncate">Arrot. Base</label>
+                      <select 
+                        value={settings.defaultRoundingMode || 'none'} 
+                        onChange={e => updateSetting('defaultRoundingMode', e.target.value)} 
+                        className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs outline-none text-white cursor-pointer"
+                      >
+                        <option value="none">Nessuno</option>
+                        <option value="excess">Eccesso ⬆️</option>
+                        <option value="defect">Scarto ⬇️</option>
+                        <option value="nearest">Più Vicino ≈</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-slate-400 mb-0.5 truncate">Passo Base (€)</label>
+                      <input 
+                        type="number" 
+                        step="0.05" 
+                        min="0.01" 
+                        value={settings.defaultRoundingStep ?? 0.50} 
+                        onChange={e => updateSetting('defaultRoundingStep', e.target.value)} 
+                        className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs outline-none text-white" 
+                      />
                     </div>
                   </div>
                 </div>
@@ -1285,6 +1363,159 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                     </div>
                   </div>
 
+                  {/* Arrotondamento Prezzo */}
+                  <div className="p-3 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-semibold text-purple-400 flex items-center gap-1.5 uppercase tracking-wider">
+                        <SlidersHorizontal className="w-3.5 h-3.5 text-purple-400" />
+                        Arrotondamento Prezzo
+                      </h3>
+                      <div className="text-[11px] text-slate-400">
+                        {quote.roundingMode === 'none' || !quote.roundingMode ? (
+                          <span className="text-slate-500 font-mono">Disattivato</span>
+                        ) : (
+                          <span className="text-purple-300 font-mono font-medium">
+                            Passo: €{(parseFloat(quote.roundingStep?.toString() || '0.50') || 0.50).toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Modalità di arrotondamento */}
+                    <div>
+                      <label className="block text-[11px] text-slate-400 mb-1.5 font-medium">
+                        Direzione di Arrotondamento
+                      </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => updateQuote('roundingMode', 'none')}
+                          className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all text-center ${
+                            (!quote.roundingMode || quote.roundingMode === 'none')
+                              ? 'bg-slate-800 border-slate-600 text-white shadow-sm'
+                              : 'bg-slate-900/60 border-slate-800/80 text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                          }`}
+                        >
+                          ⚖️ Nessuno (Esatto)
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => updateQuote('roundingMode', 'excess')}
+                          className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all text-center ${
+                            quote.roundingMode === 'excess'
+                              ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 font-bold shadow-sm'
+                              : 'bg-slate-900/60 border-slate-800/80 text-slate-400 hover:text-emerald-300 hover:bg-slate-800/40'
+                          }`}
+                        >
+                          ⬆️ Per Eccesso
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => updateQuote('roundingMode', 'defect')}
+                          className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all text-center ${
+                            quote.roundingMode === 'defect'
+                              ? 'bg-amber-500/20 border-amber-500/50 text-amber-300 font-bold shadow-sm'
+                              : 'bg-slate-900/60 border-slate-800/80 text-slate-400 hover:text-amber-300 hover:bg-slate-800/40'
+                          }`}
+                        >
+                          ⬇️ Per Scarto
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => updateQuote('roundingMode', 'nearest')}
+                          className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all text-center ${
+                            quote.roundingMode === 'nearest'
+                              ? 'bg-purple-500/20 border-purple-500/50 text-purple-300 font-bold shadow-sm'
+                              : 'bg-slate-900/60 border-slate-800/80 text-slate-400 hover:text-purple-300 hover:bg-slate-800/40'
+                          }`}
+                        >
+                          ≈ Al Più Vicino
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Passo di arrotondamento (Centesimi / Euro) */}
+                    {quote.roundingMode && quote.roundingMode !== 'none' && (
+                      <div className="pt-2 border-t border-slate-800/60 space-y-2">
+                        <label className="block text-[11px] text-slate-400 font-medium">
+                          Precisione / Passo di Arrotondamento
+                        </label>
+
+                        {/* Pulsanti veloci */}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {[
+                            { label: '5¢ (0.05€)', val: 0.05 },
+                            { label: '10¢ (0.10€)', val: 0.10 },
+                            { label: '50¢ (0.50€)', val: 0.50 },
+                            { label: '1.00 €', val: 1.00 },
+                            { label: '5.00 €', val: 5.00 },
+                          ].map((item) => {
+                            const currentStep = parseFloat(quote.roundingStep?.toString() || '0.50');
+                            const isSelected = Math.abs(currentStep - item.val) < 0.001;
+                            return (
+                              <button
+                                key={item.val}
+                                type="button"
+                                onClick={() => updateQuote('roundingStep', item.val)}
+                                className={`px-2 py-1 rounded text-[11px] font-medium border transition-all ${
+                                  isSelected
+                                    ? 'bg-purple-600/30 border-purple-500 text-purple-200 font-bold'
+                                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                                }`}
+                              >
+                                {item.label}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {/* Input personalizzato per qualsiasi cifra/centesimo */}
+                        <div className="flex items-center gap-2 pt-1 flex-wrap">
+                          <label className="text-[11px] text-slate-400 whitespace-nowrap">
+                            Valore Personalizzato (€):
+                          </label>
+                          <div className="relative max-w-[120px]">
+                            <input
+                              type="number"
+                              step="0.05"
+                              min="0.01"
+                              value={quote.roundingStep ?? 0.50}
+                              onChange={(e) => updateQuote('roundingStep', Math.max(0.01, parseFloat(e.target.value) || 0.01))}
+                              className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-white outline-none focus:border-purple-500"
+                              placeholder="0.50"
+                            />
+                          </div>
+                          <span className="text-[10px] text-slate-500">
+                            (es. 0.05, 0.10, 0.25, 0.50, 1.00, 2.00, 5.00...)
+                          </span>
+                        </div>
+
+                        {/* Box Anteprima Dinamica */}
+                        <div className="mt-2 p-2 bg-slate-900/80 border border-slate-800/80 rounded-lg flex items-center justify-between text-xs flex-wrap gap-1.5">
+                          <div className="text-slate-400 text-[11px]">
+                            Prezzo calcolato: <span className="font-mono text-slate-300 line-through">€{totals.unroundedPrice.toFixed(2)}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-[11px] text-slate-400">➔ Arrotondato:</span>
+                            <span className="font-bold text-white font-mono text-xs">€{totals.finalPrice.toFixed(2)}</span>
+                            {totals.roundingDelta !== 0 && (
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
+                                totals.roundingDelta > 0
+                                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                                  : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                              }`}>
+                                {totals.roundingDelta > 0 ? `+€${totals.roundingDelta.toFixed(2)}` : `-€${Math.abs(totals.roundingDelta).toFixed(2)}`}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
                   {/* Riepilogo Tariffe Macchina in uso */}
                   <div className="p-3 bg-slate-950/40 border border-slate-800/60 rounded-xl text-xs space-y-1.5">
                     <span className="font-bold text-slate-300 block text-[11px] uppercase tracking-wider">Parametri Macchinario Applicati:</span>
@@ -1352,47 +1583,24 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                     )}
                   </div>
 
-                  {/* 3D Viewer Three.js */}
-                  <div className="p-3 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-2">
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <span className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
-                        <BoxIcon className="w-3.5 h-3.5 text-emerald-400" />
-                        Visualizzatore 3D (.STL / .3MF)
-                      </span>
-
-                      <div className="flex items-center gap-2">
-                        {uploadingModel && (
-                          <span className="text-[11px] text-amber-400 animate-pulse">
-                            Caricamento file...
-                          </span>
-                        )}
-
-                        {quote.modelFileName && !uploadingModel && (
-                          <div className="flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded text-emerald-400 text-[11px]">
-                            <span className="font-medium truncate max-w-[130px]" title={quote.modelFileName}>
-                              📎 {quote.modelFileName}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={handleRemoveModel}
-                              className="hover:text-red-400 text-slate-400 font-bold ml-1"
-                              title="Rimuovi file"
-                            >
-                              ×
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    <StlViewer 
-                      height={230}
-                      url={quote.modelUrl}
-                      fileName={quote.modelFileName}
-                      initialColor={quote.material.includes('PLA') ? '#10b981' : quote.material.includes('PETG') ? '#06b6d4' : '#a855f7'}
+                  {/* 3D Viewer & MakerWorld Plate Preview */}
+                  <div className="space-y-1.5">
+                    <MakerWorldModelViewer
+                      makerWorldUrl={quote.makerWorldUrl}
+                      modelTitle={makerWorldInfo?.modelTitle || quote.name}
+                      coverUrl={makerWorldInfo?.coverUrl}
+                      authorName={makerWorldInfo?.authorName}
+                      plates={makerWorldInfo?.selectedProfile?.plates}
+                      pictures={makerWorldInfo?.pictures}
+                      modelUrl={quote.modelUrl}
+                      modelFileName={quote.modelFileName}
+                      material={quote.material}
+                      height={250}
+                      allowUpload={true}
                       onFileSelected={handleModelUpload}
+                      onRemoveModel={handleRemoveModel}
                     />
-                    <p className="text-[10px] text-slate-500 leading-tight">
+                    <p className="text-[10px] text-slate-500 leading-tight px-1">
                       💡 Il file 3D caricato viene memorizzato nel preventivo e visualizzato al cliente nel tracking ordine.
                     </p>
                   </div>
@@ -1468,11 +1676,45 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                     <span>- €{totals.discountAmount.toFixed(2)}</span>
                   </div>
                 )}
+
+                {totals.roundingDelta !== 0 && (
+                  <div className={`flex justify-between items-center text-xs font-medium pt-1.5 border-t border-slate-800 ${
+                    totals.roundingDelta > 0 ? 'text-emerald-400' : 'text-amber-400'
+                  }`}>
+                    <span className="flex items-center gap-1">
+                      <SlidersHorizontal className="w-3 h-3 opacity-80" />
+                      Arrotondamento ({quote.roundingMode === 'excess' ? 'Eccesso ⬆️' : quote.roundingMode === 'defect' ? 'Scarto ⬇️' : 'Più vicino ≈'})
+                    </span>
+                    <span>{totals.roundingDelta > 0 ? `+ €${totals.roundingDelta.toFixed(2)}` : `- €${Math.abs(totals.roundingDelta).toFixed(2)}`}</span>
+                  </div>
+                )}
               </div>
 
               <div className="pt-2 border-t border-slate-800">
                 <div className="flex justify-between items-baseline">
-                  <span className="text-slate-400 text-xs font-medium">Prezzo Finale</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-slate-400 text-xs font-medium">Prezzo Finale</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const cycle: Record<RoundingMode, RoundingMode> = {
+                          'none': 'excess',
+                          'excess': 'defect',
+                          'defect': 'nearest',
+                          'nearest': 'none'
+                        };
+                        const cur = quote.roundingMode || 'none';
+                        updateQuote('roundingMode', cycle[cur]);
+                      }}
+                      title="Clicca per cambiare al volo: Nessuno -> Eccesso -> Scarto -> Al Più Vicino"
+                      className="text-[10px] px-1.5 py-0.5 rounded border border-slate-800 hover:border-slate-700 bg-slate-900 text-slate-400 hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      {!quote.roundingMode || quote.roundingMode === 'none' ? '⚖️ Esatto' :
+                       quote.roundingMode === 'excess' ? `⬆️ +€${(parseFloat(quote.roundingStep?.toString() || '0.50') || 0.50).toFixed(2)}` :
+                       quote.roundingMode === 'defect' ? `⬇️ -€${(parseFloat(quote.roundingStep?.toString() || '0.50') || 0.50).toFixed(2)}` :
+                       `≈ €${(parseFloat(quote.roundingStep?.toString() || '0.50') || 0.50).toFixed(2)}`}
+                    </button>
+                  </div>
                   <span className="text-2xl font-black text-white tracking-tight">€{totals.finalPrice.toFixed(2)}</span>
                 </div>
 

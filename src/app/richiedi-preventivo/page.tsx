@@ -6,7 +6,8 @@ import {
   Package, Send, CheckCircle2, AlertCircle, 
   ExternalLink, Layers, Sparkles, Lock, ArrowRight, Loader2
 } from 'lucide-react';
-import StlViewer from '@/components/StlViewer';
+import MakerWorldModelViewer from '@/components/MakerWorldModelViewer';
+import type { MakerWorldPlateInfo, MakerWorldPicture } from '@/app/api/makerworld/route';
 import { parseSlicerFile } from '@/lib/slicerParser';
 
 export function calculateClientEstimate(
@@ -66,6 +67,8 @@ export default function RichiediPreventivoPage() {
     weightGrams: number;
     material: string;
     needAms: boolean;
+    plates?: MakerWorldPlateInfo[];
+    pictures?: MakerWorldPicture[];
   } | null>(null);
 
   // Slicer file auto-preview state (.3mf / .gcode)
@@ -106,6 +109,8 @@ export default function RichiediPreventivoPage() {
           weightGrams: prof.weightGrams,
           material: prof.material,
           needAms: prof.needAms,
+          plates: prof.plates,
+          pictures: data.pictures,
         });
 
         // Precompila il nome progetto se vuoto
@@ -335,9 +340,18 @@ export default function RichiediPreventivoPage() {
                 </p>
               </div>
 
-              {/* 3D WebGL Viewer */}
-              <StlViewer 
+              {/* 3D Model & MakerWorld Viewer */}
+              <MakerWorldModelViewer 
+                makerWorldUrl={makerWorldUrl}
+                modelTitle={activeModelInfo?.title}
+                coverUrl={activeModelInfo?.coverUrl}
+                authorName={activeModelInfo?.author}
+                plates={mwInfo?.plates}
+                pictures={mwInfo?.pictures}
+                modelFileName={selectedFile?.name}
+                material={material || activeModelInfo?.material || 'PLA'}
                 height={320}
+                allowUpload={true}
                 onDimensionsCalculated={(dim) => {
                   setStlDimensions({ x: dim.x, y: dim.y, z: dim.z });
                 }}
