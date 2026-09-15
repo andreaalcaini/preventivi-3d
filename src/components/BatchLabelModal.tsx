@@ -15,7 +15,7 @@ interface Props {
   onClose: () => void;
 }
 
-export type SheetLayout = '2x4' | '3x6' | '3x7';
+export type SheetLayout = '4x8' | '4x10' | '3x7' | '3x6' | '2x4';
 
 export default function BatchLabelModal({ spools, preselectedIds, onClose }: Props) {
   // Mappa di quantità etichette selezionate per ciascuna bobina
@@ -35,8 +35,8 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
   const [filterMaterial, setFilterMaterial] = useState<string>('all');
   const [filterBrand, setFilterBrand] = useState<string>('all');
 
-  // Opzioni Layout Foglio A4
-  const [layout, setLayout] = useState<SheetLayout>('3x6');
+  // Opzioni Layout Foglio A4 (di default 4x8 compatto perfetto per la flangia della bobina)
+  const [layout, setLayout] = useState<SheetLayout>('4x8');
   const [showTare, setShowTare] = useState(true);
   const [showCost, setShowCost] = useState(true);
   const [showQr, setShowQr] = useState(true);
@@ -117,7 +117,7 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
     return list;
   }, [spools, selectedQuantities]);
 
-  const labelsPerPage = layout === '2x4' ? 8 : layout === '3x6' ? 18 : 21;
+  const labelsPerPage = layout === '2x4' ? 8 : layout === '3x6' ? 18 : layout === '3x7' ? 21 : layout === '4x8' ? 32 : 40;
   const totalSheetsNeeded = Math.ceil(flatLabelsToPrint.length / labelsPerPage) || 1;
 
   // Toggle singola bobina
@@ -230,48 +230,85 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
                 <SlidersHorizontal className="w-3.5 h-3.5" /> Formato Foglio A4
               </span>
               
-              <div className="grid grid-cols-3 gap-1.5 text-xs">
-                <button
-                  type="button"
-                  onClick={() => setLayout('2x4')}
-                  className={`p-2 rounded-lg border text-center transition-all ${
-                    layout === '2x4'
-                      ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300 font-bold'
-                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
-                  }`}
-                >
-                  <div className="font-bold">2 x 4</div>
-                  <div className="text-[10px] opacity-75">8 per foglio</div>
-                  <div className="text-[9px] text-slate-500">Grandi (~95x65)</div>
-                </button>
+              <div className="space-y-1.5">
+                <span className="text-[10px] text-slate-400 font-semibold block">Formati per Bobina (Consigliati):</span>
+                <div className="grid grid-cols-2 gap-1.5 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setLayout('4x8')}
+                    className={`p-2 rounded-lg border text-left transition-all ${
+                      layout === '4x8'
+                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 font-bold shadow-sm'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold">4 x 8</span>
+                      <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-1 rounded border border-emerald-500/20 font-mono">32 pz</span>
+                    </div>
+                    <div className="text-[10px] text-emerald-400 font-medium mt-0.5">🎯 Bobina Universale</div>
+                    <div className="text-[9px] text-slate-400 font-mono">~48 x 33 mm</div>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => setLayout('3x6')}
-                  className={`p-2 rounded-lg border text-center transition-all ${
-                    layout === '3x6'
-                      ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300 font-bold'
-                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
-                  }`}
-                >
-                  <div className="font-bold">3 x 6</div>
-                  <div className="text-[10px] opacity-75">18 per foglio</div>
-                  <div className="text-[9px] text-slate-500">Standard (~65x45)</div>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setLayout('4x10')}
+                    className={`p-2 rounded-lg border text-left transition-all ${
+                      layout === '4x10'
+                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 font-bold shadow-sm'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold">4 x 10</span>
+                      <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-1 rounded border border-emerald-500/20 font-mono">40 pz</span>
+                    </div>
+                    <div className="text-[10px] text-emerald-400 font-medium mt-0.5">🎯 Slot Bambu / Mini</div>
+                    <div className="text-[9px] text-slate-400 font-mono">~48 x 26 mm</div>
+                  </button>
+                </div>
 
-                <button
-                  type="button"
-                  onClick={() => setLayout('3x7')}
-                  className={`p-2 rounded-lg border text-center transition-all ${
-                    layout === '3x7'
-                      ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300 font-bold'
-                      : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
-                  }`}
-                >
-                  <div className="font-bold">3 x 7</div>
-                  <div className="text-[10px] opacity-75">21 per foglio</div>
-                  <div className="text-[9px] text-slate-500">Avery (~65x38)</div>
-                </button>
+                <span className="text-[10px] text-slate-400 font-semibold block pt-1">Altri Formati (Avery / Scatole):</span>
+                <div className="grid grid-cols-3 gap-1.5 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setLayout('3x7')}
+                    className={`p-1.5 rounded-lg border text-center transition-all ${
+                      layout === '3x7'
+                        ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300 font-bold'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <div className="font-bold">3 x 7 (21 pz)</div>
+                    <div className="text-[9px] text-slate-400">Avery (~65x38)</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setLayout('3x6')}
+                    className={`p-1.5 rounded-lg border text-center transition-all ${
+                      layout === '3x6'
+                        ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300 font-bold'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <div className="font-bold">3 x 6 (18 pz)</div>
+                    <div className="text-[9px] text-slate-400">Medio (~65x45)</div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setLayout('2x4')}
+                    className={`p-1.5 rounded-lg border text-center transition-all ${
+                      layout === '2x4'
+                        ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300 font-bold'
+                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    <div className="font-bold">2 x 4 (8 pz)</div>
+                    <div className="text-[9px] text-slate-400">Box (~95x65)</div>
+                  </button>
+                </div>
               </div>
 
               {/* Toggle Campi Inclusi */}
@@ -493,41 +530,52 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
               <div className="w-full max-w-[680px] bg-white text-black p-4 rounded-xl shadow-2xl border border-slate-300 font-sans">
                 
                 <div 
-                  className={`grid gap-2 ${
+                  className={`grid gap-1.5 ${
                     layout === '2x4' 
                       ? 'grid-cols-2' 
-                      : 'grid-cols-3'
+                      : layout === '3x6' || layout === '3x7'
+                      ? 'grid-cols-3'
+                      : 'grid-cols-4'
                   }`}
                 >
                   {flatLabelsToPrint.map((spool, idx) => {
                     const tare = spool.spoolTare ?? (findSuggestedTare(spool.brand)?.tareWeight || 200);
                     const qrUrl = qrMap[spool.id];
+                    const isCompact = layout === '4x8' || layout === '4x10';
 
                     return (
                       <div
                         key={`${spool.id}-${idx}`}
-                        className={`p-2 rounded flex flex-col justify-between text-left text-black ${
+                        className={`rounded flex flex-col justify-between text-left text-black ${
                           showCutLines ? 'border border-dashed border-gray-400' : 'border border-gray-200'
                         } ${
-                          layout === '2x4' ? 'min-h-[120px]' : layout === '3x6' ? 'min-h-[92px]' : 'min-h-[80px]'
+                          layout === '4x10'
+                            ? 'p-1 min-h-[64px]'
+                            : layout === '4x8'
+                            ? 'p-1.5 min-h-[72px]'
+                            : layout === '2x4'
+                            ? 'p-2 min-h-[120px]'
+                            : layout === '3x6'
+                            ? 'p-2 min-h-[92px]'
+                            : 'p-2 min-h-[80px]'
                         }`}
                       >
                         {/* Riga Header: Marca, Materiale, Colore */}
                         <div className="border-b border-black pb-0.5 mb-1 flex items-baseline justify-between leading-tight">
-                          <div>
-                            <span className="font-black text-[10px] uppercase tracking-wider block">
+                          <div className="min-w-0 pr-1">
+                            <span className={`font-black uppercase tracking-wider block truncate ${isCompact ? 'text-[8.5px]' : 'text-[10px]'}`}>
                               {spool.brand}
                             </span>
-                            <span className="text-[9px] font-bold text-gray-800 uppercase">
+                            <span className={`font-bold text-gray-800 uppercase ${isCompact ? 'text-[7.5px]' : 'text-[9px]'}`}>
                               {spool.material}
                             </span>
                           </div>
                           
-                          <div className="flex items-center gap-1 text-[9px]">
-                            <span className="truncate max-w-[65px] font-medium">{spool.color}</span>
+                          <div className="flex items-center gap-1 text-[8px] flex-shrink-0">
+                            <span className="truncate max-w-[45px] font-medium">{spool.color}</span>
                             {spool.colorHex && (
                               <span 
-                                className="w-2.5 h-2.5 rounded-full border border-black inline-block flex-shrink-0"
+                                className="w-2 h-2 rounded-full border border-black inline-block flex-shrink-0"
                                 style={{ backgroundColor: spool.colorHex }}
                               />
                             )}
@@ -535,45 +583,61 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
                         </div>
 
                         {/* Centro: QR Code + Dati Peso */}
-                        <div className="flex items-center gap-2 my-0.5">
+                        <div className="flex items-center gap-1.5 my-0.5">
                           {showQr && (
                             qrUrl ? (
                               // eslint-disable-next-line @next/next/no-img-element
                               <img
                                 src={qrUrl}
                                 alt="QR"
-                                className={`${layout === '2x4' ? 'w-14 h-14' : 'w-10 h-10'} border border-black p-0.5 rounded flex-shrink-0`}
+                                className={`${
+                                  layout === '2x4' 
+                                    ? 'w-14 h-14' 
+                                    : layout === '4x10'
+                                    ? 'w-7 h-7'
+                                    : layout === '4x8'
+                                    ? 'w-8 h-8'
+                                    : 'w-10 h-10'
+                                } border border-black p-0.5 rounded flex-shrink-0`}
                               />
                             ) : (
-                              <div className={`${layout === '2x4' ? 'w-14 h-14' : 'w-10 h-10'} bg-gray-200 animate-pulse rounded flex-shrink-0`} />
+                              <div className={`${
+                                layout === '2x4' 
+                                  ? 'w-14 h-14' 
+                                  : layout === '4x10'
+                                  ? 'w-7 h-7'
+                                  : layout === '4x8'
+                                  ? 'w-8 h-8'
+                                  : 'w-10 h-10'
+                              } bg-gray-200 animate-pulse rounded flex-shrink-0`} />
                             )
                           )}
 
-                          <div className="text-[9px] leading-tight space-y-0.5 min-w-0">
+                          <div className="text-[8.5px] leading-tight space-y-0.5 min-w-0">
                             <div>
-                              <span className="text-[7px] text-gray-500 uppercase block">Residuo:</span>
-                              <strong className="text-[11px] font-black text-black">{spool.weightRemaining}g</strong>
+                              <span className="text-[6.5px] text-gray-500 uppercase block">Residuo:</span>
+                              <strong className={`${isCompact ? 'text-[10px]' : 'text-[11px]'} font-black text-black`}>{spool.weightRemaining}g</strong>
                             </div>
 
                             {showTare && (
                               <div>
-                                <span className="text-[7px] text-gray-500 uppercase block">Tara rocchetto:</span>
+                                <span className="text-[6.5px] text-gray-500 uppercase block">Tara:</span>
                                 <span className="font-bold text-gray-800">{tare}g</span>
                               </div>
                             )}
 
                             {showCost && (
-                              <div className="text-[8px] text-gray-700">
-                                Costo: <strong>€{spool.cost.toFixed(2)}</strong>
+                              <div className="text-[7.5px] text-gray-700">
+                                <strong>€{spool.cost.toFixed(2)}</strong>
                               </div>
                             )}
                           </div>
                         </div>
 
                         {/* Footer Etichetta */}
-                        <div className="mt-1 pt-0.5 border-t border-gray-300 flex justify-between items-center text-[7px] text-gray-500 font-mono">
-                          <span>Inquadra QR per pesare</span>
-                          <span>ID:{spool.id.slice(0, 6)}</span>
+                        <div className="mt-0.5 pt-0.5 border-t border-gray-300 flex justify-between items-center text-[6.5px] text-gray-500 font-mono">
+                          <span>{isCompact ? 'QR Pesa' : 'Inquadra QR per pesare'}</span>
+                          <span>ID:{spool.id.slice(0, 5)}</span>
                         </div>
                       </div>
                     );
@@ -623,41 +687,52 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
         `}} />
 
         <div 
-          className={`grid gap-2 w-full ${
+          className={`grid gap-1.5 w-full ${
             layout === '2x4' 
               ? 'grid-cols-2' 
-              : 'grid-cols-3'
+              : layout === '3x6' || layout === '3x7'
+              ? 'grid-cols-3'
+              : 'grid-cols-4'
           }`}
         >
           {flatLabelsToPrint.map((spool, idx) => {
             const tare = spool.spoolTare ?? (findSuggestedTare(spool.brand)?.tareWeight || 200);
             const qrUrl = qrMap[spool.id];
+            const isCompact = layout === '4x8' || layout === '4x10';
 
             return (
               <div
                 key={`print-${spool.id}-${idx}`}
-                className={`page-break-label p-2 flex flex-col justify-between text-left text-black ${
+                className={`page-break-label flex flex-col justify-between text-left text-black ${
                   showCutLines ? 'border border-dashed border-gray-400' : 'border border-gray-200'
                 } ${
-                  layout === '2x4' ? 'h-[65mm]' : layout === '3x6' ? 'h-[44mm]' : 'h-[37mm]'
+                  layout === '2x4' 
+                    ? 'p-2 h-[65mm]' 
+                    : layout === '3x6' 
+                    ? 'p-2 h-[44mm]' 
+                    : layout === '3x7' 
+                    ? 'p-2 h-[37mm]' 
+                    : layout === '4x8'
+                    ? 'p-1.5 h-[32mm]'
+                    : 'p-1 h-[26mm]'
                 }`}
               >
                 {/* Header Marca / Materiale */}
                 <div className="border-b border-black pb-0.5 mb-1 flex items-baseline justify-between leading-tight">
-                  <div>
-                    <span className="font-black text-xs uppercase tracking-wider block">
+                  <div className="min-w-0 pr-1">
+                    <span className={`font-black uppercase tracking-wider block truncate ${isCompact ? 'text-[9px]' : 'text-xs'}`}>
                       {spool.brand}
                     </span>
-                    <span className="text-[10px] font-bold text-gray-800 uppercase">
+                    <span className={`font-bold text-gray-800 uppercase ${isCompact ? 'text-[8px]' : 'text-[10px]'}`}>
                       {spool.material}
                     </span>
                   </div>
                   
-                  <div className="flex items-center gap-1.5 text-[10px]">
-                    <span className="font-semibold">{spool.color}</span>
+                  <div className="flex items-center gap-1 text-[8.5px] flex-shrink-0">
+                    <span className="font-semibold truncate max-w-[55px]">{spool.color}</span>
                     {spool.colorHex && (
                       <span 
-                        className="w-3 h-3 rounded-full border border-black inline-block flex-shrink-0" 
+                        className="w-2.5 h-2.5 rounded-full border border-black inline-block flex-shrink-0" 
                         style={{ backgroundColor: spool.colorHex }}
                       />
                     )}
@@ -665,31 +740,39 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
                 </div>
 
                 {/* Centro: QR Code + Dati */}
-                <div className="flex items-center gap-2.5 my-1">
+                <div className="flex items-center gap-2 my-0.5">
                   {showQr && qrUrl && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={qrUrl}
                       alt="QR"
-                      className={`${layout === '2x4' ? 'w-16 h-16' : 'w-12 h-12'} border border-black p-0.5 rounded flex-shrink-0`}
+                      className={`${
+                        layout === '2x4' 
+                          ? 'w-16 h-16' 
+                          : layout === '4x10'
+                          ? 'w-8 h-8'
+                          : layout === '4x8'
+                          ? 'w-9 h-9'
+                          : 'w-12 h-12'
+                      } border border-black p-0.5 rounded flex-shrink-0`}
                     />
                   )}
 
-                  <div className="text-[10px] leading-tight space-y-0.5 min-w-0">
+                  <div className="text-[9px] leading-tight space-y-0.5 min-w-0">
                     <div>
-                      <span className="text-[8px] text-gray-500 uppercase block">Residuo Filamento:</span>
-                      <strong className="text-sm font-black text-black">{spool.weightRemaining}g</strong>
+                      <span className="text-[7px] text-gray-500 uppercase block">Residuo:</span>
+                      <strong className={`${isCompact ? 'text-xs' : 'text-sm'} font-black text-black`}>{spool.weightRemaining}g</strong>
                     </div>
 
                     {showTare && (
                       <div>
-                        <span className="text-[8px] text-gray-500 uppercase block">Tara rocchetto:</span>
+                        <span className="text-[7px] text-gray-500 uppercase block">Tara:</span>
                         <span className="font-bold text-gray-800">{tare}g</span>
                       </div>
                     )}
 
                     {showCost && (
-                      <div className="text-[9px] text-gray-700">
+                      <div className="text-[8px] text-gray-700">
                         Costo: <strong>€{spool.cost.toFixed(2)}</strong>
                       </div>
                     )}
@@ -697,9 +780,9 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
                 </div>
 
                 {/* Footer Etichetta */}
-                <div className="mt-1 pt-0.5 border-t border-gray-300 flex justify-between items-center text-[8px] text-gray-600 font-mono">
-                  <span>Inquadra QR per pesare</span>
-                  <span>ID: {spool.id.slice(0, 8)}</span>
+                <div className="mt-0.5 pt-0.5 border-t border-gray-300 flex justify-between items-center text-[7px] text-gray-600 font-mono">
+                  <span>{isCompact ? 'QR Pesa' : 'Inquadra QR per pesare'}</span>
+                  <span>ID: {spool.id.slice(0, 6)}</span>
                 </div>
               </div>
             );
