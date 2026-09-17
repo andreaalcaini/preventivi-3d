@@ -31,33 +31,7 @@ export interface Printer {
 }
 
 function getInitialPrinters(): Printer[] {
-  return [
-    {
-      id: 'printer-default-1',
-      name: 'Stampante Primaria #1',
-      model: 'Bambu Lab P1S',
-      nozzleType: '0.4mm Acciaio Temperato (Hardened Steel)',
-      totalPrintHours: 142.5,
-      nozzleInstalledAtHours: 0,
-      nozzleLifespanHours: 1000,
-      lastLubricationHours: 40,
-      lubricationIntervalHours: 250,
-      lastBeltsCheckHours: 0,
-      beltsCheckIntervalHours: 500,
-      status: 'operativa',
-      notes: 'Piatto PEI texturizzato installato',
-      logs: [
-        {
-          id: 'log-1',
-          date: new Date().toLocaleDateString('it-IT'),
-          printerId: 'printer-default-1',
-          type: 'lubrificazione',
-          description: 'Pulizia e ingrassaggio guide asse Z e barre lineari',
-          hoursAtLog: 40
-        }
-      ]
-    }
-  ];
+  return [];
 }
 
 function readPrinters(): Printer[] {

@@ -44,10 +44,8 @@ CLAUDE.md
 .claude/
 .cursor/
 
-# Application runtime persistent data & credentials
-/data/*.json
-/data/.session_secret
-/data/*.zip
+# Application runtime persistent data, uploads, models & credentials
+/data/*
 !/data/.gitkeep
 
 # TypeScript

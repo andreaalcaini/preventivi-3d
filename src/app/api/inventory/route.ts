@@ -6,16 +6,8 @@ const dataDir = path.join(process.cwd(), 'data');
 const filePath = path.join(dataDir, 'inventory.json');
 
 const initialInventory = {
-  spools: [
-    { id: '1', brand: 'Bambu Lab', material: 'PLA Basic', color: 'Nero', cost: 18.99, weightTotal: 1000, weightRemaining: 750 },
-    { id: '2', brand: 'eSUN', material: 'PETG', color: 'Grigio Scuro', cost: 19.50, weightTotal: 1000, weightRemaining: 400 },
-    { id: '3', brand: 'Sunlu', material: 'TPU 95A', color: 'Nero', cost: 28.00, weightTotal: 1000, weightRemaining: 900 }
-  ],
-  hardware: [
-    { id: '1', name: 'Inserti termici filettati M3x4x5', qty: 85, cost: 0.08 },
-    { id: '2', name: 'Viti UNI 7687 M3x12', qty: 120, cost: 0.05 },
-    { id: '3', name: 'Magneti al Neodimio 6x3', qty: 40, cost: 0.15 }
-  ]
+  spools: [],
+  hardware: []
 };
 
 function ensureFileExists() {

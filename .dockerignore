@@ -1,5 +1,6 @@
 node_modules
 .next
 .git
-data/*.json
+data/*
+!data/.gitkeep
 npm-debug.log*
