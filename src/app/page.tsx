@@ -642,7 +642,7 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
   const activeClientStat = exactClientMatch ? clientStats[exactClientMatch] : null;
 
   return (
-    <div className="h-full max-h-full overflow-hidden bg-slate-950 text-slate-200 p-2 sm:p-3 font-sans flex flex-col">
+    <div className="flex-1 flex flex-col min-h-0 bg-slate-950 text-slate-200 p-2 sm:p-4 font-sans relative">
       
       {/* FOGLIO DI LAVORO / RICEVUTA PDF MINIMALE */}
       <div className="hidden print:block text-black bg-white p-8 max-w-2xl mx-auto font-sans">
@@ -1176,7 +1176,7 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                             >
                               {makerWorldInfo.availableProfiles.map(p => (
                                 <option key={p.id} value={p.id}>
-                                  {p.title} — {p.printHours}h {p.printMinutes}m ({p.weightGrams}g, {p.material})
+                                  {p.title} • {p.printHours}h {p.printMinutes}m ({p.weightGrams}g, {p.material})
                                 </option>
                               ))}
                             </select>

@@ -157,17 +157,17 @@ export default function MakerWorldModelViewer({
   }, [pictures, activeGalleryIndex, displayCover, displayTitle]);
 
   return (
-    <div className={`bg-slate-900 border border-slate-800 rounded-xl overflow-hidden flex flex-col ${className}`}>
+    <div className={`bg-slate-950/90 border border-white/10 rounded-2xl overflow-hidden flex flex-col shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] ${className}`}>
       {/* Barra Superiore: Titolo & Switcher Modalità */}
-      <div className="p-2.5 bg-slate-950/70 border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
+      <div className="p-3 bg-white/[0.02] border-b border-white/10 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
           <span className="text-xs font-semibold text-slate-200 flex items-center gap-1.5 truncate">
-            <BoxIcon className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+            <BoxIcon className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" strokeWidth={1.75} />
             <span className="truncate">{displayTitle || modelFileName || 'Visualizzatore Modello'}</span>
           </span>
 
           {loadingMw && (
-            <span className="text-[10px] text-emerald-400 flex items-center gap-1 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+            <span className="text-[10px] text-emerald-400 flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 font-mono">
               <Loader2 className="w-3 h-3 animate-spin" />
               <span>MakerWorld...</span>
             </span>
@@ -175,18 +175,18 @@ export default function MakerWorldModelViewer({
         </div>
 
         {/* Tab Switcher: [ 📐 Piatto 3D ] [ 📸 Foto & Renders ] [ 🧊 Mesh 3D ] */}
-        <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 p-0.5 rounded-lg flex-wrap">
+        <div className="flex items-center gap-1 bg-white/[0.03] border border-white/10 p-0.5 rounded-full flex-wrap">
           {hasPlates && (
             <button
               type="button"
               onClick={() => setViewMode('plate')}
-              className={`px-2 py-1 rounded text-[11px] font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+              className={`px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-[0.98] ${
                 viewMode === 'plate'
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]'
+                  : 'text-slate-400 hover:text-white border border-transparent'
               }`}
             >
-              <Layers className="w-3 h-3 text-emerald-400" />
+              <Layers className="w-3 h-3 text-emerald-400" strokeWidth={1.75} />
               <span>Piatto 3D</span>
             </button>
           )}
@@ -195,13 +195,13 @@ export default function MakerWorldModelViewer({
             <button
               type="button"
               onClick={() => setViewMode('gallery')}
-              className={`px-2 py-1 rounded text-[11px] font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+              className={`px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-[0.98] ${
                 viewMode === 'gallery'
-                  ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-sm'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]'
+                  : 'text-slate-400 hover:text-white border border-transparent'
               }`}
             >
-              <ImageIcon className="w-3 h-3 text-purple-400" />
+              <ImageIcon className="w-3 h-3 text-purple-400" strokeWidth={1.75} />
               <span>Foto ({pictures?.length || 0})</span>
             </button>
           )}
@@ -210,13 +210,13 @@ export default function MakerWorldModelViewer({
             <button
               type="button"
               onClick={() => setViewMode('mesh')}
-              className={`px-2 py-1 rounded text-[11px] font-semibold flex items-center gap-1 transition-all cursor-pointer ${
+              className={`px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-[0.98] ${
                 viewMode === 'mesh'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]'
+                  : 'text-slate-400 hover:text-white border border-transparent'
               }`}
             >
-              <BoxIcon className="w-3 h-3 text-cyan-400" />
+              <BoxIcon className="w-3 h-3 text-cyan-400" strokeWidth={1.75} />
               <span>Mesh 3D {modelFileName ? '✓' : ''}</span>
             </button>
           )}

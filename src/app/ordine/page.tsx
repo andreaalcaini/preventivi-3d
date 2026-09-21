@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { 
   Search, Package, Clock, CheckCircle2, 
   ExternalLink, Layers, AlertCircle, Wrench, Lock, Link as LinkIcon, Copy,
-  Box as BoxIcon, ChevronDown, ChevronUp
+  Box as BoxIcon, ChevronDown, ChevronUp, ArrowRight, Sparkles
 } from 'lucide-react';
 import Link from 'next/link';
 import MakerWorldModelViewer from '@/components/MakerWorldModelViewer';
@@ -26,10 +26,10 @@ interface PublicOrder {
 }
 
 const statusSteps = [
-  { key: 'in_attesa', label: 'In Coda / Ricevuto', desc: 'Ordine inserito nel programma di stampa' },
-  { key: 'in_stampa', label: 'In Stampa', desc: 'Piatto occupato, pezzo in fase di estrusione' },
-  { key: 'pronto', label: 'Pronto per il Ritiro', desc: 'Stampa terminata, pezzo pulito e pronto' },
-  { key: 'saldato', label: 'Consegnato & Saldato', desc: 'Lavoro completato con successo' }
+  { key: 'in_attesa', label: 'In Coda', desc: 'Ordine inserito nel programma di stampa' },
+  { key: 'in_stampa', label: 'In Stampa', desc: 'Piatto occupato, estrusione in corso' },
+  { key: 'pronto', label: 'Pronto al Ritiro', desc: 'Stampa ultimata e controllata' },
+  { key: 'saldato', label: 'Consegnato', desc: 'Lavoro saldato e ritirato con successo' }
 ];
 
 function OrdineClienteContent() {
@@ -90,7 +90,6 @@ function OrdineClienteContent() {
         setTotalAll(typeof data.totalAll === 'number' ? data.totalAll : (data.order?.totalCalculated || 0));
         setClientName(data.clientName || orderList[0]?.clientName || 'Cliente');
 
-        // Se è presente un modello 3D allegato o link MakerWorld per il singolo ordine, apri l'anteprima
         if (orderList.length === 1 && (orderList[0].modelUrl || orderList[0].makerWorldUrl)) {
           setShow3dViewer(true);
         }
@@ -133,109 +132,136 @@ function OrdineClienteContent() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto w-full pb-2">
+    <div className="max-w-4xl mx-auto w-full space-y-6 pb-6">
       
-      <header className="flex justify-between items-center pb-3 border-b border-slate-800/80 mb-4">
-        <div className="flex items-center gap-2.5">
-          <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400">
-            <Package className="w-5 h-5" />
+      {/* Floating Island Header */}
+      <header className="bg-slate-950/80 backdrop-blur-2xl border border-white/10 ring-1 ring-white/5 rounded-2xl sm:rounded-full px-4 sm:px-6 py-3 flex items-center justify-between shadow-2xl shadow-black/80">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-cyan-500/10 border border-cyan-500/20 rounded-xl text-cyan-400 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
+            <Package className="w-4 h-4 sm:w-5 sm:h-5" strokeWidth={1.75} />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-white tracking-tight">Portale Ordini Stampa 3D</h1>
-            <p className="text-slate-400 text-xs">Traccia lo stato di produzione del tuo pezzo e il totale dovuto</p>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-[0.2em] font-semibold">
+                Monitoraggio Commesse
+              </span>
+            </div>
+            <h1 className="text-sm sm:text-base font-bold text-white tracking-tight">
+              Portale Ordini Stampa 3D
+            </h1>
           </div>
         </div>
 
-        <Link
-          href="/login"
-          className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 transition-colors"
-          title="Area riservata per il laboratorio"
-        >
-          <Lock className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Area Venditore</span>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/richiedi-preventivo"
+            className="text-xs text-slate-300 hover:text-white px-3.5 py-1.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 transition-all font-medium"
+          >
+            Nuovo Preventivo
+          </Link>
+          <Link
+            href="/login"
+            className="text-slate-400 hover:text-white p-2 rounded-full bg-white/[0.03] border border-white/5 hover:border-white/15 transition-all"
+            title="Area Riservata Operatore"
+          >
+            <Lock className="w-3.5 h-3.5" strokeWidth={1.75} />
+          </Link>
+        </div>
       </header>
 
-      {/* Barra Ricerca Codice Univoco */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl mb-4">
-        <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="w-4 h-4 text-slate-500 absolute left-4 top-3.5" />
-            <input 
-              type="text" 
-              value={code}
-              onChange={e => setCode(e.target.value)}
-              placeholder="Inserisci uno o più codici ordine separati da virgola"
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 font-mono"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="py-3 px-6 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-emerald-950 flex items-center justify-center gap-2"
-          >
-            {loading ? 'Ricerca in corso...' : 'Verifica Ordini'}
-          </button>
-        </form>
+      {/* Barra Ricerca Codice con Architettura Button-in-Button */}
+      <div className="p-1.5 rounded-[2rem] bg-white/[0.03] border border-white/10 ring-1 ring-white/5 shadow-2xl">
+        <div className="p-5 sm:p-6 rounded-[calc(2rem-0.375rem)] bg-slate-950/85 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)] space-y-3">
+          <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2" strokeWidth={1.75} />
+              <input 
+                type="text" 
+                value={code}
+                onChange={e => setCode(e.target.value)}
+                placeholder="Inserisci uno o più codici ordine (es. ORD-1049, ORD-1050)"
+                className="w-full bg-white/[0.03] border border-white/10 rounded-full pl-11 pr-4 py-3 text-xs sm:text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 transition-all font-mono"
+              />
+            </div>
+            
+            <button
+              type="submit"
+              disabled={loading}
+              className="py-3 pl-6 pr-3 bg-cyan-500 hover:bg-cyan-400 disabled:opacity-50 text-slate-950 font-bold text-xs sm:text-sm rounded-full transition-all shadow-lg shadow-cyan-950/40 flex items-center justify-center gap-3 active:scale-[0.98] group"
+            >
+              <span>{loading ? 'Ricerca in corso...' : 'Verifica Ordini'}</span>
+              <div className="w-7 h-7 rounded-full bg-slate-950/15 flex items-center justify-center group-hover:translate-x-1 transition-transform">
+                <ArrowRight className="w-3.5 h-3.5 text-slate-950" strokeWidth={2.5} />
+              </div>
+            </button>
+          </form>
 
-        <p className="text-[11px] text-slate-500 mt-2.5">
-          Il codice univoco ti è stato fornito dal laboratorio nel messaggio di preventivo o riepilogo conto.
-        </p>
+          <p className="text-[11px] text-slate-500 pl-2">
+            Il codice univoco ti è stato fornito dal laboratorio nel messaggio di preventivo o riepilogo commessa.
+          </p>
+        </div>
       </div>
 
       {/* Messaggio Errore */}
       {error && (
-        <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-400 text-sm flex items-center gap-3 mb-8">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+        <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-2xl text-red-400 text-xs flex items-center gap-3">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" strokeWidth={1.75} />
           <span>{error}</span>
         </div>
       )}
 
-      {/* CASO 1: SINGOLO ORDINE */}
+      {/* CASO 1: SINGOLO ORDINE IN ARCHITETTURA DOPPELRAND */}
       {orders.length === 1 && (() => {
         const order = orders[0];
         const currentStep = getStepIndex(order.status);
         return (
-          <div className="space-y-6">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 md:p-8 shadow-2xl space-y-6">
+          <div className="p-1.5 rounded-[2.5rem] bg-white/[0.03] border border-white/10 ring-1 ring-white/5 shadow-2xl">
+            <div className="p-6 sm:p-8 rounded-[calc(2.5rem-0.375rem)] bg-slate-950/85 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)] space-y-6">
               
               {/* Header scheda ordine */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-slate-800">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-5 border-b border-white/10">
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[11px] font-mono text-emerald-400 font-semibold uppercase tracking-wider">
-                      Codice Ordine #{order.id}
+                  <div className="flex items-center gap-2.5 mb-1.5">
+                    <span className="text-[11px] font-mono text-emerald-400 font-semibold uppercase tracking-wider bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                      Codice #{order.id}
                     </span>
                     <button
                       onClick={() => handleCopySingleLink(order.id)}
-                      className="flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+                      className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white border border-white/10 transition-colors"
                       title="Copia link diretto di questo ordine"
                     >
-                      {copiedItemId === order.id ? <CheckCircle2 className="w-3 h-3 text-emerald-400" /> : <LinkIcon className="w-3 h-3" />}
+                      {copiedItemId === order.id ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <LinkIcon className="w-3.5 h-3.5" strokeWidth={1.75} />}
                       <span>{copiedItemId === order.id ? 'Link copiato!' : 'Copia link'}</span>
                     </button>
                   </div>
                   <h2 className="text-2xl font-bold text-white tracking-tight">{order.name}</h2>
-                  <p className="text-xs text-slate-400 mt-0.5">Destinatario: <strong className="text-slate-200">{order.clientName}</strong> • Registrato il {order.savedAt}</p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Committente: <strong className="text-slate-200">{order.clientName}</strong> • Registrato il {order.savedAt}
+                  </p>
                 </div>
 
-                <div className="text-left sm:text-right bg-slate-950/80 p-3 rounded-xl border border-slate-800">
-                  <span className="text-[11px] text-slate-400 block">Totale Dovuto</span>
-                  <span className="text-2xl font-black text-white block leading-tight">€{order.totalCalculated.toFixed(2)}</span>
-                  <span className={`text-[10px] font-bold uppercase tracking-wider inline-block mt-0.5 px-2 py-0.5 rounded border ${
+                <div className="text-left sm:text-right bg-white/[0.03] p-4 rounded-2xl border border-white/10 min-w-[170px]">
+                  <span className="text-[10px] text-slate-400 uppercase tracking-widest font-mono block">
+                    Totale Dovuto
+                  </span>
+                  <span className="text-2xl font-black text-white block leading-tight font-mono my-0.5">
+                    €{order.totalCalculated.toFixed(2)}
+                  </span>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider inline-block px-2.5 py-0.5 rounded-full border ${
                     order.status === 'saldato' 
-                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
-                      : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                      ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' 
+                      : 'bg-amber-500/15 text-amber-300 border-amber-500/30'
                   }`}>
                     {order.status === 'saldato' ? '✓ Pagamento Saldato' : '⏳ In attesa di saldo'}
                   </span>
                 </div>
               </div>
 
-              {/* Timeline Avanzamento */}
+              {/* Timeline Avanzamento Stepper */}
               <div>
-                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-emerald-400" /> Stato di Avanzamento
+                <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-[0.15em] mb-4 flex items-center gap-2 font-mono">
+                  <Clock className="w-3.5 h-3.5 text-emerald-400" strokeWidth={1.75} /> 
+                  <span>Stato di Produzione</span>
                 </h3>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -245,51 +271,51 @@ function OrdineClienteContent() {
                     return (
                       <div 
                         key={step.key}
-                        className={`p-3.5 rounded-xl border transition-all ${
+                        className={`p-4 rounded-2xl border transition-all duration-300 ${
                           isCurrent 
-                            ? 'bg-emerald-950/40 border-emerald-500/60 ring-1 ring-emerald-500/30' 
+                            ? 'bg-emerald-950/40 border-emerald-500/50 ring-1 ring-emerald-500/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]' 
                             : isPassed 
-                              ? 'bg-slate-950/70 border-slate-800 text-slate-300' 
-                              : 'bg-slate-950/30 border-slate-800/40 opacity-40'
+                              ? 'bg-white/[0.03] border-white/10 text-slate-300' 
+                              : 'bg-white/[0.01] border-white/5 opacity-40'
                         }`}
                       >
-                        <div className="flex items-center gap-2 mb-1.5">
-                          <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold font-mono ${
                             isCurrent 
                               ? 'bg-emerald-500 text-slate-950' 
                               : isPassed 
                                 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                                : 'bg-slate-800 text-slate-500'
+                                : 'bg-white/10 text-slate-500'
                           }`}>
                             {isPassed && !isCurrent ? '✓' : idx + 1}
                           </div>
-                          <span className="text-xs font-bold text-white">{step.label}</span>
+                          <span className="text-xs font-bold text-white tracking-tight">{step.label}</span>
                         </div>
-                        <p className="text-[11px] text-slate-400 leading-snug">{step.desc}</p>
+                        <p className="text-[11px] text-slate-400 leading-relaxed">{step.desc}</p>
                       </div>
                     );
                   })}
                 </div>
               </div>
 
-              {/* Dettagli Tecnici */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-slate-800">
-                <div className="p-4 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-2">
+              {/* Dettagli Tecnici & Minuteria */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-white/10">
+                <div className="p-4 bg-white/[0.02] border border-white/10 rounded-2xl space-y-2">
                   <span className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
-                    <Layers className="w-3.5 h-3.5 text-emerald-400" /> Materiale & Configurazione
+                    <Layers className="w-3.5 h-3.5 text-emerald-400" strokeWidth={1.75} /> Materiale & Configurazione
                   </span>
                   <p className="text-sm font-semibold text-white">{order.material}</p>
                   {order.multiColor && (
-                    <span className="inline-block text-[10px] bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2 py-0.5 rounded">
+                    <span className="inline-block text-[10px] bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2.5 py-0.5 rounded-full font-mono">
                       Stampa multi-colore
                     </span>
                   )}
                 </div>
 
                 {order.extraBom && order.extraBom.length > 0 ? (
-                  <div className="p-4 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-2">
+                  <div className="p-4 bg-white/[0.02] border border-white/10 rounded-2xl space-y-2">
                     <span className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
-                      <Wrench className="w-3.5 h-3.5 text-purple-400" /> Minuteria & Componenti Inclusi
+                      <Wrench className="w-3.5 h-3.5 text-cyan-400" strokeWidth={1.75} /> Minuteria & Componenti Inclusi
                     </span>
                     <ul className="text-xs text-slate-300 space-y-1 list-disc list-inside">
                       {order.extraBom.map((item, i) => (
@@ -298,16 +324,16 @@ function OrdineClienteContent() {
                     </ul>
                   </div>
                 ) : (
-                  <div className="p-4 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-2">
-                    <span className="text-xs text-slate-400 font-medium">Modello 3D di Riferimento</span>
+                  <div className="p-4 bg-white/[0.02] border border-white/10 rounded-2xl space-y-2">
+                    <span className="text-xs text-slate-400 font-medium">Riferimento Sorgente</span>
                     {order.makerWorldUrl ? (
                       <a 
                         href={order.makerWorldUrl} 
                         target="_blank" 
                         rel="noreferrer"
-                        className="text-xs text-emerald-400 hover:underline flex items-center gap-1"
+                        className="text-xs text-emerald-400 hover:underline flex items-center gap-1 font-medium"
                       >
-                        <span>Visualizza file sorgente (MakerWorld)</span>
+                        <span>Visualizza su MakerWorld</span>
                         <ExternalLink className="w-3 h-3" />
                       </a>
                     ) : (
@@ -318,20 +344,20 @@ function OrdineClienteContent() {
               </div>
 
               {/* Box Viewer 3D Interattivo per il Cliente */}
-              <div className="p-4 bg-slate-950/70 border border-slate-800/80 rounded-xl space-y-3">
+              <div className="p-5 bg-white/[0.02] border border-white/10 rounded-2xl space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <button
                     type="button"
                     onClick={() => setShow3dViewer(!show3dViewer)}
-                    className="text-xs font-semibold text-slate-300 hover:text-emerald-400 transition-colors flex items-center gap-1.5"
+                    className="text-xs font-semibold text-slate-300 hover:text-emerald-400 transition-colors flex items-center gap-2"
                   >
-                    <BoxIcon className="w-3.5 h-3.5 text-emerald-400" />
+                    <BoxIcon className="w-4 h-4 text-emerald-400" strokeWidth={1.75} />
                     <span>
                       {order.makerWorldUrl 
                         ? (show3dViewer ? 'Nascondi Anteprima Modello 3D / MakerWorld' : 'Visualizza Anteprima Modello 3D (Piatti & Foto MakerWorld)')
                         : order.modelUrl 
                         ? (show3dViewer ? 'Nascondi Modello 3D del Pezzo' : `Visualizza Modello 3D di Produzione (${order.modelFileName || 'STL/3MF'})`)
-                        : (show3dViewer ? 'Nascondi Visualizzatore 3D' : 'Visualizzatore 3D (Carica file .STL o .3MF per ispezione)')
+                        : (show3dViewer ? 'Nascondi Visualizzatore 3D' : 'Visualizzatore 3D (Ispezione geometrica)')
                       }
                     </span>
                     {show3dViewer ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -342,7 +368,7 @@ function OrdineClienteContent() {
                       <a
                         href={order.modelUrl}
                         download={order.modelFileName || 'modello-3d'}
-                        className="text-[11px] text-emerald-400 hover:underline flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20"
+                        className="text-[11px] text-emerald-400 hover:underline flex items-center gap-1 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20"
                         title="Scarica file originale del pezzo"
                       >
                         <span>Scarica {order.modelFileName?.toLowerCase().endsWith('.3mf') ? '.3MF' : '.STL'}</span>
@@ -353,7 +379,7 @@ function OrdineClienteContent() {
                         href={order.makerWorldUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-[11px] text-emerald-400 hover:underline flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20"
+                        className="text-[11px] text-emerald-400 hover:underline flex items-center gap-1 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20"
                       >
                         <span>MakerWorld</span>
                         <ExternalLink className="w-3 h-3" />
@@ -363,7 +389,7 @@ function OrdineClienteContent() {
                 </div>
 
                 {show3dViewer && (
-                  <div className="pt-1">
+                  <div className="pt-2">
                     <MakerWorldModelViewer 
                       makerWorldUrl={order.makerWorldUrl}
                       modelUrl={order.modelUrl}
@@ -378,12 +404,12 @@ function OrdineClienteContent() {
               </div>
 
               {/* Informazioni Ritiro e Pagamento */}
-              <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs text-emerald-300 flex items-start gap-3">
-                <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-400 mt-0.5" />
+              <div className="p-5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-xs text-emerald-300 flex items-start gap-3.5">
+                <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-400 mt-0.5" strokeWidth={1.75} />
                 <div>
                   <p className="font-bold text-white text-sm mb-0.5">Indicazioni per il Ritiro & Pagamento</p>
                   <p className="text-slate-300 leading-relaxed">
-                    Quando il tuo ordine raggiunge lo stato <strong>&quot;Pronto per il Ritiro&quot;</strong>, puoi concordare giorno e ora di consegna con il maker. Il saldo di <strong>€{order.totalCalculated.toFixed(2)}</strong> potrà essere corrisposto al momento del ritiro (o secondo gli accordi stabiliti).
+                    Quando il tuo ordine raggiunge lo stato <strong>&quot;Pronto al Ritiro&quot;</strong>, puoi concordare giorno e ora di consegna con il laboratorio. L&apos;importo di <strong>€{order.totalCalculated.toFixed(2)}</strong> potrà essere saldato direttamente al momento del ritiro.
                   </p>
                 </div>
               </div>
@@ -398,58 +424,64 @@ function OrdineClienteContent() {
         <div className="space-y-6">
           
           {/* Box Riepilogativo Complessivo Cliente */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl space-y-5">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-800">
-              <div>
-                <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">
-                  Riepilogo Multi-Ordine Cliente
-                </span>
-                <h2 className="text-2xl font-bold text-white tracking-tight">{clientName}</h2>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Visualizzazione unificata di <strong>{orders.length} pezzi di stampa</strong>
-                </p>
+          <div className="p-1.5 rounded-[2.5rem] bg-white/[0.03] border border-white/10 ring-1 ring-white/5 shadow-2xl">
+            <div className="p-6 sm:p-8 rounded-[calc(2.5rem-0.375rem)] bg-slate-950/85 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)] space-y-5">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-white/10">
+                <div>
+                  <span className="text-[10px] font-mono font-semibold text-emerald-400 uppercase tracking-[0.2em] block">
+                    Riepilogo Multi-Commessa
+                  </span>
+                  <h2 className="text-2xl font-bold text-white tracking-tight">{clientName}</h2>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Visualizzazione unificata di <strong>{orders.length} pezzi di stampa</strong>
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleCopyBundleLink}
+                    className="flex items-center gap-2 text-xs font-semibold px-4 py-2.5 rounded-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 transition-all shadow-md shadow-emerald-950/50 active:scale-[0.98]"
+                    title="Copia link che include tutti questi pezzi"
+                  >
+                    {copiedAllLink ? <CheckCircle2 className="w-3.5 h-3.5 text-slate-950" /> : <Copy className="w-3.5 h-3.5 text-slate-950" strokeWidth={2} />}
+                    <span>{copiedAllLink ? 'Link Riepilogo Copiato!' : 'Copia Link Unificato'}</span>
+                  </button>
+                </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleCopyBundleLink}
-                  className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md shadow-emerald-950"
-                  title="Copia link che include tutti questi pezzi"
-                >
-                  {copiedAllLink ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copiedAllLink ? 'Link Riepilogo Copiato!' : 'Copia Link Riepilogo'}</span>
-                </button>
-              </div>
-            </div>
+              {/* Metriche Totali */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="p-5 bg-white/[0.02] border border-white/10 rounded-2xl">
+                  <span className="text-xs text-slate-400 block mb-1">Totale da Saldare</span>
+                  <span className="text-3xl font-black text-amber-400 block leading-tight font-mono">
+                    €{totalDue.toFixed(2)}
+                  </span>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider inline-block mt-2 px-2.5 py-0.5 rounded-full border ${
+                    totalDue === 0
+                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                      : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                  }`}>
+                    {totalDue === 0 ? '✓ Tutti i lavori saldati' : '⏳ In attesa di saldo'}
+                  </span>
+                </div>
 
-            {/* Metriche Totali */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-4 bg-slate-950/80 border border-slate-800 rounded-xl">
-                <span className="text-xs text-slate-400 block mb-0.5">Totale Ancora da Saldare</span>
-                <span className="text-2xl font-black text-amber-400 block leading-tight">€{totalDue.toFixed(2)}</span>
-                <span className={`text-[10px] font-bold uppercase tracking-wider inline-block mt-1 px-2 py-0.5 rounded border ${
-                  totalDue === 0
-                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
-                    : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                }`}>
-                  {totalDue === 0 ? '✓ Tutti i lavori saldati' : '⏳ In attesa di saldo'}
-                </span>
-              </div>
-
-              <div className="p-4 bg-slate-950/80 border border-slate-800 rounded-xl">
-                <span className="text-xs text-slate-400 block mb-0.5">Valore Complessivo Lavori Inclusi</span>
-                <span className="text-2xl font-black text-white block leading-tight">€{totalAll.toFixed(2)}</span>
-                <span className="text-[10px] text-slate-400 block mt-1">
-                  {orders.filter(o => o.status === 'saldato').length} di {orders.length} pezzi già completati e saldati
-                </span>
+                <div className="p-5 bg-white/[0.02] border border-white/10 rounded-2xl">
+                  <span className="text-xs text-slate-400 block mb-1">Valore Totale Ordini</span>
+                  <span className="text-3xl font-black text-white block leading-tight font-mono">
+                    €{totalAll.toFixed(2)}
+                  </span>
+                  <span className="text-[11px] text-slate-400 block mt-2">
+                    {orders.filter(o => o.status === 'saldato').length} di {orders.length} pezzi già consegnati e saldati
+                  </span>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Elenco Schede per Ciascun Pezzo */}
           <div className="space-y-4">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">
-              Dettaglio Pezzi in Produzione ({orders.length})
+            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest px-2 font-mono">
+              Dettaglio Pezzi ({orders.length})
             </h3>
 
             {orders.map((order) => {
@@ -457,151 +489,153 @@ function OrdineClienteContent() {
               const isCopied = copiedItemId === order.id;
 
               return (
-                <div key={order.id} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
-                  
-                  {/* Header singolo pezzo */}
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-3 border-b border-slate-800">
-                    <div>
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className="text-[10px] font-mono text-emerald-400 font-semibold uppercase">
-                          Codice #{order.id}
-                        </span>
-                        <button
-                          onClick={() => handleCopySingleLink(order.id)}
-                          className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
-                          title="Copia link diretto solo per questo pezzo"
-                        >
-                          {isCopied ? <CheckCircle2 className="w-3 h-3 text-emerald-400" /> : <LinkIcon className="w-3 h-3" />}
-                          <span>{isCopied ? 'Copiato' : 'Copia link'}</span>
-                        </button>
+                <div key={order.id} className="p-1.5 rounded-[2rem] bg-white/[0.03] border border-white/10 ring-1 ring-white/5 shadow-xl">
+                  <div className="p-5 sm:p-6 rounded-[calc(2rem-0.375rem)] bg-slate-950/85 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)] space-y-4">
+                    
+                    {/* Header singolo pezzo */}
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-3 border-b border-white/10">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-[10px] font-mono text-emerald-400 font-semibold uppercase bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                            #{order.id}
+                          </span>
+                          <button
+                            onClick={() => handleCopySingleLink(order.id)}
+                            className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 transition-colors border border-white/10"
+                            title="Copia link diretto solo per questo pezzo"
+                          >
+                            {isCopied ? <CheckCircle2 className="w-3 h-3 text-emerald-400" /> : <LinkIcon className="w-3 h-3" />}
+                            <span>{isCopied ? 'Copiato' : 'Copia link'}</span>
+                          </button>
+                        </div>
+                        <h4 className="text-lg font-bold text-white tracking-tight">{order.name}</h4>
+                        <p className="text-[11px] text-slate-400">Data: {order.savedAt || 'Registrato'}</p>
                       </div>
-                      <h4 className="text-lg font-bold text-white tracking-tight">{order.name}</h4>
-                      <p className="text-[11px] text-slate-400">Data: {order.savedAt || '-'}</p>
+
+                      <div className="text-left sm:text-right">
+                        <span className="text-xl font-black text-white block font-mono">€{order.totalCalculated.toFixed(2)}</span>
+                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border inline-block ${
+                          order.status === 'saldato' 
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                            : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                        }`}>
+                          {order.status === 'saldato' ? '✓ Saldato' : '⏳ Da saldare'}
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="text-left sm:text-right">
-                      <span className="text-lg font-black text-white block">€{order.totalCalculated.toFixed(2)}</span>
-                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border inline-block ${
-                        order.status === 'saldato' 
-                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
-                          : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                      }`}>
-                        {order.status === 'saldato' ? '✓ Saldato' : '⏳ Da saldare'}
+                    {/* Avanzamento pezzo */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      {statusSteps.map((step, idx) => {
+                        const isPassed = idx <= currentStep;
+                        const isCurrent = idx === currentStep;
+                        return (
+                          <div 
+                            key={step.key}
+                            className={`p-3 rounded-xl border text-xs transition-all ${
+                              isCurrent 
+                                ? 'bg-emerald-950/40 border-emerald-500/60 ring-1 ring-emerald-500/30' 
+                                : isPassed 
+                                  ? 'bg-white/[0.03] border-white/10 text-slate-300' 
+                                  : 'bg-white/[0.01] border-white/5 opacity-40'
+                            }`}
+                          >
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold font-mono ${
+                                isCurrent 
+                                  ? 'bg-emerald-500 text-slate-950' 
+                                  : isPassed 
+                                    ? 'bg-emerald-500/20 text-emerald-400' 
+                                    : 'bg-white/10 text-slate-500'
+                              }`}>
+                                {isPassed && !isCurrent ? '✓' : idx + 1}
+                              </span>
+                              <span className="font-bold text-white text-[11px] truncate">{step.label}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Specifiche pezzo */}
+                    <div className="flex flex-wrap items-center gap-3 pt-2 text-xs text-slate-400">
+                      <span className="flex items-center gap-1 bg-white/[0.02] px-3 py-1 rounded-full border border-white/10 text-slate-300">
+                        <Layers className="w-3.5 h-3.5 text-emerald-400" strokeWidth={1.75} /> {order.material}
                       </span>
-                    </div>
-                  </div>
+                      {order.multiColor && (
+                        <span className="bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-3 py-1 rounded-full font-mono text-[10px]">
+                          Multi-colore
+                        </span>
+                      )}
+                      {order.extraBom && order.extraBom.length > 0 && (
+                        <span className="bg-white/[0.02] px-3 py-1 rounded-full border border-white/10 text-slate-300">
+                          {order.extraBom.map(b => `${b.qty}x ${b.name}`).join(', ')}
+                        </span>
+                      )}
+                      {order.makerWorldUrl && (
+                        <a 
+                          href={order.makerWorldUrl} 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="text-emerald-400 hover:underline flex items-center gap-1 ml-auto"
+                        >
+                          <span>MakerWorld</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
 
-                  {/* Avanzamento pezzo */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {statusSteps.map((step, idx) => {
-                      const isPassed = idx <= currentStep;
-                      const isCurrent = idx === currentStep;
-                      return (
-                        <div 
-                          key={step.key}
-                          className={`p-2.5 rounded-xl border text-xs transition-all ${
-                            isCurrent 
-                              ? 'bg-emerald-950/40 border-emerald-500/60 ring-1 ring-emerald-500/30' 
-                              : isPassed 
-                                ? 'bg-slate-950/70 border-slate-800 text-slate-300' 
-                                : 'bg-slate-950/30 border-slate-800/40 opacity-40'
+                      {(order.modelUrl || order.makerWorldUrl) && (
+                        <button
+                          type="button"
+                          onClick={() => setExpandedViewerId(expandedViewerId === order.id ? null : order.id)}
+                          className={`text-[11px] font-semibold flex items-center gap-1.5 px-3 py-1 rounded-full border transition-colors ${
+                            expandedViewerId === order.id 
+                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' 
+                              : 'bg-white/[0.03] hover:bg-white/[0.07] text-slate-300 border-white/10'
                           }`}
                         >
-                          <div className="flex items-center gap-1.5 mb-1">
-                            <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                              isCurrent 
-                                ? 'bg-emerald-500 text-slate-950' 
-                                : isPassed 
-                                  ? 'bg-emerald-500/20 text-emerald-400' 
-                                  : 'bg-slate-800 text-slate-500'
-                            }`}>
-                              {isPassed && !isCurrent ? '✓' : idx + 1}
-                            </span>
-                            <span className="font-bold text-white text-[11px] truncate">{step.label}</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Specifiche pezzo */}
-                  <div className="flex flex-wrap items-center gap-3 pt-2 text-xs text-slate-400">
-                    <span className="flex items-center gap-1 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 text-slate-300">
-                      <Layers className="w-3.5 h-3.5 text-emerald-400" /> {order.material}
-                    </span>
-                    {order.multiColor && (
-                      <span className="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-2.5 py-1 rounded-lg">
-                        Multi-colore
-                      </span>
-                    )}
-                    {order.extraBom && order.extraBom.length > 0 && (
-                      <span className="bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800 text-slate-300">
-                        {order.extraBom.map(b => `${b.qty}x ${b.name}`).join(', ')}
-                      </span>
-                    )}
-                    {order.makerWorldUrl && (
-                      <a 
-                        href={order.makerWorldUrl} 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="text-emerald-400 hover:underline flex items-center gap-1 ml-auto"
-                      >
-                        <span>MakerWorld</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    )}
-
-                    {(order.modelUrl || order.makerWorldUrl) && (
-                      <button
-                        type="button"
-                        onClick={() => setExpandedViewerId(expandedViewerId === order.id ? null : order.id)}
-                        className={`text-[11px] font-semibold flex items-center gap-1.5 px-2.5 py-1 rounded-lg border transition-colors ${
-                          expandedViewerId === order.id 
-                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' 
-                            : 'bg-slate-950 hover:bg-slate-800 text-slate-300 border-slate-800'
-                        }`}
-                      >
-                        <BoxIcon className="w-3 h-3 text-emerald-400" />
-                        <span>
-                          {expandedViewerId === order.id 
-                            ? 'Chiudi Anteprima' 
-                            : (order.makerWorldUrl 
-                                ? 'Vedi Anteprima 3D / MakerWorld' 
-                                : `Vedi Modello 3D (${order.modelFileName || 'Allegato'})`
-                              )
-                          }
-                        </span>
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Viewer 3D Espandibile nel Multi-ordine */}
-                  {(order.modelUrl || order.makerWorldUrl) && expandedViewerId === order.id && (
-                    <div className="pt-2 border-t border-slate-800">
-                      <MakerWorldModelViewer
-                        makerWorldUrl={order.makerWorldUrl}
-                        modelUrl={order.modelUrl}
-                        modelFileName={order.modelFileName}
-                        modelTitle={order.name || order.id}
-                        material={order.material || 'PLA'}
-                        height={260}
-                        allowUpload={false}
-                      />
+                          <BoxIcon className="w-3 h-3 text-emerald-400" />
+                          <span>
+                            {expandedViewerId === order.id 
+                              ? 'Chiudi Anteprima' 
+                              : (order.makerWorldUrl 
+                                  ? 'Vedi Anteprima 3D' 
+                                  : `Vedi Modello 3D (${order.modelFileName || 'File'})`
+                                )
+                            }
+                          </span>
+                        </button>
+                      )}
                     </div>
-                  )}
 
+                    {/* Viewer 3D Espandibile nel Multi-ordine */}
+                    {(order.modelUrl || order.makerWorldUrl) && expandedViewerId === order.id && (
+                      <div className="pt-3 border-t border-white/10">
+                        <MakerWorldModelViewer
+                          makerWorldUrl={order.makerWorldUrl}
+                          modelUrl={order.modelUrl}
+                          modelFileName={order.modelFileName}
+                          modelTitle={order.name || order.id}
+                          material={order.material || 'PLA'}
+                          height={280}
+                          allowUpload={false}
+                        />
+                      </div>
+                    )}
+
+                  </div>
                 </div>
               );
             })}
           </div>
 
           {/* Box Ritiro per Multi-ordine */}
-          <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-xs text-emerald-300 flex items-start gap-3">
-            <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-400 mt-0.5" />
+          <div className="p-5 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl text-xs text-emerald-300 flex items-start gap-3.5">
+            <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-400 mt-0.5" strokeWidth={1.75} />
             <div>
               <p className="font-bold text-white text-sm mb-0.5">Indicazioni per il Ritiro & Pagamento</p>
               <p className="text-slate-300 leading-relaxed">
-                Appena i pezzi raggiungono lo stato <strong>&quot;Pronto per il Ritiro&quot;</strong> potrai concordare il ritiro con il laboratorio. Il totale rimanente da saldare è di <strong>€{totalDue.toFixed(2)}</strong>.
+                Appena i pezzi raggiungono lo stato <strong>&quot;Pronto al Ritiro&quot;</strong> potrai concordare il ritiro con il laboratorio. Il totale rimanente da saldare è di <strong>€{totalDue.toFixed(2)}</strong>.
               </p>
             </div>
           </div>
@@ -611,12 +645,16 @@ function OrdineClienteContent() {
 
       {/* Stato Iniziale se non ha ancora cercato */}
       {orders.length === 0 && !error && !hasSearched && (
-        <div className="text-center py-16 px-4 bg-slate-900/40 border border-slate-800/60 rounded-2xl">
-          <Package className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-          <h3 className="text-base font-bold text-white mb-1">Hai un codice ordine?</h3>
-          <p className="text-xs text-slate-400 max-w-md mx-auto">
-            Inserisci il codice univoco nel campo sopra per visualizzare subito lo stato del tuo pezzo in stampa e il riepilogo del costo.
-          </p>
+        <div className="p-1.5 rounded-[2.5rem] bg-white/[0.03] border border-white/10 ring-1 ring-white/5 shadow-2xl">
+          <div className="text-center py-16 px-6 rounded-[calc(2.5rem-0.375rem)] bg-slate-950/85 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)]">
+            <div className="w-16 h-16 rounded-2xl bg-white/[0.04] border border-white/10 ring-1 ring-white/5 flex items-center justify-center mx-auto mb-4 text-slate-500">
+              <Package className="w-8 h-8" strokeWidth={1.5} />
+            </div>
+            <h3 className="text-lg font-bold text-white mb-1.5">Hai un codice ordine?</h3>
+            <p className="text-xs sm:text-sm text-slate-400 max-w-md mx-auto leading-relaxed">
+              Inserisci il codice univoco nel campo sopra per visualizzare lo stato di lavorazione del tuo modello e il riepilogo del saldo.
+            </p>
+          </div>
         </div>
       )}
 
@@ -626,16 +664,15 @@ function OrdineClienteContent() {
 
 export default function OrdineClientePage() {
   return (
-    <div className="h-full max-h-full overflow-hidden bg-slate-950 text-slate-200 font-sans p-2 sm:p-4 flex flex-col justify-between">
-      <Suspense fallback={<div className="max-w-3xl mx-auto text-xs text-slate-500 py-6 text-center">Caricamento portale...</div>}>
-        <div className="flex-1 min-h-0 overflow-y-auto pr-1">
+    <div className="min-h-[100dvh] bg-slate-950 text-slate-100 font-sans p-3 sm:p-6 flex flex-col justify-between relative">
+      <Suspense fallback={<div className="max-w-4xl mx-auto text-xs text-slate-500 py-10 text-center font-mono">Caricamento portale ordini...</div>}>
+        <div className="flex-1 flex flex-col">
           <OrdineClienteContent />
         </div>
       </Suspense>
 
-      {/* Footer */}
-      <footer className="max-w-3xl mx-auto w-full pt-2 pb-2 text-center text-[11px] text-slate-600 border-t border-slate-900 flex-shrink-0">
-        <p>PrintQuote Lab • Sistema di gestione e preventivazione per maker di stampa 3D FDM</p>
+      <footer className="max-w-4xl mx-auto w-full pt-4 pb-2 text-center text-[11px] text-slate-600 border-t border-white/5 flex-shrink-0">
+        <p>Preventivi 3D • Portale Tracciamento e Fabbricazione Digitale</p>
       </footer>
     </div>
   );

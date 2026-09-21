@@ -288,7 +288,7 @@ export default function ClientiPage() {
   };
 
   return (
-    <div className="h-full max-h-full overflow-hidden bg-slate-950 text-slate-200 p-2 sm:p-3 font-sans flex flex-col">
+    <div className="flex-1 flex flex-col min-h-0 bg-slate-950 text-slate-200 p-2 sm:p-4 font-sans relative">
       
       {/* 1. SEZIONE RICEVUTA PDF / ESTRATTO CONTO PER LA STAMPA (@media print) */}
       {activeClient && (

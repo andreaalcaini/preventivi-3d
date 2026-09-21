@@ -62,207 +62,232 @@ function PortalContent() {
   };
 
   return (
-    <div className="h-full w-full max-w-5xl mx-auto flex flex-col justify-between items-center py-2 sm:py-4 px-4">
+    <div className="min-h-[100dvh] w-full max-w-5xl mx-auto flex flex-col justify-between items-center py-6 sm:py-10 px-4 sm:px-6 relative z-10">
       
-      {/* Intestazione Principale */}
-      <div className="text-center pt-2 sm:pt-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] sm:text-xs font-semibold uppercase tracking-wider mb-2 sm:mb-3 shadow-sm">
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>Laboratorio di Stampa 3D & Prototipazione</span>
+      {/* Intestazione Principale con Eyebrow Pill */}
+      <div className="text-center pt-4 sm:pt-6">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-mono uppercase tracking-[0.2em] mb-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]">
+          <Sparkles className="w-3 h-3 text-emerald-400" strokeWidth={1.75} />
+          <span>Laboratorio di Fabbricazione Digitale</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">
-          Cosa desideri fare oggi?
+        
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight leading-tight">
+          Cosa desideri realizzare?
         </h1>
-        <p className="text-slate-400 text-xs sm:text-sm mt-1.5 max-w-lg mx-auto">
-          Traccia lo stato della tua commessa in tempo reale oppure inviaci una richiesta per realizzare il tuo progetto 3D.
+        <p className="text-slate-400 text-xs sm:text-sm mt-2.5 max-w-md mx-auto leading-relaxed">
+          Monitora lo stato di produzione della tua commessa in tempo reale oppure richiedi un preventivo per il tuo file 3D.
         </p>
       </div>
 
-      {/* Sezioni Principali per Clienti (2 Card in evidenza) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 w-full my-auto max-w-4xl">
+      {/* Griglia Asimmetrica & Double-Bezel Architecture */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 w-full my-auto max-w-4xl pt-6 pb-8">
         
-        {/* CARD 1: TRACCIA ORDINE */}
-        <div className="bg-slate-900/90 border border-slate-800 hover:border-cyan-500/40 rounded-2xl sm:rounded-3xl p-5 sm:p-6 flex flex-col justify-between transition-all duration-300 shadow-xl group">
-          <div>
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-105 transition-transform">
-              <Package className="w-5 h-5 sm:w-6 sm:h-6" />
-            </div>
-
-            <h2 className="text-lg sm:text-xl font-bold text-white mb-1.5 flex items-center gap-2">
-              Traccia il tuo Ordine
-            </h2>
-            <p className="text-slate-400 text-xs sm:text-sm leading-relaxed mb-4">
-              Hai già un ordine attivo? Inserisci il codice per verificare lo stato di avanzamento della stampa e il ritiro.
-            </p>
-
-            <form onSubmit={handleTrack} className="space-y-2.5">
-              <div className="relative">
-                <Search className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                <input 
-                  type="text"
-                  value={trackingCode}
-                  onChange={e => setTrackingCode(e.target.value)}
-                  placeholder="Inserisci codice ordine..."
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-3.5 py-2.5 text-xs sm:text-sm text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all"
-                />
+        {/* CARD 1: TRACCIA ORDINE (Doppelrand Outer Shell) */}
+        <div className="p-1.5 rounded-[2rem] bg-white/[0.03] border border-white/10 ring-1 ring-white/5 shadow-2xl hover:border-cyan-500/30 transition-all duration-500 group">
+          {/* Inner Core */}
+          <div className="p-6 sm:p-7 rounded-[calc(2rem-0.375rem)] bg-slate-950/85 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)] flex flex-col justify-between h-full">
+            <div>
+              {/* Concentric Icon Island */}
+              <div className="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/10 ring-1 ring-white/5 text-cyan-400 flex items-center justify-center mb-5 group-hover:scale-105 transition-transform shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
+                <Package className="w-5 h-5" strokeWidth={1.75} />
               </div>
 
-              <button
-                type="submit"
-                className="w-full py-2.5 px-4 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md shadow-cyan-950 flex items-center justify-center gap-2 group-hover:shadow-cyan-900/50"
-              >
-                <span>Cerca Ordine</span>
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </form>
-          </div>
+              <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                Traccia il tuo Ordine
+              </h2>
+              <p className="text-slate-400 text-xs sm:text-sm leading-relaxed mb-6">
+                Hai già una commessa attiva in laboratorio? Inserisci il codice per verificare lo stato dei piatti e il ritiro.
+              </p>
 
-          <div className="mt-4 pt-3 border-t border-slate-800/80 text-center">
-            <Link 
-              href="/ordine"
-              className="text-xs text-slate-400 hover:text-cyan-400 transition-colors inline-flex items-center gap-1 font-medium"
-            >
-              <span>Accedi alla ricerca ordini completa</span>
-              <ArrowRight className="w-3 h-3" />
-            </Link>
+              <form onSubmit={handleTrack} className="space-y-3">
+                <div className="relative">
+                  <Search className="w-4 h-4 text-slate-500 absolute left-4 top-1/2 -translate-y-1/2" strokeWidth={1.75} />
+                  <input 
+                    type="text"
+                    value={trackingCode}
+                    onChange={e => setTrackingCode(e.target.value)}
+                    placeholder="Es. ORD-1049..."
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-full pl-11 pr-4 py-3 text-xs sm:text-sm text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 transition-all font-mono"
+                  />
+                </div>
+
+                {/* Nested Island Button (Button-in-Button) */}
+                <button
+                  type="submit"
+                  className="w-full py-2.5 pl-5 pr-2.5 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs sm:text-sm rounded-full transition-all shadow-lg shadow-cyan-950/40 flex items-center justify-between active:scale-[0.98] group/btn"
+                >
+                  <span>Verifica Avanzamento</span>
+                  <div className="w-7 h-7 rounded-full bg-slate-950/15 flex items-center justify-center group-hover/btn:translate-x-1 transition-transform">
+                    <ArrowRight className="w-3.5 h-3.5 text-slate-950" strokeWidth={2.5} />
+                  </div>
+                </button>
+              </form>
+            </div>
+
+            <div className="mt-6 pt-4 border-t border-white/5 text-center">
+              <Link 
+                href="/ordine"
+                className="text-xs text-slate-400 hover:text-cyan-300 transition-colors inline-flex items-center gap-1.5 font-medium"
+              >
+                <span>Accedi alla ricerca ordini multipli</span>
+                <ArrowRight className="w-3 h-3" strokeWidth={1.75} />
+              </Link>
+            </div>
           </div>
         </div>
 
-        {/* CARD 2: RICHIEDI PREVENTIVO */}
-        <div className="bg-slate-900/90 border border-slate-800 hover:border-emerald-500/40 rounded-2xl sm:rounded-3xl p-5 sm:p-6 flex flex-col justify-between transition-all duration-300 shadow-xl group">
-          <div>
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-105 transition-transform">
-              <Send className="w-5 h-5 sm:w-6 sm:h-6" />
+        {/* CARD 2: RICHIEDI PREVENTIVO (Doppelrand Outer Shell) */}
+        <div className="p-1.5 rounded-[2rem] bg-white/[0.03] border border-white/10 ring-1 ring-white/5 shadow-2xl hover:border-emerald-500/30 transition-all duration-500 group">
+          {/* Inner Core */}
+          <div className="p-6 sm:p-7 rounded-[calc(2rem-0.375rem)] bg-slate-950/85 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)] flex flex-col justify-between h-full">
+            <div>
+              {/* Concentric Icon Island */}
+              <div className="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/10 ring-1 ring-white/5 text-emerald-400 flex items-center justify-center mb-5 group-hover:scale-105 transition-transform shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
+                <Send className="w-5 h-5" strokeWidth={1.75} />
+              </div>
+
+              <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                Richiedi un Preventivo
+              </h2>
+              <p className="text-slate-400 text-xs sm:text-sm leading-relaxed mb-4">
+                Inviaci un file STL/3MF o incolla un link MakerWorld per calcolare all&apos;istante tempi, materiale e costi stimati.
+              </p>
+
+              <div className="space-y-2 mb-6 text-xs text-slate-300">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-4 h-4 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2} />
+                  </div>
+                  <span>Viewer 3D con quote millimetriche in tempo reale</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-4 h-4 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2} />
+                  </div>
+                  <span>Supporto per filamenti tecnici (PLA, PETG, TPU, ASA, CF)</span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-4 h-4 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" strokeWidth={2} />
+                  </div>
+                  <span>Stima trasparente e verifica tecnica d&apos;estrusione</span>
+                </div>
+              </div>
             </div>
 
-            <h2 className="text-lg sm:text-xl font-bold text-white mb-1.5 flex items-center gap-2">
-              Richiedi un Preventivo
-            </h2>
-            <p className="text-slate-400 text-xs sm:text-sm leading-relaxed mb-3">
-              Hai un file STL/3MF o un link MakerWorld/Printables? Inviacelo per una stima rapida e trasparente.
-            </p>
+            <div>
+              {/* Nested Island Button (Button-in-Button) */}
+              <Link
+                href="/richiedi-preventivo"
+                className="w-full py-2.5 pl-5 pr-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs sm:text-sm rounded-full transition-all shadow-lg shadow-emerald-950/40 flex items-center justify-between active:scale-[0.98] group/btn"
+              >
+                <span>Configura e Invia File</span>
+                <div className="w-7 h-7 rounded-full bg-slate-950/15 flex items-center justify-center group-hover/btn:translate-x-1 transition-transform">
+                  <ArrowRight className="w-3.5 h-3.5 text-slate-950" strokeWidth={2.5} />
+                </div>
+              </Link>
 
-            <div className="space-y-1.5 mb-4 text-xs text-slate-300">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                <span>Caricamento diretto file 3D con viewer interattivo</span>
+              <div className="mt-6 pt-4 border-t border-white/5 text-center">
+                <span className="text-[11px] text-slate-500">
+                  Valutazione gratuita e risposta celere
+                </span>
               </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                <span>Materiali standard e tecnici (PLA, PETG, TPU, ASA)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-                <span>Stima accurata dei costi e consulenza inclusa</span>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <Link
-              href="/richiedi-preventivo"
-              className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md shadow-emerald-950 flex items-center justify-center gap-2 group-hover:shadow-emerald-900/50"
-            >
-              <span>Invia Richiesta Preventivo</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-
-            <div className="mt-4 pt-3 border-t border-slate-800/80 text-center">
-              <span className="text-[11px] text-slate-500">
-                Preventivo gratuito senza impegno • Risposta celere
-              </span>
             </div>
           </div>
         </div>
 
       </div>
 
-      {/* ACCESSO ADMIN / OPERATORE (IN PICCOLO) */}
+      {/* Accesso Riservato Operatore */}
       <div className="w-full text-center pb-2">
         <button
           onClick={() => setShowAdminLogin(true)}
-          className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-300 transition-colors py-1 px-3 rounded-lg hover:bg-slate-900/60"
+          className="inline-flex items-center gap-2 text-xs text-slate-500 hover:text-slate-300 transition-colors py-1.5 px-4 rounded-full bg-white/[0.02] border border-white/5 hover:border-white/10 active:scale-[0.98]"
         >
-          <Lock className="w-3 h-3 text-slate-500" />
-          <span>Accesso Operatore</span>
+          <Lock className="w-3 h-3 text-slate-500" strokeWidth={1.75} />
+          <span>Accesso Riservato Operatore</span>
         </button>
       </div>
 
-      {/* MODAL LOGIN OPERATORE */}
+      {/* Modal Login Operatore con Doppelrand e Glass Blur */}
       {showAdminLogin && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="relative w-full max-w-sm bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl animate-in zoom-in-95 duration-150">
-            
-            <div className="flex items-center justify-between pb-3 mb-4 border-b border-slate-800">
-              <div className="flex items-center gap-2 text-sm font-semibold text-white">
-                <div className="p-1.5 bg-emerald-500/10 rounded-lg text-emerald-400">
-                  <Lock className="w-4 h-4" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xl animate-in fade-in duration-200">
+          <div className="p-1.5 rounded-[2rem] bg-white/[0.04] border border-white/15 ring-1 ring-white/10 shadow-2xl w-full max-w-sm">
+            <div className="p-6 rounded-[calc(2rem-0.375rem)] bg-slate-950/95 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)]">
+              
+              <div className="flex items-center justify-between pb-3 mb-5 border-b border-white/10">
+                <div className="flex items-center gap-2.5 text-sm font-semibold text-white">
+                  <div className="p-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400">
+                    <Lock className="w-4 h-4" strokeWidth={1.75} />
+                  </div>
+                  <span>Accesso Operatore</span>
                 </div>
-                <span>Accesso Operatore</span>
-              </div>
-              <button
-                onClick={() => setShowAdminLogin(false)}
-                className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {error && (
-              <div className="mb-4 p-2.5 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs flex items-center gap-2">
-                <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                <span>{error}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleLogin} className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-slate-500" /> Username
-                </label>
-                <input 
-                  type="text"
-                  required
-                  autoFocus
-                  value={username}
-                  onChange={e => setUsername(e.target.value)}
-                  placeholder="admin"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs sm:text-sm text-white focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1 flex items-center gap-1.5">
-                  <Lock className="w-3.5 h-3.5 text-slate-500" /> Password
-                </label>
-                <input 
-                  type="password"
-                  required
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs sm:text-sm text-white focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-
-              <div className="pt-2 flex items-center justify-end gap-2">
                 <button
-                  type="button"
                   onClick={() => setShowAdminLogin(false)}
-                  className="py-2 px-3 text-xs text-slate-400 hover:text-slate-200"
+                  className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
+                  aria-label="Chiudi finestra"
                 >
-                  Annulla
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="py-2 px-4 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-semibold text-xs sm:text-sm rounded-xl transition-all flex items-center gap-1.5 shadow-sm"
-                >
-                  {loading ? 'Accesso...' : 'Entra'}
-                  <ArrowRight className="w-3.5 h-3.5" />
+                  <X className="w-4 h-4" strokeWidth={1.75} />
                 </button>
               </div>
-            </form>
+
+              {error && (
+                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-xs flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" strokeWidth={1.75} />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5 flex items-center gap-1.5">
+                    <User className="w-3.5 h-3.5 text-slate-500" strokeWidth={1.75} /> Username
+                  </label>
+                  <input 
+                    type="text"
+                    required
+                    autoFocus
+                    value={username}
+                    onChange={e => setUsername(e.target.value)}
+                    placeholder="admin"
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1.5 flex items-center gap-1.5">
+                    <Lock className="w-3.5 h-3.5 text-slate-500" strokeWidth={1.75} /> Password
+                  </label>
+                  <input 
+                    type="password"
+                    required
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                  />
+                </div>
+
+                <div className="pt-2 flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminLogin(false)}
+                    className="py-2 px-3 text-xs text-slate-400 hover:text-white"
+                  >
+                    Annulla
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="py-2.5 px-5 bg-emerald-500 hover:bg-emerald-400 disabled:opacity-50 text-slate-950 font-bold text-xs sm:text-sm rounded-full transition-all flex items-center gap-2 shadow-sm active:scale-[0.98]"
+                  >
+                    <span>{loading ? 'Accesso in corso...' : 'Entra'}</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-slate-950" strokeWidth={2.5} />
+                  </button>
+                </div>
+              </form>
+
+            </div>
           </div>
         </div>
       )}
@@ -273,18 +298,10 @@ function PortalContent() {
 
 export default function LoginPage() {
   return (
-    <div className="h-screen w-screen max-h-screen max-w-full overflow-hidden bg-slate-950 flex flex-col justify-center items-center text-slate-200">
-      {/* Sfondo decorativo con gradienti */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-10 right-10 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
-      </div>
-
-      <Suspense fallback={<div className="text-xs text-slate-500">Caricamento portale...</div>}>
+    <div className="min-h-[100dvh] w-full bg-slate-950 flex flex-col justify-center items-center text-slate-200 relative overflow-x-hidden">
+      <Suspense fallback={<div className="text-xs text-slate-500 font-mono">Caricamento portale...</div>}>
         <PortalContent />
       </Suspense>
     </div>
   );
 }
-
-
