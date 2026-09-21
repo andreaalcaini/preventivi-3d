@@ -1,17 +1,233 @@
 {
   "version": 1,
   "skills": {
+    "ai-slop-cleaner": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/ai-slop-cleaner/SKILL.md",
+      "computedHash": "d9efd747599d082b368acb863c900b4e247d06114b4e80b82eac3952459ae49c"
+    },
+    "ask": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/ask/SKILL.md",
+      "computedHash": "8be2797461c8c38b720cd8d202094777a0de04b1ef5ffda463478495598616eb"
+    },
+    "autopilot": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/autopilot/SKILL.md",
+      "computedHash": "34dda7ba0c55b98d346a385c48e56f4969c22763a1c9c21937e2159d39919419"
+    },
+    "autoresearch": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/autoresearch/SKILL.md",
+      "computedHash": "ee864fc9acb04c3a7c2629aa2a5af298e18649ee33c3d44402b42c94531bdb21"
+    },
+    "cancel": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/cancel/SKILL.md",
+      "computedHash": "456abcaf3355fd1f53651e082b2c8eebbc3f3a2e100b3372dc9da5f4d49c659c"
+    },
+    "configure-notifications": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/configure-notifications/SKILL.md",
+      "computedHash": "3868a06bdc382d6f6e474ce8eb44c57f70eb324dff506eedf283b856404c66d1"
+    },
+    "debug": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/debug/SKILL.md",
+      "computedHash": "685266e99acf35559ce001aa360cd53ee9690918b3a6e6094fe05d131cef36ca"
+    },
+    "deep-interview": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/deep-interview/SKILL.md",
+      "computedHash": "7b457504574be5576fc4eb00a3fd008a56df39baa577fed26152e372aeafdf68"
+    },
+    "deepinit": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/deepinit/SKILL.md",
+      "computedHash": "585de0b0f9bd1474bdfa277ea256fecaf9e56d10c3505708c54ea7ff777768d7"
+    },
     "design-taste-frontend": {
       "source": "Leonxlnx/taste-skill",
       "sourceType": "github",
       "skillPath": "skills/taste-skill/SKILL.md",
       "computedHash": "899b84384f74f540ea5284d9b2e9234e050998b42eacc805410b518d4226c0b3"
     },
+    "drydock": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/drydock/SKILL.md",
+      "computedHash": "1a26a1c367232a3d17e5f38a50c8e0cebe447259d39240ac436c4fbdf8a55631"
+    },
+    "execute": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/execute/SKILL.md",
+      "computedHash": "b447494d97fe8623a95f1e99febfbc17063a0598d1ffcfa5c392895ed0c40127"
+    },
+    "external-context": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/external-context/SKILL.md",
+      "computedHash": "4addb3e31cbb6531e54473f72e448ca305bd54f0a417ddcc36a7db81d83691a5"
+    },
+    "graph": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/graph/SKILL.md",
+      "computedHash": "bb6b6c2d74a705923e0f39c07e6024ab914a7eb9cc8ebf3bda2ff4339a902ba5"
+    },
+    "harbor": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/harbor/SKILL.md",
+      "computedHash": "2f1409808e1f99d56205c443773bd438b64100e2f3a970265b8d7076b72f54b9"
+    },
     "high-end-visual-design": {
       "source": "Leonxlnx/taste-skill",
       "sourceType": "github",
       "skillPath": "skills/soft-skill/SKILL.md",
       "computedHash": "f730e4132775f13eea19e3dc39afc6bb453cfc0498872b127ad8f0d47cfd802d"
+    },
+    "hud": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/hud/SKILL.md",
+      "computedHash": "1e43281ce078f49c422a91a4e2cc68a0ddc6ab13905274c6d1372781bec8628b"
+    },
+    "launch": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/launch/SKILL.md",
+      "computedHash": "ae822e12129c07e2d65af158f596c75a1b94a35410aad01c39ad2b045b3aa951"
+    },
+    "minimal-code-discipline": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/minimal-code-discipline/SKILL.md",
+      "computedHash": "c3e8be29754fd1ece15a658a177a9b92d849684a1aecd467a8d014dcbff552b8"
+    },
+    "omc-doctor": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/omc-doctor/SKILL.md",
+      "computedHash": "95ebda020d58c355915bd4a8c9ac7b1c5cdc97bfdf3e4bf436bf065d198be930"
+    },
+    "omc-plan": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/plan/SKILL.md",
+      "computedHash": "bf5f6c26cfc17d43e2794cd6aea6c2c7f62bdc63b8b1a026185a95b32481b641"
+    },
+    "omc-review": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/review/SKILL.md",
+      "computedHash": "b120fe2f4795096752b0e22a402dcf6f4df1a42e59aabf1af6b72613bf95d667"
+    },
+    "omc-setup": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/omc-setup/SKILL.md",
+      "computedHash": "99155d91aa19bc7042828c114f09c1c1ae7a2958280e401a23ef8f07e79595ff"
+    },
+    "project-session-manager": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/project-session-manager/SKILL.md",
+      "computedHash": "8739c691fc3bdadcf449cff027d6b77da9975a307fbb90496099850f363a71ee"
+    },
+    "ralph": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/ralph/SKILL.md",
+      "computedHash": "12d739f827a69dfa00e06a94d8c7ec8d98d5933d64eb967c3869d1e71411765f"
+    },
+    "ralplan": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/ralplan/SKILL.md",
+      "computedHash": "87506c39b1d8c189e36d3e9df8da4f861154ba365ce1ddebfd339735e3c8849f"
+    },
+    "release": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/release/SKILL.md",
+      "computedHash": "fa92076a94a818a6f66d92305152269cabf3f3aca53b6a1f6be8b8ef7442b13a"
+    },
+    "remember": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/remember/SKILL.md",
+      "computedHash": "5c297ab8ffaf5be38c48c9e874ec3fb0dcce8f7c4aa4d68de21794865b9163e1"
+    },
+    "research": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/research/SKILL.md",
+      "computedHash": "0d504f44bdecb2ded84c292c5cf4209bcff3a4018eeb664f07aa31b92419685c"
+    },
+    "self-improve": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/self-improve/SKILL.md",
+      "computedHash": "f0ffa6d2dd505a2e646ed73fbf434d25f5f59b4b9d1d16ac6f6664b4c3ed73f8"
+    },
+    "skill": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/skill/SKILL.md",
+      "computedHash": "867622ee504a2a348cbed90ee31072fe524ccb3c32d6c7d52a63798ecd094396"
+    },
+    "skillify": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/skillify/SKILL.md",
+      "computedHash": "4f4bab8926d7cf362aa0fd3e9404c331f68d862dfd3b2f74d03ce9c245f067b6"
+    },
+    "team": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/team/SKILL.md",
+      "computedHash": "6bf03bb717da6b54cbc82ac3f1f30ff51f278c7d5de5c5fbb37ec0d92fd2eb6f"
+    },
+    "trace": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/trace/SKILL.md",
+      "computedHash": "98d37c6bae1fb761dfbe860348acc3d5515f6957a458f7448ce61444791cdc8a"
+    },
+    "ultragoal": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/ultragoal/SKILL.md",
+      "computedHash": "7ae64b852d22d9c093bd49d75da85be9f24821688e7616eeca50c4ca25788954"
+    },
+    "verify": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/verify/SKILL.md",
+      "computedHash": "329c036f5dae1c62ebba0bcf5fd45225faacc441351bda18da4c46f9b4c8cd08"
+    },
+    "visual-verdict": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/visual-verdict/SKILL.md",
+      "computedHash": "6f55cd821f60c7f09c43de30dd43966b7d41d58d33548d5260179d5ca4c10bb9"
+    },
+    "wiki": {
+      "source": "yeachan-heo/oh-my-claudecode",
+      "sourceType": "github",
+      "skillPath": "skills/wiki/SKILL.md",
+      "computedHash": "a63094474c40b0ccb6defc6c50789af1f6877ac8996a747f1065655f45bea657"
     }
   }
 }
