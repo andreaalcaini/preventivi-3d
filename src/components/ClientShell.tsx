@@ -8,6 +8,7 @@ import {
   Eye, EyeOff, Shield, LogOut, BarChart3, Wrench, HardDrive,
   ExternalLink, Sparkles
 } from 'lucide-react';
+import { NotificationManager } from '@/components/NotificationManager';
 
 function subscribeToStorage(callback: () => void) {
   window.addEventListener('storage', callback);
@@ -169,6 +170,9 @@ export default function ClientShell({ children }: { children: React.ReactNode })
             {/* Azioni Rapide a Destra */}
             <div className="flex items-center gap-1.5 sm:gap-2">
               
+              {/* Notifiche Push PWA & Popup In-App */}
+              <NotificationManager />
+
               {/* Privacy Mode Toggle Button */}
               <button
                 onClick={togglePrivacy}

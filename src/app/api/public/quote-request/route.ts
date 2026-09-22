@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { broadcastLabNotification } from '@/lib/notification-bus';
+import { sendPushNotificationToAll } from '@/lib/push';
 
 const quotesFilePath = path.join(process.cwd(), 'data', 'quotes.json');
 
@@ -86,6 +88,36 @@ export async function POST(request: NextRequest) {
 
     quotes.unshift(newQuote);
     fs.writeFileSync(quotesFilePath, JSON.stringify(quotes, null, 2), 'utf-8');
+
+    // 1. Broadcast real-time per le schede aperte del sito (Popup in-app + Suono)
+    try {
+      broadcastLabNotification({
+        type: 'quote_request',
+        title: 'Nuova Richiesta Preventivo!',
+        projectName: newQuote.name,
+        clientName: newQuote.clientName,
+        clientContact: newQuote.clientContact,
+        totalCalculated: newQuote.totalCalculated,
+        material: newQuote.material,
+        dateStr: savedAt,
+        trackingUrl: `/ordine?code=${orderId}`
+      });
+    } catch (broadcastErr) {
+      console.error('Errore broadcast notifica in-app:', broadcastErr);
+    }
+
+    // 2. Invio Web Push allo smartphone dell'operatore (anche ad app/schermo chiuso)
+    try {
+      const formattedTotal = newQuote.totalCalculated > 0 ? ` (€${newQuote.totalCalculated.toFixed(2)})` : '';
+      await sendPushNotificationToAll({
+        title: 'Nuova Richiesta Preventivo!',
+        body: `${newQuote.clientName} ha richiesto "${newQuote.name}" [${newQuote.material}]${formattedTotal}`,
+        url: `/preventivi`,
+        tag: `quote-${orderId}`
+      });
+    } catch (pushErr) {
+      console.error('Errore invio Web Push:', pushErr);
+    }
 
     return NextResponse.json({
       success: true,

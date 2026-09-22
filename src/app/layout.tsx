@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import ClientShell from '@/components/ClientShell';
@@ -15,9 +15,25 @@ const geistMono = Geist_Mono({
   display: 'swap',
 });
 
+export const viewport: Viewport = {
+  themeColor: '#020617',
+  width: 'device-width',
+  initialScale: 1,
+};
+
 export const metadata: Metadata = {
   title: 'Preventivi di Stampa 3D | Lab Manager',
   description: 'Piattaforma per maker e laboratori di stampa 3D FDM/SLA: calcolo preventivi, viewer STL WebGL, gestione clienti con portale ordini e magazzino con tara',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Preventivi 3D',
+  },
+  icons: {
+    icon: '/icons/icon.svg',
+    apple: '/icons/icon-192.png',
+  },
 };
 
 export default function RootLayout({
