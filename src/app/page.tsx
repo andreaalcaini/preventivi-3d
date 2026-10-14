@@ -22,7 +22,7 @@ interface BomItem {
   cost: number;
 }
 
-type PricingType = 'amico' | 'collega' | 'commerciale';
+type PricingType = 'amico' | 'collega' | 'commerciale' | 'richiesta_cliente';
 export type RoundingMode = 'none' | 'excess' | 'defect' | 'nearest';
 
 interface QuoteState {
@@ -51,6 +51,7 @@ interface QuoteState {
   roundingStep?: number;
   modelUrl?: string;
   modelFileName?: string;
+  quantity?: number;
 }
 
 interface SavedQuote extends QuoteState {
@@ -124,7 +125,8 @@ const emptyQuote: QuoteState = {
   roundingMode: 'none',
   roundingStep: 0.50,
   modelUrl: '',
-  modelFileName: ''
+  modelFileName: '',
+  quantity: 1
 };
 
 function subscribeToStorage(callback: () => void) {
@@ -249,7 +251,8 @@ export default function QuoteCalculator() {
                   roundingMode: target.roundingMode || 'none',
                   roundingStep: target.roundingStep !== undefined ? target.roundingStep : 0.50,
                   modelUrl: target.modelUrl || '',
-                  modelFileName: target.modelFileName || ''
+                  modelFileName: target.modelFileName || '',
+                  quantity: target.quantity ? Math.max(1, Number(target.quantity)) : 1
                 });
                 if (target.modelUrl) {
                   setShowStlViewer(true);
@@ -301,15 +304,23 @@ export default function QuoteCalculator() {
   };
 
   const calcTotals = () => {
-    const materialCost = ((parseFloat(quote.weight.toString()) || 0) + (parseFloat(quote.purgeWeight.toString()) || 0)) * ((parseFloat(quote.spoolCost.toString()) || 0) / 1000);
-    const printTimeHours = (parseFloat(quote.hours.toString()) || 0) + ((parseFloat(quote.mins.toString()) || 0) / 60);
-    const energyCost = (settings.watt / 1000) * printTimeHours * settings.powerCost;
-    const wearCost = printTimeHours * settings.wearCost;
+    const qty = Math.max(1, parseInt(quote.quantity?.toString() || '1', 10) || 1);
+
+    const unitMaterialCost = ((parseFloat(quote.weight.toString()) || 0) + (parseFloat(quote.purgeWeight.toString()) || 0)) * ((parseFloat(quote.spoolCost.toString()) || 0) / 1000);
+    const unitPrintTimeHours = (parseFloat(quote.hours.toString()) || 0) + ((parseFloat(quote.mins.toString()) || 0) / 60);
+    const unitEnergyCost = (settings.watt / 1000) * unitPrintTimeHours * settings.powerCost;
+    const unitWearCost = unitPrintTimeHours * settings.wearCost;
+    const unitExtraHardwareCost = quote.extraBom.reduce((sum, item) => sum + ((parseFloat(item.qty.toString()) || 0) * (parseFloat(item.cost.toString()) || 0)), 0);
+
+    const materialCost = unitMaterialCost * qty;
+    const energyCost = unitEnergyCost * qty;
+    const wearCost = unitWearCost * qty;
+    const extraHardwareCost = unitExtraHardwareCost * qty;
+    const printTimeHours = unitPrintTimeHours * qty;
     
     const laborTimeHours = ((parseFloat(quote.prepMins.toString()) || 0) + (parseFloat(quote.postMins.toString()) || 0)) / 60;
     const laborCost = laborTimeHours * settings.laborRate;
     
-    const extraHardwareCost = quote.extraBom.reduce((sum, item) => sum + ((parseFloat(item.qty.toString()) || 0) * (parseFloat(item.cost.toString()) || 0)), 0);
     const servicesCost = (parseFloat(quote.cadCost.toString()) || 0) + (parseFloat(quote.urgencyCost.toString()) || 0);
 
     const subtotalVivo = materialCost + energyCost + wearCost + laborCost + extraHardwareCost + servicesCost;
@@ -341,9 +352,14 @@ export default function QuoteCalculator() {
       finalPrice = Math.round(unroundedPrice * 100) / 100;
     }
 
+    const unitPrice = qty > 0 ? Math.round((finalPrice / qty) * 100) / 100 : finalPrice;
     const estimatedProfit = Math.max(0, finalPrice - (materialCost + energyCost + wearCost + extraHardwareCost));
 
     return {
+      qty,
+      unitPrice,
+      unitMaterialCost,
+      unitPrintTimeHours,
       materialCost, energyCost, wearCost, laborCost, extraHardwareCost, servicesCost,
       subtotalVivo, costWithRisk, baseFinal, discountAmount, unroundedPrice, roundingDelta, finalPrice, estimatedProfit, printTimeHours
     };
@@ -598,11 +614,14 @@ export default function QuoteCalculator() {
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const clientStr = quote.clientName ? `\n- Cliente: ${quote.clientName}` : '';
     const trackingStr = quote.id ? `- Codice ordine: ${quote.id}\n🔗 Traccia qui: ${origin}/ordine?code=${quote.id}\n` : '';
+    const qtyStr = (quote.quantity || 1) > 1 
+      ? `- Quantità: ${quote.quantity} pezzi (€${totals.unitPrice.toFixed(2)} cad.)\n` 
+      : '';
     const text = `*Preventivo Stampa 3D: ${quote.name || 'Progetto'}*${clientStr}
 - Tipo: ${quote.pricingType.toUpperCase()}
 - Materiale: ${quote.material}
-- Tempo stimato: ${quote.hours}h ${quote.mins}m
-- Peso totale: ${(parseFloat(quote.weight.toString()) || 0) + (parseFloat(quote.purgeWeight.toString()) || 0)}g
+${qtyStr}- Tempo stimato: ${quote.hours}h ${quote.mins}m${(quote.quantity || 1) > 1 ? ` (totale: ${Math.floor(totals.printTimeHours)}h ${Math.round((totals.printTimeHours % 1) * 60)}m)` : ''}
+- Peso totale: ${((parseFloat(quote.weight.toString()) || 0) + (parseFloat(quote.purgeWeight.toString()) || 0)) * (quote.quantity || 1)}g
 ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}x ${b.name}`).join(', ')}\n` : ''}${quote.makerWorldUrl ? `- Modello 3D: ${quote.makerWorldUrl}\n` : ''}${trackingStr}*Totale: €${totals.finalPrice.toFixed(2)}*`;
     
     navigator.clipboard.writeText(text);
@@ -804,6 +823,11 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
               >
                 Azienda
               </button>
+              {quote.pricingType === 'richiesta_cliente' && (
+                <span className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm flex items-center gap-1" title="Preventivo originato da richiesta autonoma del cliente">
+                  Richiesta Cliente
+                </span>
+              )}
             </div>
           </div>
         </header>
@@ -1040,6 +1064,77 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                         <option value="collega">Collega (Margine Leggero)</option>
                         <option value="commerciale">Azienda / Commerciale</option>
                       </select>
+                    </div>
+                  </div>
+
+                  {/* Selettore Quantità Pezzi (Funzione Opzionale) */}
+                  <div className="p-2.5 bg-slate-950/60 border border-slate-800/80 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex-shrink-0">
+                        <BoxIcon className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-white leading-tight">Quantità Pezzi da Stampare</span>
+                          {(quote.quantity || 1) > 1 && (
+                            <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.2 rounded font-mono font-bold">
+                              x{quote.quantity} pezzi
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-slate-400 truncate block">
+                          {(quote.quantity || 1) > 1 
+                            ? `Lotto di ${quote.quantity} copie • ${(totals.unitPrice).toFixed(2)}€ cad. • filamento totale: ${(((parseFloat(quote.weight.toString()) || 0) + (parseFloat(quote.purgeWeight.toString()) || 0)) * (quote.quantity || 1)).toFixed(0)}g`
+                            : 'Stampa pezzo singolo (1 copia predefinita)'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-shrink-0 self-end sm:self-center">
+                      {/* Chip rapidi 1, 2, 5, 10, 20 */}
+                      <div className="flex bg-slate-900 border border-slate-800 rounded-lg p-0.5 gap-0.5 text-xs">
+                        {[1, 2, 5, 10, 20].map(n => (
+                          <button
+                            key={n}
+                            type="button"
+                            onClick={() => updateQuote('quantity', n)}
+                            className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all cursor-pointer ${
+                              (quote.quantity || 1) === n 
+                                ? 'bg-emerald-600 text-white shadow-sm' 
+                                : 'text-slate-400 hover:text-white'
+                            }`}
+                          >
+                            {n}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Stepper manuale +/- */}
+                      <div className="flex items-center border border-slate-800 bg-slate-900 rounded-lg overflow-hidden h-7">
+                        <button
+                          type="button"
+                          onClick={() => updateQuote('quantity', Math.max(1, (quote.quantity || 1) - 1))}
+                          className="px-2 h-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-xs font-bold cursor-pointer"
+                          title="Diminuisci copie"
+                        >
+                          -
+                        </button>
+                        <input
+                          type="number"
+                          min="1"
+                          value={quote.quantity || 1}
+                          onChange={e => updateQuote('quantity', Math.max(1, parseInt(e.target.value, 10) || 1))}
+                          className="w-10 bg-transparent text-center text-xs font-bold font-mono text-emerald-400 outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => updateQuote('quantity', (quote.quantity || 1) + 1)}
+                          className="px-2 h-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-xs font-bold cursor-pointer"
+                          title="Aumenta copie"
+                        >
+                          +
+                        </button>
+                      </div>
                     </div>
                   </div>
 
@@ -1715,8 +1810,22 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                        `≈ €${(parseFloat(quote.roundingStep?.toString() || '0.50') || 0.50).toFixed(2)}`}
                     </button>
                   </div>
-                  <span className="text-2xl font-black text-white tracking-tight">€{totals.finalPrice.toFixed(2)}</span>
+                  <div className="text-right">
+                    <span className="text-2xl font-black text-white tracking-tight block">€{totals.finalPrice.toFixed(2)}</span>
+                    {(quote.quantity || 1) > 1 && (
+                      <span className="text-[10px] text-emerald-400 font-mono font-semibold block">
+                        (€{totals.unitPrice.toFixed(2)} / pezzo)
+                      </span>
+                    )}
+                  </div>
                 </div>
+
+                {(quote.quantity || 1) > 1 && (
+                  <div className="flex justify-between items-center text-[11px] text-slate-300 bg-slate-900/80 px-2 py-1 rounded-md border border-slate-800 mt-1.5 font-mono">
+                    <span className="text-slate-400">Lotto totale:</span>
+                    <span className="text-white font-bold">{quote.quantity} copie</span>
+                  </div>
+                )}
 
                 {!isPrivacyMode && (
                   <div className="flex justify-between items-center text-[11px] text-emerald-400/90 bg-emerald-500/10 p-1.5 rounded-md border border-emerald-500/20 mt-1">
@@ -1736,7 +1845,8 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                   material: quote.material,
                   totalCalculated: totals.finalPrice,
                   orderCode: quote.id,
-                  status: 'in_attesa'
+                  status: 'in_attesa',
+                  quantity: quote.quantity
                 })}
                 target="_blank"
                 rel="noreferrer"

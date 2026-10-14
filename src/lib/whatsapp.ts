@@ -1,4 +1,4 @@
-﻿export interface WhatsAppMessageParams {
+export interface WhatsAppMessageParams {
   phone?: string;
   clientName: string;
   projectName: string;
@@ -7,6 +7,7 @@
   orderCode?: string;
   status?: 'richiesta' | 'in_attesa' | 'in_stampa' | 'pronto' | 'saldato';
   origin?: string;
+  quantity?: number;
 }
 
 /**
@@ -29,22 +30,23 @@ export function formatPhoneNumber(phone: string): string {
  * Genera il messaggio formattato in base allo stato della commessa.
  */
 export function buildWhatsAppMessage(params: WhatsAppMessageParams): string {
-  const { clientName, projectName, material, totalCalculated, orderCode, status, origin } = params;
+  const { clientName, projectName, material, totalCalculated, orderCode, status, origin, quantity } = params;
   const nameStr = clientName && clientName.trim() !== 'Cliente Anonimo' ? ` ${clientName.trim()}` : '';
   const priceStr = totalCalculated !== undefined ? `€${totalCalculated.toFixed(2)}` : '';
   const baseUrl = origin || (typeof window !== 'undefined' ? window.location.origin : '');
   const trackingLink = orderCode ? `${baseUrl}/ordine?code=${encodeURIComponent(orderCode)}` : '';
+  const qtyStr = quantity && quantity > 1 ? `\n- *Quantità:* ${quantity} pezzi` : '';
 
   switch (status) {
     case 'pronto':
-      return `Ciao${nameStr}! 🎉 La tua stampa 3D per "*${projectName || 'il tuo progetto'}*" è completata ed è *PRONTA PER IL RITIRO*! 📦
+      return `Ciao${nameStr}! 🎉 La tua stampa 3D per "*${projectName || 'il tuo progetto'}*"${quantity && quantity > 1 ? ` (${quantity} pezzi)` : ''} è completata ed è *PRONTA PER IL RITIRO*! 📦
 ${priceStr ? `\n💰 *Totale dovuto:* ${priceStr}` : ''}
 ${trackingLink ? `🔗 *Dettagli ordine:* ${trackingLink}` : ''}
 
 Passa pure in laboratorio quando desideri! A presto.`;
 
     case 'in_stampa':
-      return `Ciao${nameStr}! 🖨️ Abbiamo appena avviato la stampante 3D per "*${projectName || 'il tuo progetto'}*"${material ? ` in *${material}*` : ''}!
+      return `Ciao${nameStr}! 🖨️ Abbiamo appena avviato la stampante 3D per "*${projectName || 'il tuo progetto'}*"${quantity && quantity > 1 ? ` (${quantity} pezzi)` : ''}${material ? ` in *${material}*` : ''}!
 ${trackingLink ? `\n🔗 *Puoi seguire l'avanzamento qui:* ${trackingLink}` : ''}
 
 Ti avviserò non appena il pezzo sarà pulito e pronto per la consegna.`;
@@ -58,7 +60,7 @@ Se ti serve qualsiasi altra ristampa, modifica CAD o nuovo progetto, siamo sempr
     case 'richiesta':
     default:
       return `Ciao${nameStr}! 👋 Ecco il preventivo per la realizzazione 3D di "*${projectName || 'il tuo progetto'}*":
-${material ? `\n- *Materiale:* ${material}` : ''}
+${material ? `\n- *Materiale:* ${material}` : ''}${qtyStr}
 ${priceStr ? `- *Totale preventivato:* ${priceStr}` : ''}
 ${trackingLink ? `\n🔗 *Scheda completa & anteprima 3D:* ${trackingLink}` : ''}
 

@@ -121,7 +121,14 @@ export default function PreventiviPage() {
   };
 
   const deductFromInventory = async (item: SavedQuote) => {
-    const grams = (parseFloat(item.weight?.toString() || '0') + parseFloat(item.purgeWeight?.toString() || '0'));
+    const qty = Math.max(1, Number(item.quantity) || 1);
+    const unitGrams = (parseFloat(item.weight?.toString() || '0') + parseFloat(item.purgeWeight?.toString() || '0'));
+    const grams = unitGrams * qty;
+    const scaledBom = (item.extraBom || []).map(b => ({
+      ...b,
+      qty: (parseFloat(b.qty?.toString() || '1') || 1) * qty
+    }));
+
     try {
       await fetch('/api/inventory/consume', {
         method: 'POST',
@@ -129,7 +136,7 @@ export default function PreventiviPage() {
         body: JSON.stringify({
           spoolId: item.spoolId,
           gramsUsed: grams,
-          bomItems: item.extraBom || []
+          bomItems: scaledBom
         })
       });
     } catch (e) {
@@ -158,14 +165,15 @@ export default function PreventiviPage() {
 
   const handleCopyText = (item: SavedQuote) => {
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const qtyStr = item.quantity && item.quantity > 1 ? `\n- Quantità: ${item.quantity} pezzi` : '';
     const text = `*Preventivo Stampa 3D: ${item.name}*
 - Cliente: ${item.clientName || 'Anonimo'}
-- Materiale: ${item.material}
+- Materiale: ${item.material}${qtyStr}
 - Tempo stimato: ${item.hours}h ${item.mins}m
-- Peso totale: ${(parseFloat(item.weight?.toString() || '0') + parseFloat(item.purgeWeight?.toString() || '0'))}g
+- Peso totale: ${(parseFloat(item.weight?.toString() || '0') + parseFloat(item.purgeWeight?.toString() || '0')) * (item.quantity || 1)}g
 ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map(b => `${b.qty}x ${b.name}`).join(', ')}\n` : ''}${item.makerWorldUrl ? `- Modello: ${item.makerWorldUrl}\n` : ''}- Codice ordine: ${item.id}
 🔗 Traccia qui: ${origin}/ordine?code=${item.id}
-*Totale: €${item.totalCalculated?.toFixed(2)}*`;
+*Totale: €${item.totalCalculated?.toFixed(2)}*${item.quantity && item.quantity > 1 ? ` (€${(item.totalCalculated / item.quantity).toFixed(2)} cad.)` : ''}`;
 
     navigator.clipboard.writeText(text);
     setCopiedId(item.id);
@@ -339,7 +347,14 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
                   <div>
                     <div className="flex justify-between items-start gap-2 mb-2">
                       <div className="min-w-0">
-                        <h3 className="font-bold text-white text-base truncate">{item.name}</h3>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <h3 className="font-bold text-white text-base truncate">{item.name}</h3>
+                          {item.quantity && item.quantity > 1 && (
+                            <span className="text-[10px] bg-blue-500/20 text-blue-300 border border-blue-500/30 px-1.5 py-0.5 rounded font-mono font-bold flex-shrink-0" title={`Lotto di ${item.quantity} pezzi`}>
+                              x{item.quantity} pz
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
                           <User className="w-3 h-3 text-slate-500" />
                           {item.clientName ? (
@@ -364,7 +379,14 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
                             Da Quantificare
                           </span>
                         ) : (
-                          <span className="text-lg font-bold text-white block">€{item.totalCalculated?.toFixed(2)}</span>
+                          <>
+                            <span className="text-lg font-bold text-white block">€{item.totalCalculated?.toFixed(2)}</span>
+                            {item.quantity && item.quantity > 1 && (
+                              <span className="text-[10px] text-slate-400 font-mono block">
+                                €{(item.totalCalculated / item.quantity).toFixed(2)} /pz
+                              </span>
+                            )}
+                          </>
                         )}
                         {!isPrivacyMode && item.estimatedProfit > 0 && (
                           <span className="text-[10px] text-emerald-400/90 font-medium">netto: €{item.estimatedProfit?.toFixed(2)}</span>
@@ -385,9 +407,11 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
                         </span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-slate-500 block">Tempo & Peso</span>
+                        <span className="text-[10px] text-slate-500 block">
+                          Tempo & Peso {item.quantity && item.quantity > 1 ? `(x${item.quantity} pz)` : ''}
+                        </span>
                         <span className="text-slate-200 font-medium">
-                          {item.hours || 0}h {item.mins || 0}m • {(parseFloat(item.weight?.toString() || '0') + parseFloat(item.purgeWeight?.toString() || '0'))}g
+                          {item.hours || 0}h {item.mins || 0}m • {((parseFloat(item.weight?.toString() || '0') + parseFloat(item.purgeWeight?.toString() || '0')) * (item.quantity || 1)).toFixed(0)}g
                         </span>
                       </div>
                     </div>
@@ -448,7 +472,8 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
                           material: item.material,
                           totalCalculated: item.totalCalculated,
                           orderCode: item.id,
-                          status: item.status
+                          status: item.status,
+                          quantity: item.quantity
                         })}
                         target="_blank"
                         rel="noreferrer"

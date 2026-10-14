@@ -17,6 +17,7 @@ interface PublicOrder {
   material: string;
   savedAt: string;
   status: 'in_attesa' | 'in_stampa' | 'pronto' | 'saldato';
+  quantity?: number;
   totalCalculated: number;
   multiColor?: boolean;
   extraBom?: Array<{ name: string; qty: number | string }>;
@@ -221,10 +222,15 @@ function OrdineClienteContent() {
               {/* Header scheda ordine */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-5 border-b border-white/10">
                 <div>
-                  <div className="flex items-center gap-2.5 mb-1.5">
+                  <div className="flex items-center gap-2.5 mb-1.5 flex-wrap">
                     <span className="text-[11px] font-mono text-emerald-400 font-semibold uppercase tracking-wider bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
                       Codice #{order.id}
                     </span>
+                    {order.quantity && order.quantity > 1 && (
+                      <span className="text-[11px] font-mono text-cyan-400 font-semibold uppercase tracking-wider bg-cyan-500/10 px-2.5 py-0.5 rounded-full border border-cyan-500/20">
+                        Lotto da {order.quantity} pezzi
+                      </span>
+                    )}
                     <button
                       onClick={() => handleCopySingleLink(order.id)}
                       className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 hover:text-white border border-white/10 transition-colors"
@@ -247,6 +253,11 @@ function OrdineClienteContent() {
                   <span className="text-2xl font-black text-white block leading-tight font-mono my-0.5">
                     €{order.totalCalculated.toFixed(2)}
                   </span>
+                  {order.quantity && order.quantity > 1 && (
+                    <span className="text-[11px] text-slate-400 font-mono block mb-1">
+                      (€{(order.totalCalculated / order.quantity).toFixed(2)} / pz)
+                    </span>
+                  )}
                   <span className={`text-[10px] font-bold uppercase tracking-wider inline-block px-2.5 py-0.5 rounded-full border ${
                     order.status === 'saldato' 
                       ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' 
@@ -495,10 +506,15 @@ function OrdineClienteContent() {
                     {/* Header singolo pezzo */}
                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-3 border-b border-white/10">
                       <div>
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <span className="text-[10px] font-mono text-emerald-400 font-semibold uppercase bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
                             #{order.id}
                           </span>
+                          {order.quantity && order.quantity > 1 && (
+                            <span className="text-[10px] font-mono text-cyan-400 font-semibold bg-cyan-500/10 px-2 py-0.5 rounded-full border border-cyan-500/20">
+                              {order.quantity} pz
+                            </span>
+                          )}
                           <button
                             onClick={() => handleCopySingleLink(order.id)}
                             className="flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-white/[0.04] hover:bg-white/[0.08] text-slate-300 transition-colors border border-white/10"
@@ -514,6 +530,11 @@ function OrdineClienteContent() {
 
                       <div className="text-left sm:text-right">
                         <span className="text-xl font-black text-white block font-mono">€{order.totalCalculated.toFixed(2)}</span>
+                        {order.quantity && order.quantity > 1 && (
+                          <span className="text-[10px] text-slate-400 font-mono block mb-0.5">
+                            (€{(order.totalCalculated / order.quantity).toFixed(2)} / pz)
+                          </span>
+                        )}
                         <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border inline-block ${
                           order.status === 'saldato' 
                             ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 

@@ -12,6 +12,7 @@ interface RawQuote {
   savedAt: string;
   totalCalculated: number;
   status?: string;
+  quantity?: number;
   multiColor?: boolean;
   extraBom?: Array<{ name: string; qty: number | string }>;
   makerWorldUrl?: string;
@@ -67,6 +68,7 @@ export async function GET(request: NextRequest) {
       material: q.material || 'Standard',
       savedAt: q.savedAt || '',
       status: q.status || 'in_attesa',
+      quantity: typeof q.quantity === 'number' && q.quantity > 0 ? q.quantity : 1,
       totalCalculated: typeof q.totalCalculated === 'number' ? q.totalCalculated : 0,
       multiColor: Boolean(q.multiColor),
       extraBom: Array.isArray(q.extraBom) ? q.extraBom.map(b => ({ name: b.name, qty: b.qty })) : [],
