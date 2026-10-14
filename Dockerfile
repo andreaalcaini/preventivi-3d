@@ -1,13 +1,13 @@
-# 1. Dipendenze
-FROM node:20-alpine AS deps
+# 1. Dipendenze (compila/installa nativamente su BUILDPLATFORM veloce)
+FROM --platform=$BUILDPLATFORM node:20-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json package-lock.json* ./
 RUN npm ci
 
-# 2. Builder
-FROM node:20-alpine AS builder
+# 2. Builder (compila Next.js standalone in pochi secondi su host nativo)
+FROM --platform=$BUILDPLATFORM node:20-alpine AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
