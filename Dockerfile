@@ -40,6 +40,12 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 USER nextjs
 
+# Info di build esposte da /api/public/version (dichiarate in fondo per non invalidare la cache dei layer precedenti)
+ARG GIT_SHA=dev
+ARG BUILD_TIME=
+ENV GIT_SHA=$GIT_SHA
+ENV BUILD_TIME=$BUILD_TIME
+
 EXPOSE 3000
 
 CMD ["node", "server.js"]
