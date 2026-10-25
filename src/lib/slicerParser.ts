@@ -107,50 +107,69 @@ export async function parse3mfFile(file: File): Promise<ParsedSlicerData> {
   if (sliceInfoFile) {
     const xmlText = await sliceInfoFile.async('string');
     
+    // Un progetto può contenere più piatti: tempi e pesi vanno sommati,
+    // i filamenti deduplicati per id (lo stesso slot AMS può comparire su più piatti)
+    const plateBlocks = Array.from(xmlText.matchAll(/<plate>([\s\S]*?)<\/plate>/gi), m => m[1]);
+    if (plateBlocks.length === 0) plateBlocks.push(xmlText);
+
     let totalSeconds = 0;
-    const predMatch = xmlText.match(/<prediction\s+value="(\d+)"/i) || 
-                      xmlText.match(/prediction="(\d+)"/i) ||
-                      xmlText.match(/<prediction>(\d+)<\/prediction>/i);
-    if (predMatch) {
-      totalSeconds = parseInt(predMatch[1], 10);
-    }
-
     let totalWeight = 0;
-    const weightMatch = xmlText.match(/<weight\s+value="([0-9.]+)"/i) ||
-                        xmlText.match(/weight="([0-9.]+)"/i) ||
-                        xmlText.match(/<weight>([0-9.]+)<\/weight>/i);
-    if (weightMatch) {
-      totalWeight = parseFloat(weightMatch[1]);
-    }
+    const filamentsById = new Map<number, NonNullable<ParsedSlicerData['filaments']>[number]>();
 
-    const filaments: ParsedSlicerData['filaments'] = [];
-    const filamentMatches = xmlText.matchAll(/<filament\s+([^>]+)>/gi);
-    for (const match of filamentMatches) {
-      const attrs = match[1];
-      const idMatch = attrs.match(/id="(\d+)"/i);
-      const typeMatch = attrs.match(/type="([^"]+)"/i);
-      const colorMatch = attrs.match(/color="([^"]+)"/i);
-      const usedGMatch = attrs.match(/used_g="([0-9.]+)"/i);
+    for (const plate of plateBlocks) {
+      const predMatch = plate.match(/<metadata\s+key="prediction"\s+value="(\d+(?:\.\d+)?)"/i) ||
+                        plate.match(/<prediction\s+value="(\d+)"/i) ||
+                        plate.match(/prediction="(\d+)"/i) ||
+                        plate.match(/<prediction>(\d+)<\/prediction>/i);
+      if (predMatch) {
+        totalSeconds += Number(predMatch[1]) || 0;
+      }
 
-      if (usedGMatch) {
+      const weightMatch = plate.match(/<metadata\s+key="weight"\s+value="([0-9.]+)"/i) ||
+                          plate.match(/<weight\s+value="([0-9.]+)"/i) ||
+                          plate.match(/<weight>([0-9.]+)<\/weight>/i);
+      if (weightMatch) {
+        totalWeight += parseFloat(weightMatch[1]) || 0;
+      }
+
+      const filamentMatches = plate.matchAll(/<filament\s+([^>]+)>/gi);
+      for (const match of filamentMatches) {
+        const attrs = match[1];
+        const idMatch = attrs.match(/\bid="(\d+)"/i);
+        const typeMatch = attrs.match(/\btype="([^"]+)"/i);
+        const colorMatch = attrs.match(/\bcolor="([^"]+)"/i);
+        const usedGMatch = attrs.match(/\bused_g="([0-9.]+)"/i);
+
+        if (!usedGMatch) continue;
         const fWeight = parseFloat(usedGMatch[1]);
-        if (fWeight > 0) {
-          filaments.push({
-            id: idMatch ? parseInt(idMatch[1], 10) : filaments.length + 1,
+        if (!(fWeight > 0)) continue;
+
+        const id = idMatch ? parseInt(idMatch[1], 10) : filamentsById.size + 1;
+        const existing = filamentsById.get(id);
+        if (existing) {
+          existing.weightGrams += fWeight;
+        } else {
+          filamentsById.set(id, {
+            id,
             type: typeMatch ? typeMatch[1].toUpperCase() : 'PLA',
             color: colorMatch ? colorMatch[1] : undefined,
-            weightGrams: Math.round(fWeight * 10) / 10
+            weightGrams: fWeight
           });
         }
       }
     }
 
+    const filaments = Array.from(filamentsById.values())
+      .sort((a, b) => a.id - b.id)
+      .map(f => ({ ...f, weightGrams: Math.round(f.weightGrams * 10) / 10 }));
+
     if (totalWeight === 0 && filaments.length > 0) {
       totalWeight = filaments.reduce((acc, f) => acc + f.weightGrams, 0);
     }
 
-    const hours = Math.floor(totalSeconds / 3600);
-    const mins = Math.round((totalSeconds % 3600) / 60);
+    const totalMinutes = Math.round(totalSeconds / 60);
+    const hours = Math.floor(totalMinutes / 60);
+    const mins = totalMinutes % 60;
     const primaryMaterial = filaments.length > 0 ? filaments[0].type : undefined;
 
     return {
