@@ -21,6 +21,7 @@ export async function POST(request: NextRequest) {
       stlDimensions,
       modelUrl,
       modelFileName,
+      modelFiles,
       hours,
       mins,
       weight,
@@ -31,6 +32,22 @@ export async function POST(request: NextRequest) {
     if (!name || !contact || !projectName) {
       return NextResponse.json({ error: 'Compila tutti i campi obbligatori (Nome, Contatto, Progetto)' }, { status: 400 });
     }
+
+    // Più file 3D per richiesta: si accettano solo URL interni prodotti da /api/public/model
+    const sanitizedModelFiles = Array.isArray(modelFiles)
+      ? modelFiles
+          .filter((f: unknown): f is { url: string; fileName?: string; stlDimensions?: unknown } =>
+            typeof f === 'object' && f !== null &&
+            typeof (f as { url?: unknown }).url === 'string' &&
+            (f as { url: string }).url.startsWith('/api/public/model?')
+          )
+          .slice(0, 20)
+          .map(f => ({
+            url: f.url,
+            fileName: typeof f.fileName === 'string' ? f.fileName : '',
+            stlDimensions: f.stlDimensions || null
+          }))
+      : [];
 
     const orderId = Date.now().toString();
     const now = new Date();
@@ -73,6 +90,7 @@ export async function POST(request: NextRequest) {
       stlDimensions: stlDimensions || null,
       modelUrl: modelUrl || '',
       modelFileName: modelFileName || '',
+      modelFiles: sanitizedModelFiles,
       inventoryDeducted: false
     };
 

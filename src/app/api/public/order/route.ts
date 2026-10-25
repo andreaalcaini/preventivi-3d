@@ -18,6 +18,7 @@ interface RawQuote {
   makerWorldUrl?: string;
   modelUrl?: string;
   modelFileName?: string;
+  modelFiles?: Array<{ url: string; fileName?: string }>;
   [key: string]: unknown;
 }
 
@@ -74,7 +75,13 @@ export async function GET(request: NextRequest) {
       extraBom: Array.isArray(q.extraBom) ? q.extraBom.map(b => ({ name: b.name, qty: b.qty })) : [],
       makerWorldUrl: q.makerWorldUrl || '',
       modelUrl: q.modelUrl || '',
-      modelFileName: q.modelFileName || ''
+      modelFileName: q.modelFileName || '',
+      // Le richieste salvate prima del supporto multi-file hanno solo modelUrl
+      modelFiles: Array.isArray(q.modelFiles) && q.modelFiles.length > 0
+        ? q.modelFiles.map(f => ({ url: f.url, fileName: f.fileName || '' }))
+        : q.modelUrl
+          ? [{ url: q.modelUrl, fileName: q.modelFileName || '' }]
+          : []
     });
 
     const sanitizedOrders = foundQuotes.map(sanitize);

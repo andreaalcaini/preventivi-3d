@@ -152,6 +152,13 @@ export default function StlViewer({
     }
   }, []);
 
+  // Callback in un ref: se il genitore passa una funzione inline, ogni suo re-render
+  // non deve invalidare il parsing e ricaricare il modello (loop infinito di caricamento)
+  const onDimensionsCalculatedRef = useRef(onDimensionsCalculated);
+  useEffect(() => {
+    onDimensionsCalculatedRef.current = onDimensionsCalculated;
+  }, [onDimensionsCalculated]);
+
   // Adatta camera e griglia all'oggetto inserito
   const setupObjectInScene = useCallback((object: THREE.Object3D, totalTriangles: number) => {
     if (!sceneRef.current || !cameraRef.current || !controlsRef.current) return;
@@ -175,9 +182,7 @@ export default function StlViewer({
     };
 
     setDimensions(dim);
-    if (onDimensionsCalculated) {
-      onDimensionsCalculated(dim);
-    }
+    onDimensionsCalculatedRef.current?.(dim);
 
     // Posiziona la griglia alla base dell'oggetto
     if (gridRef.current) {
@@ -197,7 +202,7 @@ export default function StlViewer({
 
     setLoading(false);
     setError(null);
-  }, [clearCurrentObject, onDimensionsCalculated]);
+  }, [clearCurrentObject]);
 
   // Caricamento geometria STL
   const loadStlGeometry = useCallback((geometry: THREE.BufferGeometry) => {

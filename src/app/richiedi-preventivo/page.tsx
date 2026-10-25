@@ -1,14 +1,20 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import { 
   Package, Send, CheckCircle2, AlertCircle, 
-  ExternalLink, Layers, Sparkles, Lock, ArrowRight, Loader2, Copy
+  ExternalLink, Layers, Sparkles, Lock, ArrowRight, Loader2, Copy, UploadCloud, X
 } from 'lucide-react';
 import MakerWorldModelViewer from '@/components/MakerWorldModelViewer';
 import type { MakerWorldPlateInfo, MakerWorldPicture } from '@/app/api/makerworld/route';
-import { parseSlicerFile } from '@/lib/slicerParser';
+import { parseSlicerFiles, isSlicerFileName } from '@/lib/slicerParser';
+
+const MODEL_FILE_ACCEPT = '.stl,.3mf';
+
+function fileKey(file: File) {
+  return `${file.name}-${file.size}-${file.lastModified}`;
+}
 
 export function calculateClientEstimate(
   hours: number,
@@ -48,8 +54,11 @@ export default function RichiediPreventivoPage() {
   const [material, setMaterial] = useState('PLA Standard');
   const [color, setColor] = useState('Nero');
   const [quantity, setQuantity] = useState('1');
-  const [stlDimensions, setStlDimensions] = useState<{ x: number; y: number; z: number } | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  // Più file 3D per richiesta: quello attivo è mostrato nel viewer, le quote sono salvate per file
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [activeFileIndex, setActiveFileIndex] = useState(0);
+  const [dimensionsByFile, setDimensionsByFile] = useState<Record<string, { x: number; y: number; z: number }>>({});
+  const [fileError, setFileError] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -82,6 +91,75 @@ export default function RichiediPreventivoPage() {
     needAms?: boolean;
     slicerName?: string;
   } | null>(null);
+
+  const slicerRequestRef = useRef(0);
+  const activeFile = selectedFiles[activeFileIndex] || null;
+  const stlDimensions = selectedFiles.length > 0 ? dimensionsByFile[fileKey(selectedFiles[0])] || null : null;
+
+  const addFiles = (incoming: File[]) => {
+    const valid = incoming.filter(f => /\.(stl|3mf)$/i.test(f.name));
+    setFileError(valid.length < incoming.length ? 'Alcuni file sono stati ignorati: formati supportati .STL e .3MF' : '');
+    if (valid.length === 0) return;
+
+    const known = new Set(selectedFiles.map(fileKey));
+    const fresh = valid.filter(f => !known.has(fileKey(f)));
+    const next = [...selectedFiles, ...fresh];
+    // Mostra nel viewer il primo file appena aggiunto (o quello già presente se duplicato)
+    const target = fresh[0] || valid[0];
+    setSelectedFiles(next);
+    setActiveFileIndex(next.findIndex(f => fileKey(f) === fileKey(target)));
+    if (fresh.length > 0) refreshSlicerInfo(next);
+
+    if (!projectName) {
+      const cleanName = valid[0].name.replace(/\.[^/.]+$/, "").replace(/_/g, " ");
+      setProjectName(cleanName.charAt(0).toUpperCase() + cleanName.slice(1));
+    }
+  };
+
+  const removeFile = (index: number) => {
+    const removed = selectedFiles[index];
+    const next = selectedFiles.filter((_, i) => i !== index);
+    setSelectedFiles(next);
+    refreshSlicerInfo(next);
+    setDimensionsByFile(prev => {
+      const next = { ...prev };
+      delete next[fileKey(removed)];
+      return next;
+    });
+    setActiveFileIndex(prev => (index < prev ? prev - 1 : index === prev ? 0 : prev));
+  };
+
+  // Ricalcola tempo/peso sommando tutti i file slicer (.3mf con G-Code integrato) presenti
+  const refreshSlicerInfo = (files: File[]) => {
+    const requestId = ++slicerRequestRef.current;
+    const slicerFiles = files.filter(f => isSlicerFileName(f.name));
+    if (slicerFiles.length === 0) {
+      setSlicerInfo(null);
+      return;
+    }
+
+    parseSlicerFiles(slicerFiles).then(({ merged, parsed, errors }) => {
+      // Ignora risultati superati da un'aggiunta/rimozione successiva
+      if (requestId !== slicerRequestRef.current) return;
+      errors.forEach(er => console.warn(`File 3D senza dati di slicing (${er.fileName}):`, er.message));
+      if (!merged || (merged.hours === 0 && merged.mins === 0 && merged.weightGrams === 0)) {
+        setSlicerInfo(null);
+        return;
+      }
+      setSlicerInfo({
+        title: parsed.length > 1 ? `${parsed.length} file slicer` : parsed[0].fileName.replace(/\.[^/.]+$/, "").replace(/_/g, " "),
+        printHours: merged.hours,
+        printMinutes: merged.mins,
+        weightGrams: merged.weightGrams,
+        material: merged.material,
+        needAms: Boolean(merged.multiColor),
+        slicerName: merged.slicerName
+      });
+      if (merged.material) {
+        setMaterial(merged.material);
+      }
+    });
+  };
 
   const handleMakerWorldUrlChange = async (url: string) => {
     setMakerWorldUrl(url);
@@ -173,21 +251,31 @@ export default function RichiediPreventivoPage() {
     setError('');
 
     try {
-      let modelUrl = '';
-      let modelFileName = '';
+      const modelFiles: Array<{ url: string; fileName: string; stlDimensions: { x: number; y: number; z: number } | null }> = [];
+      const failedUploads: string[] = [];
 
-      if (selectedFile) {
+      for (const file of selectedFiles) {
         const formData = new FormData();
-        formData.append('file', selectedFile);
+        formData.append('file', file);
         const uploadRes = await fetch('/api/public/model', {
           method: 'POST',
           body: formData
         });
         const uploadData = await uploadRes.json();
         if (uploadRes.ok && uploadData.success) {
-          modelUrl = uploadData.url;
-          modelFileName = uploadData.fileName;
+          modelFiles.push({
+            url: uploadData.url,
+            fileName: uploadData.fileName,
+            stlDimensions: dimensionsByFile[fileKey(file)] || null
+          });
+        } else {
+          failedUploads.push(file.name);
         }
+      }
+
+      if (failedUploads.length > 0) {
+        setError(`Caricamento non riuscito per: ${failedUploads.join(', ')}. Rimuovi il file o riprova.`);
+        return;
       }
 
       const res = await fetch('/api/public/quote-request', {
@@ -203,8 +291,9 @@ export default function RichiediPreventivoPage() {
           color,
           quantity: numQuantity,
           stlDimensions,
-          modelUrl,
-          modelFileName,
+          modelUrl: modelFiles[0]?.url || '',
+          modelFileName: modelFiles[0]?.fileName || '',
+          modelFiles,
           hours: activeModelInfo?.hours || 0,
           mins: activeModelInfo?.mins || 0,
           weight: activeModelInfo?.weight || 0,
@@ -379,7 +468,7 @@ export default function RichiediPreventivoPage() {
                   </div>
 
                   <p className="text-xs text-slate-400 leading-relaxed">
-                    Trascina qui un file <strong>.STL</strong> o <strong>.3MF</strong> per ispezionare le quote millimetriche o visualizzare i piatti MakerWorld.
+                    Trascina qui uno o più file <strong>.STL</strong> o <strong>.3MF</strong> per ispezionare le quote millimetriche o visualizzare i piatti MakerWorld.
                   </p>
 
                   {/* 3D Model & MakerWorld Viewer */}
@@ -390,42 +479,90 @@ export default function RichiediPreventivoPage() {
                     authorName={activeModelInfo?.author}
                     plates={mwInfo?.plates}
                     pictures={mwInfo?.pictures}
-                    modelFileName={selectedFile?.name}
+                    modelFile={activeFile}
+                    modelFileName={activeFile?.name}
                     material={material || activeModelInfo?.material || 'PLA'}
                     height={320}
                     allowUpload={true}
                     onDimensionsCalculated={(dim) => {
-                      setStlDimensions({ x: dim.x, y: dim.y, z: dim.z });
+                      // I .gcode.3mf senza mesh restituiscono 0×0×0: non sono quote utili
+                      if (!activeFile || (dim.x === 0 && dim.y === 0 && dim.z === 0)) return;
+                      const key = fileKey(activeFile);
+                      setDimensionsByFile(prev => {
+                        const old = prev[key];
+                        if (old && old.x === dim.x && old.y === dim.y && old.z === dim.z) return prev;
+                        return { ...prev, [key]: { x: dim.x, y: dim.y, z: dim.z } };
+                      });
                     }}
-                    onFileSelected={async (file) => {
-                      setSelectedFile(file);
-                      const cleanName = file.name.replace(/\.[^/.]+$/, "").replace(/_/g, " ");
-                      if (!projectName) {
-                        setProjectName(cleanName.charAt(0).toUpperCase() + cleanName.slice(1));
-                      }
-                      if (file.name.toLowerCase().endsWith('.3mf') || file.name.toLowerCase().endsWith('.gcode')) {
-                        try {
-                          const parsed = await parseSlicerFile(file);
-                          if (parsed && (parsed.hours > 0 || parsed.mins > 0 || parsed.weightGrams > 0)) {
-                            setSlicerInfo({
-                              title: cleanName,
-                              printHours: parsed.hours,
-                              printMinutes: parsed.mins,
-                              weightGrams: parsed.weightGrams,
-                              material: parsed.material || material,
-                              needAms: Boolean(parsed.multiColor),
-                              slicerName: parsed.slicerName
-                            });
-                            if (parsed.material) {
-                              setMaterial(parsed.material);
-                            }
-                          }
-                        } catch (err) {
-                          console.warn('File 3D non contiene gcode integrato:', err);
-                        }
-                      }
-                    }}
+                    onFileSelected={(file) => addFiles([file])}
                   />
+
+                  {/* Elenco file caricati: click per visualizzarlo nel viewer */}
+                  <div className="space-y-2">
+                    {selectedFiles.length > 0 && (
+                      <ul className="space-y-1.5">
+                        {selectedFiles.map((file, index) => {
+                          const dims = dimensionsByFile[fileKey(file)];
+                          const isActive = index === activeFileIndex;
+                          return (
+                            <li
+                              key={fileKey(file)}
+                              className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-xs transition-all ${
+                                isActive
+                                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
+                                  : 'bg-white/[0.02] border-white/10 text-slate-300 hover:border-white/20'
+                              }`}
+                            >
+                              <button
+                                type="button"
+                                onClick={() => setActiveFileIndex(index)}
+                                className="flex-1 min-w-0 flex items-center gap-2 text-left cursor-pointer"
+                                title="Mostra nel viewer 3D"
+                              >
+                                <Layers className="w-3.5 h-3.5 flex-shrink-0" strokeWidth={1.75} />
+                                <span className="truncate font-medium">{file.name}</span>
+                                {dims && (
+                                  <span className="ml-auto font-mono text-[10px] text-slate-500 flex-shrink-0 hidden sm:inline">
+                                    {dims.x} × {dims.y} × {dims.z} mm
+                                  </span>
+                                )}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => removeFile(index)}
+                                className="p-1 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors flex-shrink-0 cursor-pointer"
+                                title="Rimuovi file"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    )}
+
+                    <label className="cursor-pointer w-full px-3 py-2 rounded-xl border border-dashed border-emerald-500/30 hover:border-emerald-500/60 bg-emerald-500/5 hover:bg-emerald-500/10 text-emerald-300 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all">
+                      <UploadCloud className="w-3.5 h-3.5" strokeWidth={1.75} />
+                      <span>{selectedFiles.length > 0 ? 'Aggiungi altri file 3D' : 'Carica uno o più file 3D'}</span>
+                      <input
+                        type="file"
+                        accept={MODEL_FILE_ACCEPT}
+                        multiple
+                        className="hidden"
+                        onChange={(e) => {
+                          addFiles(Array.from(e.target.files || []));
+                          e.target.value = '';
+                        }}
+                      />
+                    </label>
+
+                    {fileError && (
+                      <p className="text-[11px] text-amber-400 flex items-center gap-1.5">
+                        <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                        {fileError}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
 

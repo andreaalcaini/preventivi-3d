@@ -52,6 +52,7 @@ interface SavedQuote {
   inventoryDeducted?: boolean;
   modelUrl?: string;
   modelFileName?: string;
+  modelFiles?: Array<{ url: string; fileName: string }>;
 }
 
 const statusConfig: Record<JobStatus, { label: string; text: string; border: string }> = {
@@ -428,6 +429,20 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
                             <span className="truncate max-w-[120px]">{item.modelFileName || 'Modello 3D'}</span>
                           </Link>
                         )}
+
+                        {/* File aggiuntivi delle richieste multi-file (il primo è già aperto nel calcolatore) */}
+                        {item.modelFiles?.slice(1).map((f, index) => (
+                          <a
+                            key={f.url}
+                            href={f.url}
+                            download={f.fileName || `modello-3d-${index + 2}`}
+                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-purple-300 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-lg hover:bg-purple-500/20 transition-colors"
+                            title="Scarica file 3D"
+                          >
+                            <Box className="w-3 h-3 text-purple-400" />
+                            <span className="truncate max-w-[120px]">{f.fileName || `Modello ${index + 2}`}</span>
+                          </a>
+                        ))}
 
                         {item.makerWorldUrl && (
                           <a href={item.makerWorldUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-slate-400 hover:text-emerald-400 truncate max-w-[140px]">

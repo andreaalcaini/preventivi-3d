@@ -24,6 +24,46 @@ interface PublicOrder {
   makerWorldUrl?: string;
   modelUrl?: string;
   modelFileName?: string;
+  modelFiles?: Array<{ url: string; fileName: string }>;
+}
+
+function getModelFiles(order: PublicOrder) {
+  if (order.modelFiles && order.modelFiles.length > 0) return order.modelFiles;
+  return order.modelUrl ? [{ url: order.modelUrl, fileName: order.modelFileName || '' }] : [];
+}
+
+function ModelFileList({ files, activeIndex, onSelect }: {
+  files: Array<{ url: string; fileName: string }>;
+  activeIndex: number;
+  onSelect: (index: number) => void;
+}) {
+  if (files.length < 2) return null;
+  return (
+    <div className="flex flex-wrap gap-1.5">
+      {files.map((f, index) => (
+        <div
+          key={f.url}
+          className={`flex items-center gap-1 text-[11px] rounded-full border pl-2.5 pr-1 py-0.5 transition-colors ${
+            index === activeIndex
+              ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40'
+              : 'bg-white/[0.03] text-slate-300 border-white/10 hover:border-white/20'
+          }`}
+        >
+          <button type="button" onClick={() => onSelect(index)} className="truncate max-w-[160px] cursor-pointer" title="Mostra nel viewer 3D">
+            {f.fileName || `Modello ${index + 1}`}
+          </button>
+          <a
+            href={f.url}
+            download={f.fileName || `modello-3d-${index + 1}`}
+            className="px-1.5 py-0.5 rounded-full text-emerald-400 hover:bg-emerald-500/10"
+            title="Scarica file"
+          >
+            ↓
+          </a>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 const statusSteps = [
@@ -49,6 +89,7 @@ function OrdineClienteContent() {
   const [copiedItemId, setCopiedItemId] = useState<string | null>(null);
   const [show3dViewer, setShow3dViewer] = useState(false);
   const [expandedViewerId, setExpandedViewerId] = useState<string | null>(null);
+  const [activeModelByOrder, setActiveModelByOrder] = useState<Record<string, number>>({});
 
   const handleCopyBundleLink = () => {
     if (typeof window !== 'undefined' && orders.length > 0) {
@@ -367,7 +408,7 @@ function OrdineClienteContent() {
                       {order.makerWorldUrl 
                         ? (show3dViewer ? 'Nascondi Anteprima Modello 3D / MakerWorld' : 'Visualizza Anteprima Modello 3D (Piatti & Foto MakerWorld)')
                         : order.modelUrl 
-                        ? (show3dViewer ? 'Nascondi Modello 3D del Pezzo' : `Visualizza Modello 3D di Produzione (${order.modelFileName || 'STL/3MF'})`)
+                        ? (show3dViewer ? 'Nascondi Modello 3D del Pezzo' : `Visualizza Modello 3D di Produzione (${getModelFiles(order).length > 1 ? `${getModelFiles(order).length} file` : order.modelFileName || 'STL/3MF'})`)
                         : (show3dViewer ? 'Nascondi Visualizzatore 3D' : 'Visualizzatore 3D (Ispezione geometrica)')
                       }
                     </span>
@@ -375,7 +416,7 @@ function OrdineClienteContent() {
                   </button>
 
                   <div className="flex items-center gap-2">
-                    {order.modelUrl && (
+                    {order.modelUrl && getModelFiles(order).length < 2 && (
                       <a
                         href={order.modelUrl}
                         download={order.modelFileName || 'modello-3d'}
@@ -399,12 +440,21 @@ function OrdineClienteContent() {
                   </div>
                 </div>
 
+                <ModelFileList
+                  files={getModelFiles(order)}
+                  activeIndex={activeModelByOrder[order.id] || 0}
+                  onSelect={(index) => {
+                    setActiveModelByOrder(prev => ({ ...prev, [order.id]: index }));
+                    setShow3dViewer(true);
+                  }}
+                />
+
                 {show3dViewer && (
                   <div className="pt-2">
-                    <MakerWorldModelViewer 
+                    <MakerWorldModelViewer
                       makerWorldUrl={order.makerWorldUrl}
-                      modelUrl={order.modelUrl}
-                      modelFileName={order.modelFileName}
+                      modelUrl={getModelFiles(order)[activeModelByOrder[order.id] || 0]?.url || order.modelUrl}
+                      modelFileName={getModelFiles(order)[activeModelByOrder[order.id] || 0]?.fileName || order.modelFileName}
                       modelTitle={order.name || order.id}
                       material={order.material || 'PLA'}
                       height={320}
@@ -621,7 +671,7 @@ function OrdineClienteContent() {
                               ? 'Chiudi Anteprima' 
                               : (order.makerWorldUrl 
                                   ? 'Vedi Anteprima 3D' 
-                                  : `Vedi Modello 3D (${order.modelFileName || 'File'})`
+                                  : `Vedi Modello 3D (${getModelFiles(order).length > 1 ? `${getModelFiles(order).length} file` : order.modelFileName || 'File'})`
                                 )
                             }
                           </span>
@@ -631,11 +681,16 @@ function OrdineClienteContent() {
 
                     {/* Viewer 3D Espandibile nel Multi-ordine */}
                     {(order.modelUrl || order.makerWorldUrl) && expandedViewerId === order.id && (
-                      <div className="pt-3 border-t border-white/10">
+                      <div className="pt-3 border-t border-white/10 space-y-2">
+                        <ModelFileList
+                          files={getModelFiles(order)}
+                          activeIndex={activeModelByOrder[order.id] || 0}
+                          onSelect={(index) => setActiveModelByOrder(prev => ({ ...prev, [order.id]: index }))}
+                        />
                         <MakerWorldModelViewer
                           makerWorldUrl={order.makerWorldUrl}
-                          modelUrl={order.modelUrl}
-                          modelFileName={order.modelFileName}
+                          modelUrl={getModelFiles(order)[activeModelByOrder[order.id] || 0]?.url || order.modelUrl}
+                          modelFileName={getModelFiles(order)[activeModelByOrder[order.id] || 0]?.fileName || order.modelFileName}
                           modelTitle={order.name || order.id}
                           material={order.material || 'PLA'}
                           height={280}

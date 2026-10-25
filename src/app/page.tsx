@@ -12,7 +12,7 @@ import {
 import Link from 'next/link';
 import StlViewer from '@/components/StlViewer';
 import MakerWorldModelViewer from '@/components/MakerWorldModelViewer';
-import { parseSlicerFile } from '@/lib/slicerParser';
+import { parseSlicerFiles } from '@/lib/slicerParser';
 import { getWhatsAppUrl } from '@/lib/whatsapp';
 import QrLabelModal, { ParcelLabelData } from '@/components/QrLabelModal';
 
@@ -421,15 +421,18 @@ export default function QuoteCalculator() {
   };
 
   const handleSlicerFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
     setParsingSlicer(true);
     setSlicerFeedback(null);
     try {
-      const parsed = await parseSlicerFile(file);
+      const { merged: parsed, parsed: parsedFiles, errors } = await parseSlicerFiles(files);
+      if (!parsed) {
+        throw new Error(errors.map(er => `${er.fileName}: ${er.message}`).join(' • ') || 'Errore durante la lettura del file slicer');
+      }
       setQuote(prev => ({
         ...prev,
-        name: prev.name.trim() ? prev.name : file.name.replace(/\.(gcode|3mf|gco|g)$/i, ''),
+        name: prev.name.trim() ? prev.name : parsedFiles[0].fileName.replace(/\.(gcode|3mf|gco|g)$/i, ''),
         hours: parsed.hours,
         mins: parsed.mins,
         weight: parsed.weightGrams,
@@ -438,9 +441,11 @@ export default function QuoteCalculator() {
         colorChanges: parsed.colorCount ? Math.max(0, parsed.colorCount - 1) : prev.colorChanges,
         purgeWeight: (parsed.multiColor && prev.purgeWeight === 0) ? Math.round(parsed.weightGrams * 0.25) : prev.purgeWeight
       }));
+      const filesLabel = parsedFiles.length > 1 ? ` (${parsedFiles.length} file sommati)` : '';
+      const skippedLabel = errors.length > 0 ? ` • Ignorati: ${errors.map(er => er.fileName).join(', ')}` : '';
       setSlicerFeedback({
         type: 'success',
-        message: `Dati importati con successo da ${parsed.slicerName || 'Slicer'}: ${parsed.hours}h ${parsed.mins}m • ${parsed.weightGrams}g${parsed.material ? ` ${parsed.material}` : ''}${parsed.multiColor ? ` • AMS (${parsed.colorCount} colori)` : ''}`
+        message: `Dati importati con successo da ${parsed.slicerName || 'Slicer'}${filesLabel}: ${parsed.hours}h ${parsed.mins}m • ${parsed.weightGrams}g${parsed.material ? ` ${parsed.material}` : ''}${parsed.multiColor ? ` • AMS (${parsed.colorCount} colori)` : ''}${skippedLabel}`
       });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Errore durante la lettura del file slicer';
@@ -1291,7 +1296,7 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                         <div className="min-w-0">
                           <span className="text-xs font-bold text-white block leading-tight">Importa da Slicer (.3mf / .gcode)</span>
                           <span className="text-[10px] text-slate-400 truncate block">
-                            Bambu Studio, OrcaSlicer, PrusaSlicer, Cura
+                            Bambu Studio, OrcaSlicer, PrusaSlicer, Cura • anche più file insieme
                           </span>
                         </div>
                       </div>
@@ -1301,8 +1306,9 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                         <span>{parsingSlicer ? 'Lettura...' : 'Carica File'}</span>
                         <input 
                           type="file" 
-                          accept=".3mf,.gcode,.gco,.g" 
-                          onChange={handleSlicerFile} 
+                          accept=".3mf,.gcode,.gco,.g"
+                          multiple
+                          onChange={handleSlicerFile}
                           className="hidden" 
                           disabled={parsingSlicer}
                         />

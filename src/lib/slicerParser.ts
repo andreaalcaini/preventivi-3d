@@ -218,3 +218,86 @@ export async function parseSlicerFile(file: File): Promise<ParsedSlicerData> {
     throw new Error("Formato non supportato. Trascina un file .3mf (Bambu/Orca) oppure .gcode.");
   }
 }
+
+export function isSlicerFileName(name: string): boolean {
+  return /\.(3mf|gcode|gco|g)$/i.test(name);
+}
+
+/**
+ * Unisce i dati di più file slicer in un unico totale: tempi e pesi sommati,
+ * filamenti con stesso tipo+colore considerati la stessa bobina anche tra file diversi
+ */
+export function mergeSlicerData(items: ParsedSlicerData[]): ParsedSlicerData | null {
+  if (items.length === 0) return null;
+  if (items.length === 1) return items[0];
+
+  let totalMinutes = 0;
+  let totalWeight = 0;
+  const filamentsByKey = new Map<string, NonNullable<ParsedSlicerData['filaments']>[number]>();
+
+  for (const item of items) {
+    totalMinutes += item.hours * 60 + item.mins;
+    totalWeight += item.weightGrams;
+
+    for (const f of item.filaments || []) {
+      const key = `${f.type}|${(f.color || '').toUpperCase()}`;
+      const existing = filamentsByKey.get(key);
+      if (existing) {
+        existing.weightGrams += f.weightGrams;
+      } else {
+        filamentsByKey.set(key, { ...f, id: filamentsByKey.size + 1 });
+      }
+    }
+  }
+
+  const filaments = Array.from(filamentsByKey.values())
+    .map(f => ({ ...f, weightGrams: Math.round(f.weightGrams * 10) / 10 }));
+  const slicerNames = Array.from(new Set(items.map(i => i.slicerName).filter(Boolean)));
+  // Senza dati sui filamenti (es. G-Code puro) si ricade sul conteggio colori dichiarato da ciascun file
+  const colorCount = filaments.length > 0
+    ? filaments.length
+    : Math.max(...items.map(i => i.colorCount || 1));
+
+  return {
+    fileName: items.map(i => i.fileName).join(', '),
+    slicerName: slicerNames.join(' + ') || undefined,
+    hours: Math.floor(totalMinutes / 60),
+    mins: totalMinutes % 60,
+    weightGrams: Math.round(totalWeight * 10) / 10,
+    material: filaments[0]?.type || items.find(i => i.material)?.material,
+    multiColor: colorCount > 1,
+    colorCount,
+    filaments: filaments.length > 0 ? filaments : undefined
+  };
+}
+
+/**
+ * Analizza più file slicer e ne restituisce il totale; i file illeggibili vengono riportati in `errors`
+ */
+export async function parseSlicerFiles(files: File[]): Promise<{
+  merged: ParsedSlicerData | null;
+  parsed: ParsedSlicerData[];
+  errors: Array<{ fileName: string; message: string }>;
+}> {
+  const results = await Promise.allSettled(files.map(f => parseSlicerFile(f)));
+  const parsed: ParsedSlicerData[] = [];
+  const errors: Array<{ fileName: string; message: string }> = [];
+
+  results.forEach((r, i) => {
+    if (r.status === 'fulfilled') {
+      const d = r.value;
+      if (d.hours === 0 && d.mins === 0 && d.weightGrams === 0) {
+        errors.push({ fileName: files[i].name, message: 'Nessun dato di tempo o peso trovato nel file' });
+      } else {
+        parsed.push(d);
+      }
+    } else {
+      errors.push({
+        fileName: files[i].name,
+        message: r.reason instanceof Error ? r.reason.message : String(r.reason)
+      });
+    }
+  });
+
+  return { merged: mergeSlicerData(parsed), parsed, errors };
+}

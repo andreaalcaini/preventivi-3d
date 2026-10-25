@@ -30,6 +30,8 @@ export interface MakerWorldModelViewerProps {
   pictures?: MakerWorldPicture[];
   modelUrl?: string | null;
   modelFileName?: string | null;
+  /** File locale da mostrare nel viewer mesh (alternativo a modelUrl) */
+  modelFile?: File | null;
   material?: string;
   height?: number;
   allowUpload?: boolean;
@@ -49,6 +51,7 @@ export default function MakerWorldModelViewer({
   pictures: initialPictures,
   modelUrl,
   modelFileName,
+  modelFile,
   material = 'PLA',
   height = 320,
   allowUpload = true,
@@ -446,6 +449,8 @@ export default function MakerWorldModelViewer({
         {viewMode === 'mesh' && (
           <div className="p-1">
             <StlViewer
+              key={modelFile ? 'local-file' : 'no-local-file'}
+              file={modelFile}
               height={height}
               url={modelUrl || undefined}
               fileName={modelFileName || undefined}
