@@ -1,6 +1,6 @@
 {
   "name": "preventivi-3d",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Piattaforma per maker e laboratori di stampa 3D FDM/SLA: calcolo preventivi, viewer STL WebGL, gestione clienti con portale ordini e magazzino con tara",
   "author": "Andrea Alcaini",
   "license": "MIT",
