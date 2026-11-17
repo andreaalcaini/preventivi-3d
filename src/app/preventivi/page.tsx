@@ -4,8 +4,9 @@ import React, { useState, useEffect, useMemo, useSyncExternalStore } from 'react
 import { 
   FolderKanban, Search, Trash2, ExternalLink, 
   Share2, CheckCircle2, User, Box, Check, Pencil, Link as LinkIcon,
-  MessageSquare, QrCode
+  MessageSquare, QrCode, MessagesSquare, X as CloseIcon
 } from 'lucide-react';
+import OrderThread from '@/components/OrderThread';
 import Link from 'next/link';
 import { getWhatsAppUrl } from '@/lib/whatsapp';
 import QrLabelModal, { ParcelLabelData } from '@/components/QrLabelModal';
@@ -104,6 +105,19 @@ export default function PreventiviPage() {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null);
   const [activeParcelLabel, setActiveParcelLabel] = useState<ParcelLabelData | null>(null);
+  const [threadFor, setThreadFor] = useState<SavedQuote | null>(null);
+  const [msgSummary, setMsgSummary] = useState<Record<string, { total: number; unread: number }>>({});
+  const loadMsgSummary = React.useCallback(() => {
+    fetch('/api/order-messages', { cache: 'no-store' })
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (d?.summary) setMsgSummary(d.summary); })
+      .catch(() => {});
+  }, []);
+  useEffect(() => {
+    loadMsgSummary();
+    const t = setInterval(loadMsgSummary, 60_000);
+    return () => clearInterval(t);
+  }, [loadMsgSummary]);
 
   const rawPrivacy = useSyncExternalStore(
     subscribeToStorage,
@@ -519,6 +533,20 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
                         <MessageSquare className="w-4 h-4" />
                       </a>
 
+                      {/* Conversazione con il cliente (visibile nel tracking) */}
+                      <button
+                        onClick={() => setThreadFor(item)}
+                        className="relative p-2 hover:bg-raised text-ink-muted hover:text-ink rounded-lg transition-colors"
+                        title={msgSummary[item.id]?.unread ? `${msgSummary[item.id].unread} messaggi non letti dal cliente` : 'Messaggi con il cliente'}
+                      >
+                        <MessagesSquare className="w-4 h-4" />
+                        {msgSummary[item.id]?.unread ? (
+                          <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 rounded-full bg-accent text-on-accent text-[10px] font-semibold leading-4 text-center">
+                            {msgSummary[item.id].unread}
+                          </span>
+                        ) : null}
+                      </button>
+
                       {/* Tasto Stampa Etichetta Pacco QR */}
                       <button
                         onClick={() => setActiveParcelLabel({
@@ -622,6 +650,30 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
                 </button>
               </div>
             )}
+          </div>
+        )}
+
+        {threadFor && (
+          <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-label={`Messaggi: ${threadFor.name}`}>
+            <div className="absolute inset-0 bg-scrim" onClick={() => { setThreadFor(null); loadMsgSummary(); }} />
+            <div className="relative flex h-full w-full max-w-lg flex-col bg-canvas border-l border-line shadow-lg animate-slide-in">
+              <div className="flex h-16 shrink-0 items-center justify-between gap-3 border-b border-line px-5">
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-ink">{threadFor.name}</p>
+                  <p className="truncate text-xs text-ink-faint">{threadFor.clientName || 'Cliente'} · codice {threadFor.id}</p>
+                </div>
+                <button onClick={() => { setThreadFor(null); loadMsgSummary(); }} aria-label="Chiudi" className="grid h-9 w-9 place-items-center rounded-lg text-ink-muted hover:bg-raised">
+                  <CloseIcon className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-y-auto p-5">
+                <OrderThread
+                  orderId={threadFor.id}
+                  side="laboratorio"
+                  onRead={() => setMsgSummary(prev => ({ ...prev, [threadFor.id]: { ...(prev[threadFor.id] || { total: 0 }), unread: 0 } }))}
+                />
+              </div>
+            </div>
           </div>
         )}
 

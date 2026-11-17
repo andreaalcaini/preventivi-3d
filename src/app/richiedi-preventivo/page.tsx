@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Package, Send, CheckCircle2, AlertCircle, 
@@ -209,6 +209,45 @@ export default function RichiediPreventivoPage() {
     }
   };
 
+  // "Richiedi di nuovo" dal tracking: /richiedi-preventivo?riordina=<codice>
+  const [reorderFrom, setReorderFrom] = useState<string | null>(null);
+  const reorderLoaded = useRef(false);
+  useEffect(() => {
+    if (reorderLoaded.current) return;
+    reorderLoaded.current = true;
+    const code = new URLSearchParams(window.location.search).get('riordina');
+    if (!code) return;
+    (async () => {
+      try {
+        const res = await fetch(`/api/public/order?code=${encodeURIComponent(code)}`);
+        if (!res.ok) return;
+        const { order } = await res.json();
+        if (!order) return;
+        setReorderFrom(order.id);
+        setProjectName(order.name || '');
+        if (order.material) setMaterial(order.material);
+        if (order.color) setColor(order.color);
+        setQuantity(String(order.quantity || 1));
+        setDescription(`Riordino dell'ordine ${order.id}.`);
+        if (order.makerWorldUrl) {
+          await handleMakerWorldUrlChange(order.makerWorldUrl);
+          setProjectName(order.name || '');
+        }
+        const files: File[] = [];
+        for (const f of order.modelFiles || []) {
+          const r = await fetch(f.url);
+          if (!r.ok) continue;
+          const blob = await r.blob();
+          files.push(new File([blob], f.fileName || 'modello.stl', { type: blob.type || 'application/octet-stream' }));
+        }
+        if (files.length) addFiles(files);
+      } catch {
+        // se il riordino non si carica, il modulo resta vuoto e utilizzabile
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const numQuantity = Math.max(1, parseInt(quantity, 10) || 1);
 
   const activeModelInfo = mwInfo ? {
@@ -357,6 +396,11 @@ export default function RichiediPreventivoPage() {
           <div>
             <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-ink">Richiedi un preventivo</h1>
             <p className="mt-2 text-ink-muted max-w-[60ch]">Carica i file del modello, scegli materiale e quantità: ricevi subito una stima e il laboratorio ti risponde con il prezzo definitivo.</p>
+            {reorderFrom && (
+              <p className="mt-3 inline-flex rounded-lg border border-accent-line bg-accent-soft px-3 py-1.5 text-sm text-accent-ink">
+                Riordino dell&apos;ordine {reorderFrom}: file e impostazioni sono già caricati, controlla e invia.
+              </p>
+            )}
           </div>
         )}
 

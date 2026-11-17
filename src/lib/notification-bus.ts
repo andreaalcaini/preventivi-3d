@@ -2,7 +2,7 @@ import { EventEmitter } from 'events';
 
 export interface LabNotification {
   id: string;
-  type: 'quote_request';
+  type: 'quote_request' | 'order_message';
   title: string;
   projectName: string;
   clientName: string;

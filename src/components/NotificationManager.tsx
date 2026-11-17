@@ -461,7 +461,7 @@ export function NotificationManager({ align = 'right' }: { align?: 'left' | 'rig
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-accent" />
                 </span>
                 <span className="text-[11px] font-mono text-accent-ink font-bold">
-                  Nuovo Preventivo
+                  {toast.type === 'order_message' ? 'Nuovo messaggio' : 'Nuovo preventivo'}
                 </span>
                 <span className="text-[9px] font-mono text-ink-faint">
                   {toast.dateStr || 'Adesso'}

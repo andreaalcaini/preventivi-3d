@@ -9,6 +9,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import MakerWorldModelViewer from '@/components/MakerWorldModelViewer';
+import OrderThread from '@/components/OrderThread';
+import { RotateCcw } from 'lucide-react';
 
 interface PublicOrder {
   id: string;
@@ -25,6 +27,33 @@ interface PublicOrder {
   modelUrl?: string;
   modelFileName?: string;
   modelFiles?: Array<{ url: string; fileName: string }>;
+  messageCount?: number;
+  unreadMessages?: number;
+}
+
+interface HistoryOrder {
+  id: string;
+  name: string;
+  material: string;
+  quantity: number;
+  savedAt: string;
+  status: string;
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  richiesta: 'In valutazione',
+  in_attesa: 'In coda',
+  in_stampa: 'In stampa',
+  pronto: 'Pronto',
+  saldato: 'Consegnato',
+};
+
+function ReorderLink({ orderId }: { orderId: string }) {
+  return (
+    <Link href={`/richiedi-preventivo?riordina=${encodeURIComponent(orderId)}`} className="btn btn-secondary btn-sm">
+      <RotateCcw className="h-3.5 w-3.5" strokeWidth={1.75} /> Richiedi di nuovo
+    </Link>
+  );
 }
 
 function getModelFiles(order: PublicOrder) {
@@ -82,6 +111,7 @@ function OrdineClienteContent() {
   const [totalDue, setTotalDue] = useState(0);
   const [totalAll, setTotalAll] = useState(0);
   const [clientName, setClientName] = useState('');
+  const [history, setHistory] = useState<HistoryOrder[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
@@ -125,12 +155,14 @@ function OrdineClienteContent() {
       if (!res.ok) {
         setError(data.error || 'Nessun ordine trovato con i codici inseriti.');
         setOrders([]);
+        setHistory([]);
       } else {
         const orderList = Array.isArray(data.orders) ? data.orders : (data.order ? [data.order] : []);
         setOrders(orderList);
         setTotalDue(typeof data.totalDue === 'number' ? data.totalDue : (data.order?.totalCalculated || 0));
         setTotalAll(typeof data.totalAll === 'number' ? data.totalAll : (data.order?.totalCalculated || 0));
         setClientName(data.clientName || orderList[0]?.clientName || 'Cliente');
+        setHistory(Array.isArray(data.history) ? data.history : []);
 
         if (orderList.length === 1 && (orderList[0].modelUrl || orderList[0].makerWorldUrl)) {
           setShow3dViewer(true);
@@ -454,6 +486,13 @@ function OrdineClienteContent() {
                 )}
               </div>
 
+              <OrderThread orderId={order.id} side="cliente" initialCount={order.messageCount || 0} />
+
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line px-4 py-3">
+                <p className="text-sm text-ink-muted">Ti serve di nuovo questo pezzo? Riparti dagli stessi file e impostazioni.</p>
+                <ReorderLink orderId={order.id} />
+              </div>
+
               {/* Informazioni Ritiro e Pagamento */}
               <div className="p-5 bg-accent-soft border border-accent-line rounded-xl text-xs text-accent-ink flex items-start gap-3.5">
                 <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-accent-ink mt-0.5" strokeWidth={1.75} />
@@ -689,6 +728,17 @@ function OrdineClienteContent() {
                       </div>
                     )}
 
+                    <OrderThread
+                      orderId={order.id}
+                      side="cliente"
+                      collapsible
+                      initialCount={order.messageCount || 0}
+                      unreadCount={order.unreadMessages || 0}
+                    />
+                    <div className="flex justify-end">
+                      <ReorderLink orderId={order.id} />
+                    </div>
+
                   </div>
                 </div>
               );
@@ -707,6 +757,31 @@ function OrdineClienteContent() {
           </div>
 
         </div>
+      )}
+
+      {orders.length > 0 && history.length > 0 && (
+        <section className="rounded-xl bg-surface border border-line shadow-sm">
+          <div className="px-5 py-4 border-b border-line">
+            <h2 className="font-semibold text-ink">I tuoi altri ordini</h2>
+            <p className="text-sm text-ink-muted mt-0.5">Ordini registrati con lo stesso contatto.</p>
+          </div>
+          <ul className="divide-y divide-line">
+            {history.map(h => (
+              <li key={h.id} className="px-5 py-3.5 flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium text-ink truncate">{h.name}</p>
+                  <p className="text-sm text-ink-faint">
+                    {h.material}{h.quantity > 1 ? ` · ${h.quantity} pezzi` : ''} · {h.savedAt} · <span className="text-ink-muted">{STATUS_LABEL[h.status] || h.status}</span>
+                  </p>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <Link href={`/ordine?code=${encodeURIComponent(h.id)}`} className="btn btn-secondary btn-sm">Apri</Link>
+                  <ReorderLink orderId={h.id} />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </section>
       )}
 
       {/* Stato Iniziale se non ha ancora cercato */}

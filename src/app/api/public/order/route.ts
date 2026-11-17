@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { getMessages } from '@/lib/orderMessages';
 
 const quotesFilePath = path.join(process.cwd(), 'data', 'quotes.json');
 
@@ -19,6 +20,9 @@ interface RawQuote {
   modelUrl?: string;
   modelFileName?: string;
   modelFiles?: Array<{ url: string; fileName?: string }>;
+  clientContact?: string;
+  preferredColor?: string;
+  description?: string;
   [key: string]: unknown;
 }
 
@@ -74,6 +78,9 @@ export async function GET(request: NextRequest) {
       multiColor: Boolean(q.multiColor),
       extraBom: Array.isArray(q.extraBom) ? q.extraBom.map(b => ({ name: b.name, qty: b.qty })) : [],
       makerWorldUrl: q.makerWorldUrl || '',
+      color: typeof q.preferredColor === 'string' ? q.preferredColor : '',
+      messageCount: getMessages(String(q.id)).length,
+      unreadMessages: getMessages(String(q.id)).filter(m => m.author === 'laboratorio' && !m.readByClient).length,
       modelUrl: q.modelUrl || '',
       modelFileName: q.modelFileName || '',
       // Le richieste salvate prima del supporto multi-file hanno solo modelUrl
@@ -90,7 +97,31 @@ export async function GET(request: NextRequest) {
       .filter(o => o.status !== 'saldato')
       .reduce((sum, o) => sum + o.totalCalculated, 0);
 
+    // Storico: altri ordini con lo stesso contatto (telefono o email), mai il contatto stesso.
+    // Serve un codice valido per vederli, quindi chi non ha un ordine non può elencare quelli altrui.
+    const normalize = (c: unknown) => {
+      const v = String(c || '').trim().toLowerCase();
+      if (!v) return '';
+      if (v.includes('@')) return v;
+      const digits = v.replace(/\D/g, '').replace(/^(0039|39)(?=\d{9,10}$)/, '');
+      return digits.length >= 6 ? digits : '';
+    };
+    const contacts = new Set(foundQuotes.map(q => normalize(q.clientContact)).filter(Boolean));
+    const requested = new Set(foundQuotes.map(q => String(q.id)));
+    const history = contacts.size === 0 ? [] : quotes
+      .filter(q => q.id && !requested.has(String(q.id)) && contacts.has(normalize(q.clientContact)))
+      .slice(0, 50)
+      .map(q => ({
+        id: String(q.id),
+        name: q.name || 'Oggetto di stampa 3D',
+        material: q.material || '',
+        quantity: typeof q.quantity === 'number' && q.quantity > 0 ? q.quantity : 1,
+        savedAt: q.savedAt || '',
+        status: q.status || 'in_attesa',
+      }));
+
     return NextResponse.json({ 
+      history,
       order: sanitizedOrders[0],
       orders: sanitizedOrders,
       totalAll,
