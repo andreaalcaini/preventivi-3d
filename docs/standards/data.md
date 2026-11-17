@@ -23,6 +23,8 @@ Ogni preventivo salvato include:
 - `totalCalculated`: totale prezzo calcolato
 - `status`: 'richiesta' | 'in_attesa' | 'in_stampa' | 'pronto' | 'saldato'
 
-## 4. Chiavi API (`api_keys.json`)
-- **Regola**: si salva solo l'hash SHA-256 della chiave, più `prefix` per riconoscerla, `scope` (`read` | `write`), `createdBy`, `createdAt`, `lastUsedAt`, `expiresAt`, `revokedAt`. La chiave in chiaro è restituita una sola volta da `POST /api/api-keys`.
-- **Motivazione**: un backup o un file esposto non permette di usare le chiavi. La verifica avviene nel proxy (`src/proxy.ts`), che blocca le chiavi su utenti, chiavi, backup, login e push.
+## 4. Chiavi API (`api_keys.json`, `api_key_usage.json`)
+- **Regola**: per ogni chiave si salvano solo l'hash SHA-256 e il `prefix` per riconoscerla, più `ownerId`, `scopes` (`risorsa:read|write`, catalogo in `src/lib/apiScopes.ts`), `allowedIps`, `rateLimitPerMinute`, date di creazione, modifica, rigenerazione, ultimo uso, scadenza e revoca. La chiave in chiaro è restituita una sola volta, alla creazione o alla rigenerazione.
+- **Regola**: i permessi effettivi sono l'intersezione tra quelli della chiave e quelli consentiti dal ruolo attuale del proprietario. Le chiavi dei vecchi formati (`scope: read|write`, senza proprietario) vengono convertite alla lettura.
+- **Regola**: le statistiche d'uso stanno in `api_key_usage.json` (30 giorni di conteggi giornalieri, ultime 50 richieste per chiave), scritte al massimo ogni 3 secondi. Il limite di richieste è in memoria.
+- **Motivazione**: un backup o un file esposto non permette di usare le chiavi. La verifica avviene nel proxy (`src/proxy.ts`) con negazione predefinita: un endpoint senza permesso mappato in `requiredScope` non è raggiungibile con una chiave.

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { verifySessionToken, SESSION_COOKIE_NAME } from '@/lib/auth';
-import { extractApiKey, authorizeApiKey } from '@/lib/apiKeys';
+import { extractApiKey, authorizeApiKey, clientIp } from '@/lib/apiKeys';
 
 const PUBLIC_PATHS = ['/login', '/ordine', '/richiedi-preventivo'];
 const PUBLIC_API_PREFIXES = ['/api/auth/login', '/api/public/', '/api/makerworld'];
@@ -33,17 +33,30 @@ export function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // Le intestazioni interne x-p3d-* le imposta solo il proxy: quelle in ingresso vengono scartate
+  const forwarded = new Headers(request.headers);
+  for (const name of [...forwarded.keys()]) {
+    if (name.startsWith('x-p3d-')) forwarded.delete(name);
+  }
+
   // Integrazioni esterne: chiave API in Authorization: Bearer p3d_... o X-API-Key
   const apiKey = extractApiKey(request.headers);
   if (apiKey) {
-    const check = authorizeApiKey(apiKey, pathname, request.method);
+    const check = authorizeApiKey(apiKey, pathname, request.method, clientIp(request.headers));
     if (!check.ok) {
-      return NextResponse.json({ error: check.error }, { status: check.status });
+      const res = NextResponse.json({ error: check.error }, { status: check.status });
+      if (check.retryAfter) res.headers.set('Retry-After', String(check.retryAfter));
+      if (check.rate) {
+        res.headers.set('X-RateLimit-Limit', String(check.rate.limit));
+        res.headers.set('X-RateLimit-Remaining', String(check.rate.remaining));
+      }
+      return res;
     }
-    const headers = new Headers(request.headers);
-    headers.set('x-p3d-api-key-id', check.key.id);
-    headers.set('x-p3d-api-key-scope', check.key.scope);
-    return NextResponse.next({ request: { headers } });
+    forwarded.set('x-p3d-key', encodeURIComponent(JSON.stringify(check.key)));
+    const res = NextResponse.next({ request: { headers: forwarded } });
+    res.headers.set('X-RateLimit-Limit', String(check.rate.limit));
+    res.headers.set('X-RateLimit-Remaining', String(check.rate.remaining));
+    return res;
   }
 
   // Per tutte le altre rotte (calcolatore, preventivi, clienti, magazzino, utenti), verifica autenticazione
@@ -61,7 +74,7 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  return NextResponse.next();
+  return NextResponse.next({ request: { headers: forwarded } });
 }
 
 export const config = {

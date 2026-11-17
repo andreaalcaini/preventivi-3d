@@ -64,6 +64,10 @@ export function readInventory(): InventoryData {
   return { spools: inv.spools || [], hardware: inv.hardware || [] };
 }
 
+export function writeInventory(inventory: InventoryData) {
+  writeJson(inventoryPath, inventory);
+}
+
 /** Stessa regola del gestionale: passando a "in_stampa" o "saldato" il materiale viene scaricato una sola volta. */
 export function consumeForQuote(quote: QuoteRecord) {
   const qty = Math.max(1, Number(quote.quantity) || 1);

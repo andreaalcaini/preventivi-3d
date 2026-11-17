@@ -1,61 +1,70 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifySessionToken, SESSION_COOKIE_NAME } from '@/lib/auth';
-import { listApiKeys, createApiKey, revokeApiKey, deleteApiKey, type ApiKeyScope } from '@/lib/apiKeys';
+import { verifySessionToken, SESSION_COOKIE_NAME, getAllPublicUsers, getUserById } from '@/lib/auth';
+import {
+  listApiKeys, createApiKey, updateApiKey, rotateApiKey, revokeApiKey, deleteApiKey, type Actor,
+} from '@/lib/apiKeys';
 
-function getSession(request: NextRequest) {
-  return verifySessionToken(request.cookies.get(SESSION_COOKIE_NAME)?.value);
+/** Utente della sessione con il ruolo aggiornato dal file utenti (non quello memorizzato nel token). */
+function getActor(request: NextRequest): Actor | null {
+  const session = verifySessionToken(request.cookies.get(SESSION_COOKIE_NAME)?.value);
+  if (!session) return null;
+  const user = getUserById(session.userId);
+  return user ? { id: user.id, username: user.username, role: user.role } : null;
 }
 
+const unauthorized = () => NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
+
 export async function GET(request: NextRequest) {
-  const session = getSession(request);
-  if (!session) return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
-  return NextResponse.json({ keys: listApiKeys(), canManage: session.role === 'admin' });
+  const actor = getActor(request);
+  if (!actor) return unauthorized();
+  return NextResponse.json({
+    actor,
+    keys: listApiKeys(actor),
+    users: actor.role === 'admin'
+      ? getAllPublicUsers().map(u => ({ id: u.id, username: u.username, displayName: u.displayName, role: u.role }))
+      : [],
+  });
 }
 
 export async function POST(request: NextRequest) {
-  const session = getSession(request);
-  if (!session) return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
-  if (session.role !== 'admin') {
-    return NextResponse.json({ error: 'Solo un amministratore può creare chiavi API' }, { status: 403 });
-  }
-
-  try {
-    const body = await request.json();
-    const result = createApiKey({
-      name: String(body?.name ?? ''),
-      scope: (body?.scope === 'write' ? 'write' : 'read') as ApiKeyScope,
-      createdBy: session.username,
-      expiresInDays: body?.expiresInDays ? Number(body.expiresInDays) : null,
-    });
-    if ('error' in result) return NextResponse.json({ error: result.error }, { status: 400 });
-    return NextResponse.json(result, { status: 201 });
-  } catch {
-    return NextResponse.json({ error: 'Richiesta non valida' }, { status: 400 });
-  }
+  const actor = getActor(request);
+  if (!actor) return unauthorized();
+  const body = await request.json().catch(() => null);
+  if (!body) return NextResponse.json({ error: 'Richiesta non valida' }, { status: 400 });
+  const result = createApiKey(actor, body);
+  if ('error' in result) return NextResponse.json({ error: result.error }, { status: 400 });
+  return NextResponse.json(result, { status: 201 });
 }
 
-/** PATCH { id, action: "revoke" } revoca la chiave senza cancellarne la traccia. */
+/** PATCH { id, action: "update" | "rotate" | "revoke", ...campi } */
 export async function PATCH(request: NextRequest) {
-  const session = getSession(request);
-  if (!session) return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
-  if (session.role !== 'admin') {
-    return NextResponse.json({ error: 'Solo un amministratore può revocare chiavi API' }, { status: 403 });
-  }
+  const actor = getActor(request);
+  if (!actor) return unauthorized();
   const body = await request.json().catch(() => null);
-  if (body?.action !== 'revoke' || typeof body?.id !== 'string') {
-    return NextResponse.json({ error: 'Richiesta non valida' }, { status: 400 });
+  if (!body || typeof body.id !== 'string') return NextResponse.json({ error: 'Richiesta non valida' }, { status: 400 });
+
+  if (body.action === 'revoke') {
+    if (!revokeApiKey(actor, body.id)) return NextResponse.json({ error: 'Chiave non trovata o già revocata' }, { status: 404 });
+    return NextResponse.json({ success: true });
   }
-  if (!revokeApiKey(body.id)) return NextResponse.json({ error: 'Chiave non trovata o già revocata' }, { status: 404 });
-  return NextResponse.json({ success: true });
+  if (body.action === 'rotate') {
+    const r = rotateApiKey(actor, body.id);
+    if ('error' in r) return NextResponse.json({ error: r.error }, { status: r.status });
+    return NextResponse.json(r);
+  }
+  if (body.action === 'update') {
+    const { id, action: _action, ownerId: _owner, ...fields } = body;
+    const r = updateApiKey(actor, id, fields);
+    if ('error' in r) return NextResponse.json({ error: r.error }, { status: r.status });
+    return NextResponse.json(r);
+  }
+  return NextResponse.json({ error: 'Azione non valida' }, { status: 400 });
 }
 
 export async function DELETE(request: NextRequest) {
-  const session = getSession(request);
-  if (!session) return NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
-  if (session.role !== 'admin') {
-    return NextResponse.json({ error: 'Solo un amministratore può eliminare chiavi API' }, { status: 403 });
-  }
+  const actor = getActor(request);
+  if (!actor) return unauthorized();
   const id = request.nextUrl.searchParams.get('id');
-  if (!id || !deleteApiKey(id)) return NextResponse.json({ error: 'Chiave non trovata' }, { status: 404 });
+  if (!id || !deleteApiKey(actor, id)) return NextResponse.json({ error: 'Chiave non trovata' }, { status: 404 });
   return NextResponse.json({ success: true });
 }

@@ -51,10 +51,13 @@
 - Ripristino completo e storico dei backup scaricabili.
 
 ### Integrazioni API e agenti AI
-- Pagina **Integrazioni API** (`/integrazioni`): gli amministratori creano chiavi `p3d_...` in sola lettura o con scrittura, con scadenza opzionale, e le revocano in qualsiasi momento. La chiave in chiaro si vede una sola volta; su disco resta solo l'hash SHA-256.
-- Autenticazione con `Authorization: Bearer p3d_...` oppure `X-API-Key`. Le chiavi valgono solo per `/api/*` e non raggiungono utenti, chiavi, backup, login e push.
-- Endpoint pensati per agenti e automazioni: `GET /api/v1/quotes`, `GET|PATCH /api/v1/quotes/{id}`, `GET /api/v1/inventory`, oltre a `GET /api/analytics` e `GET /api/maintenance`.
-- Specifica OpenAPI 3.1 pubblica su `/api/public/openapi.json`, importabile in GPT Actions, bridge OpenAPI verso MCP, LangChain, n8n.
+- **Chiavi personali** (`/integrazioni`): ogni utente crea e gestisce le proprie chiavi `p3d_...`; gli amministratori vedono quelle di tutti e possono crearne a nome di altri. Una chiave non supera mai i permessi del ruolo attuale del proprietario e smette di funzionare se l'utente viene eliminato.
+- **Permessi per area**: Preventivi, Clienti, Magazzino, Manutenzione e Statistiche, ciascuna con nessun accesso, lettura o scrittura. Preset pronti: Assistente AI, Automazione produzione, Report economici, Accesso completo. Le statistiche economiche sono riservate agli amministratori.
+- **Restrizioni**: indirizzi IP o reti consentite (CIDR), limite di richieste al minuto (header `X-RateLimit-*`, `429` con `Retry-After`), scadenza.
+- **Ciclo di vita**: modifica dei permessi senza cambiare la chiave, rigenerazione con gli stessi permessi, revoca immediata, eliminazione. Su disco resta solo l'hash SHA-256.
+- **Registro di utilizzo**: richieste riuscite e rifiutate, grafico degli ultimi 7 giorni, ultime richieste con IP ed esito.
+- **Endpoint v1**: `GET /api/v1/me` (permessi effettivi), `GET|POST /api/v1/quotes`, `GET|PATCH /api/v1/quotes/{id}`, `GET /api/v1/clients`, `GET /api/v1/inventory`, `PATCH /api/v1/inventory/spools/{id}`, `GET /api/v1/maintenance`, `GET /api/v1/analytics`. Accesso negato per impostazione predefinita a tutto il resto.
+- **OpenAPI 3.1** pubblica su `/api/public/openapi.json`, con il permesso richiesto da ogni operazione (`x-required-scope`): importabile in GPT Actions, bridge OpenAPI verso MCP, LangChain, n8n.
 
 ---
 
