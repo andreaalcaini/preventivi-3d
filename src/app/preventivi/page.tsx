@@ -4,8 +4,10 @@ import React, { useState, useEffect, useMemo, useSyncExternalStore } from 'react
 import { 
   FolderKanban, Search, Trash2, ExternalLink, 
   Share2, CheckCircle2, User, Box, Check, Pencil, Link as LinkIcon,
-  MessageSquare, QrCode, MessagesSquare, X as CloseIcon
+  MessageSquare, QrCode, MessagesSquare, X as CloseIcon, Factory
 } from 'lucide-react';
+import ProductionDrawer from '@/components/ProductionDrawer';
+import { isLate, type ProductionQuote } from '@/lib/production';
 import OrderThread from '@/components/OrderThread';
 import Link from 'next/link';
 import { getWhatsAppUrl } from '@/lib/whatsapp';
@@ -106,6 +108,7 @@ export default function PreventiviPage() {
   const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null);
   const [activeParcelLabel, setActiveParcelLabel] = useState<ParcelLabelData | null>(null);
   const [threadFor, setThreadFor] = useState<SavedQuote | null>(null);
+  const [productionFor, setProductionFor] = useState<SavedQuote | null>(null);
   const [msgSummary, setMsgSummary] = useState<Record<string, { total: number; unread: number }>>({});
   const loadMsgSummary = React.useCallback(() => {
     fetch('/api/order-messages', { cache: 'no-store' })
@@ -533,6 +536,15 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
                         <MessageSquare className="w-4 h-4" />
                       </a>
 
+                      {/* Produzione: stampante, consuntivo, scarti, controllo qualità */}
+                      <button
+                        onClick={() => setProductionFor(item)}
+                        className={`relative p-2 hover:bg-raised rounded-lg transition-colors ${isLate(item as unknown as ProductionQuote) ? 'text-danger-ink' : 'text-ink-muted hover:text-ink'}`}
+                        title={isLate(item as unknown as ProductionQuote) ? 'Produzione: fine prevista oltre la consegna promessa' : 'Produzione, consuntivo e controllo qualità'}
+                      >
+                        <Factory className="w-4 h-4" />
+                      </button>
+
                       {/* Conversazione con il cliente (visibile nel tracking) */}
                       <button
                         onClick={() => setThreadFor(item)}
@@ -651,6 +663,14 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
               </div>
             )}
           </div>
+        )}
+
+        {productionFor && (
+          <ProductionDrawer
+            quote={productionFor as unknown as ProductionQuote}
+            onClose={() => setProductionFor(null)}
+            onSaved={updated => setQuotes(prev => prev.map(x => (x.id === updated.id ? ({ ...x, ...updated } as unknown as SavedQuote) : x)))}
+          />
         )}
 
         {threadFor && (

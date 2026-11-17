@@ -12,7 +12,9 @@ const CRITICAL_FILES = [
   'maintenance.json',
   'api_keys.json',
   'api_key_usage.json',
-  'order_messages.json'
+  'order_messages.json',
+  'pricing.json',
+  'activity.json'
 ];
 
 function ensureDir(dir: string) {
