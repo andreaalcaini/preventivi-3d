@@ -49,6 +49,7 @@
 ### 7. 🛡️ Backup & Sicurezza 1-Click
 - Esportazione istantanea di un archivio compresso `.zip` contenente tutti i database JSON (`quotes.json`, `inventory.json`, `maintenance.json`, `users.json`, `api_keys.json`).
 - Ripristino completo e storico dei backup scaricabili.
+- **Backup su Google Drive** (pagina Backup, solo amministratori): collegamento OAuth con permesso `drive.file` (l'app vede solo i file che crea), caricamento manuale o automatico ogni giorno/settimana a un orario scelto, rotazione delle copie e ripristino diretto da Drive. Serve un ID client OAuth di tipo "Applicazione web" creato in Google Cloud Console con l'URI di reindirizzamento mostrato nella pagina; in alternativa `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` nel docker-compose. Il token resta in `data/drive.json`, escluso dai backup.
 
 ### Preventivo automatico e listino
 - **Stima anche da STL**: il browser misura il modello (volume, superficie, ingombro, base d'appoggio, superfici aperte); il server calcola grammi, ore e prezzo con il **Listino** (materiali, costi, margine, minimo, sconti per quantità, urgenza, multicolore). Con i dati dello slicer usa quelli.

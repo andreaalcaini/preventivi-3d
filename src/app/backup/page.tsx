@@ -5,6 +5,7 @@ import {
   HardDrive, Download, Upload, ShieldCheck, 
   AlertTriangle, RefreshCw, FileArchive, CheckCircle2, Clock
 } from 'lucide-react';
+import DriveBackupPanel from '@/components/DriveBackupPanel';
 
 interface Snapshot {
   filename: string;
@@ -151,6 +152,8 @@ export default function BackupPage() {
             <a key={t} href={`/api/export?type=${t}`} className="btn btn-secondary btn-sm">{l}</a>
           ))}
         </div>
+
+        <DriveBackupPanel />
 
         {/* Feedback Message */}
         {message && (
