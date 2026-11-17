@@ -8,6 +8,7 @@ import {
   Receipt, Copy, X, FileText, Link as LinkIcon, ArrowLeft
 } from 'lucide-react';
 import Link from 'next/link';
+import ClientProfileCard from '@/components/ClientProfileCard';
 
 type JobStatus = 'in_attesa' | 'in_stampa' | 'pronto' | 'saldato';
 
@@ -143,6 +144,14 @@ export default function ClientiPage() {
     const q = search.toLowerCase();
     return clientsData.filter(c => c.name.toLowerCase().includes(q));
   }, [clientsData, search]);
+
+  const activeContacts = useMemo(() => {
+    if (!selectedClientName && !filteredClients[0]) return [] as string[];
+    const name = selectedClientName || filteredClients[0]?.name;
+    const set = new Set<string>();
+    for (const q of quotes) if (q.clientName === name && (q as { clientContact?: string }).clientContact) set.add(String((q as { clientContact?: string }).clientContact).trim());
+    return [...set];
+  }, [quotes, selectedClientName, filteredClients]);
 
   const activeClient = useMemo(() => {
     if (!selectedClientName) return filteredClients[0] || null;
@@ -539,6 +548,12 @@ export default function ClientiPage() {
                     </Link>
                   </div>
                 </div>
+
+                <ClientProfileCard
+                  key={activeClient.name}
+                  name={activeClient.name}
+                  knownContacts={activeContacts}
+                />
 
                 {/* Box Statistiche Singolo Cliente */}
                 <div className="grid grid-cols-3 gap-3">

@@ -14,7 +14,9 @@ const CRITICAL_FILES = [
   'api_key_usage.json',
   'order_messages.json',
   'pricing.json',
-  'activity.json'
+  'activity.json',
+  'clients.json',
+  'catalog.json'
 ];
 
 function ensureDir(dir: string) {
