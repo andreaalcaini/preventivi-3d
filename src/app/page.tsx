@@ -13,6 +13,7 @@ import Link from 'next/link';
 import StlViewer from '@/components/StlViewer';
 import MakerWorldModelViewer from '@/components/MakerWorldModelViewer';
 import { parseSlicerFiles } from '@/lib/slicerParser';
+import { analyzeModelFile, type MeshStats } from '@/lib/meshAnalysis';
 import { getWhatsAppUrl } from '@/lib/whatsapp';
 import QrLabelModal, { ParcelLabelData } from '@/components/QrLabelModal';
 
@@ -26,6 +27,8 @@ type PricingType = 'amico' | 'collega' | 'commerciale' | 'richiesta_cliente';
 export type RoundingMode = 'none' | 'excess' | 'defect' | 'nearest';
 
 interface QuoteState {
+  meshStats?: MeshStats | null;
+  weightSource?: 'slicer' | 'geometria' | 'manuale' | '';
   id: string;
   name: string;
   clientName: string;
@@ -379,6 +382,67 @@ export default function QuoteCalculator() {
     }
   };
 
+  // Geometria del modello: salvata nel preventivo (serve alla calibrazione) e, se mancano grammi e ore, stima dal listino
+  const analyzeAndEstimate = async (file: File) => {
+    const stats = await analyzeModelFile(file, file.name);
+    if (!stats) return;
+    setQuote(prev => ({ ...prev, meshStats: stats }));
+    const empty = !quote.weight && !quote.hours && !quote.mins;
+    if (!empty) return;
+    try {
+      const res = await fetch('/api/public/estimate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ material: quote.material, qty: 1, mesh: stats }),
+      });
+      const data = await res.json();
+      if (!data.estimate) return;
+      const h = Math.floor(data.estimate.hours);
+      const m = Math.round((data.estimate.hours % 1) * 60);
+      setQuote(prev => ({ ...prev, weight: data.estimate.grams, hours: h, mins: m, weightSource: 'geometria' }));
+      const warn = (data.warnings || []).map((w: { text: string }) => w.text).join(' ');
+      setSlicerFeedback({
+        type: 'success',
+        message: `Stima dal modello (${stats.volumeCm3} cm³, ${stats.sizeMm.x}×${stats.sizeMm.y}×${stats.sizeMm.z} mm): ${h}h ${m}m • ${data.estimate.grams}g. Verifica con lo slicer per un prezzo preciso.${warn ? ` ${warn}` : ''}`,
+      });
+    } catch {
+      // stima facoltativa
+    }
+  };
+
+  // Import da Printables, Thingiverse e altri siti: metadati + primo file STL/3MF caricato nel preventivo
+  const [importingExternal, setImportingExternal] = useState(false);
+  const isMakerWorldLink = (u?: string) => Boolean(u && u.includes('makerworld.com'));
+  const isImportableLink = (u?: string) => Boolean(u && /(makerworld|printables|thingiverse|myminifactory|cults3d|thangs)\.com\//i.test(u));
+  const handleExternalImport = async () => {
+    const url = (quote.makerWorldUrl || '').trim();
+    if (!url) return;
+    setImportingExternal(true);
+    setMakerWorldError(null);
+    try {
+      const res = await fetch(`/api/public/model-import?url=${encodeURIComponent(url)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Importazione non riuscita');
+      if (data.title) setQuote(prev => ({ ...prev, name: prev.name.trim() ? prev.name : data.title }));
+      const first = (data.files || [])[0];
+      if (!first) {
+        setMakerWorldError(data.note || 'Nessun file scaricabile: carica il modello a mano.');
+        return;
+      }
+      const r = await fetch(first.proxyUrl);
+      if (!r.ok) throw new Error('Download del file non riuscito');
+      const file = new File([await r.blob()], first.name, { type: 'application/octet-stream' });
+      await handleModelUpload(file);
+      if ((data.files || []).length > 1) {
+        setMakerWorldError(`Caricato "${first.name}". Il modello ha ${data.files.length} file: per gli altri usa il portale richieste o caricali dallo slicer.`);
+      }
+    } catch (err) {
+      setMakerWorldError(err instanceof Error ? err.message : 'Importazione non riuscita');
+    } finally {
+      setImportingExternal(false);
+    }
+  };
+
   const handleModelUpload = async (file: File) => {
     setUploadingModel(true);
     try {
@@ -399,6 +463,7 @@ export default function QuoteCalculator() {
           modelFileName: data.fileName
         }));
         setModelViewMode('mesh');
+        await analyzeAndEstimate(file);
       } else {
         console.error('Errore risposta server upload:', data.error);
       }
@@ -439,7 +504,8 @@ export default function QuoteCalculator() {
         material: parsed.material || prev.material,
         multiColor: parsed.multiColor ?? prev.multiColor,
         colorChanges: parsed.colorCount ? Math.max(0, parsed.colorCount - 1) : prev.colorChanges,
-        purgeWeight: (parsed.multiColor && prev.purgeWeight === 0) ? Math.round(parsed.weightGrams * 0.25) : prev.purgeWeight
+        purgeWeight: (parsed.multiColor && prev.purgeWeight === 0) ? Math.round(parsed.weightGrams * 0.25) : prev.purgeWeight,
+        weightSource: 'slicer'
       }));
       const filesLabel = parsedFiles.length > 1 ? ` (${parsedFiles.length} file sommati)` : '';
       const skippedLabel = errors.length > 0 ? ` • Ignorati: ${errors.map(er => er.fileName).join(', ')}` : '';
@@ -500,6 +566,7 @@ export default function QuoteCalculator() {
           hours: prof.printHours,
           mins: prof.printMinutes,
           weight: prof.weightGrams,
+          weightSource: 'slicer',
           material: prof.material || prev.material,
           multiColor: prof.needAms ?? prev.multiColor,
           colorChanges: prof.needAms ? Math.max(1, prev.colorChanges) : prev.colorChanges,
@@ -528,6 +595,7 @@ export default function QuoteCalculator() {
       hours: target.printHours,
       mins: target.printMinutes,
       weight: target.weightGrams,
+      weightSource: 'slicer',
       material: target.material || prev.material,
       multiColor: target.needAms ?? prev.multiColor,
       colorChanges: target.needAms ? Math.max(1, prev.colorChanges) : prev.colorChanges,
@@ -1147,7 +1215,7 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                   <div className="space-y-1.5 bg-sunken p-2.5 rounded-xl border border-line">
                     <div className="flex items-center justify-between">
                       <label className="block text-[11px] font-medium text-ink-muted flex items-center gap-1">
-                        <LinkIcon className="w-3 h-3 text-accent-ink" /> Link MakerWorld / Modello 3D
+                        <LinkIcon className="w-3 h-3 text-accent-ink" /> Link al modello (MakerWorld, Printables, Thingiverse…)
                       </label>
                       {quote.makerWorldUrl?.includes('makerworld.com') && (
                         <span className="text-[10px] text-accent-ink flex items-center gap-1">
@@ -1166,13 +1234,13 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                             setMakerWorldError(null);
                           }} 
                           onKeyDown={e => {
-                            if (e.key === 'Enter' && quote.makerWorldUrl?.includes('makerworld.com')) {
+                            if (e.key === 'Enter' && isImportableLink(quote.makerWorldUrl)) {
                               e.preventDefault();
-                              handleFetchMakerWorld();
+                              if (isMakerWorldLink(quote.makerWorldUrl)) handleFetchMakerWorld(); else handleExternalImport();
                             }
                           }}
-                          placeholder="https://makerworld.com/it/models/..."
-                          className="w-full bg-surface border border-line-strong-strong rounded-lg pl-3 pr-8 py-1.5 focus:border-accent outline-none text-xs text-ink placeholder:text-ink-faint" 
+                          placeholder="https://makerworld.com/... o printables.com/..."
+                          className="w-full bg-surface border border-line-strong rounded-lg pl-3 pr-8 py-1.5 focus:border-accent outline-none text-xs text-ink placeholder:text-ink-faint" 
                         />
                         {quote.makerWorldUrl && (
                           <a href={quote.makerWorldUrl} target="_blank" rel="noreferrer" className="absolute right-2 p-1 text-ink-muted hover:text-accent-ink" title="Apri su MakerWorld">
@@ -1183,11 +1251,11 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
 
                       <button
                         type="button"
-                        onClick={() => handleFetchMakerWorld()}
-                        disabled={loadingMakerWorld || !quote.makerWorldUrl?.includes('makerworld.com')}
+                        onClick={() => (isMakerWorldLink(quote.makerWorldUrl) ? handleFetchMakerWorld() : handleExternalImport())}
+                        disabled={loadingMakerWorld || importingExternal || !isImportableLink(quote.makerWorldUrl)}
                         className="px-3 py-1.5 bg-accent hover:bg-accent-hover disabled:opacity-40 text-on-accent text-xs font-bold rounded-lg transition-all flex items-center gap-1 shadow-sm whitespace-nowrap cursor-pointer disabled:cursor-not-allowed"
                       >
-                        {loadingMakerWorld ? (
+                        {loadingMakerWorld || importingExternal ? (
                           <>
                             <Loader2 className="w-3 h-3 animate-spin" />
                             <span>Analisi...</span>
@@ -1687,7 +1755,7 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                   {/* 3D Viewer & MakerWorld Plate Preview */}
                   <div className="space-y-1.5">
                     <MakerWorldModelViewer
-                      makerWorldUrl={quote.makerWorldUrl}
+                      makerWorldUrl={isMakerWorldLink(quote.makerWorldUrl) ? quote.makerWorldUrl : ''}
                       modelTitle={makerWorldInfo?.modelTitle || quote.name}
                       coverUrl={makerWorldInfo?.coverUrl}
                       authorName={makerWorldInfo?.authorName}
