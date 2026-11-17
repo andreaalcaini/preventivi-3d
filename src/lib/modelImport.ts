@@ -153,7 +153,17 @@ async function importThingiverse(id: string, url: string): Promise<ImportedModel
     };
   }
   const auth = { Authorization: `Bearer ${token}` };
-  const thing = await fetchJson(`https://api.thingiverse.com/things/${id}`, { headers: auth });
+  let thing;
+  try {
+    thing = await fetchJson(`https://api.thingiverse.com/things/${id}`, { headers: auth });
+  } catch {
+    // Thingiverse a volte risponde con la verifica anti-bot di Cloudflare: niente file, ma un messaggio chiaro
+    return {
+      ...emptyModel('thingiverse', url),
+      title: `Thingiverse thing:${id}`,
+      note: 'Thingiverse in questo momento blocca le richieste automatiche: scarica il file STL dalla pagina del modello e caricalo qui.',
+    };
+  }
   const list = await fetchJson(`https://api.thingiverse.com/things/${id}/files`, { headers: auth }).catch(() => []);
   const files: ImportedFile[] = (Array.isArray(list) ? list : [])
     .filter((f: { name: string }) => isModelFile(f.name))

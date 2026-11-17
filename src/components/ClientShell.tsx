@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   Calculator, FolderKanban, Users, Box,
   Eye, EyeOff, Shield, LogOut, BarChart3, Wrench, HardDrive,
-  ArrowUpRight, KeyRound, Sun, Moon, Menu, X, Tags, type LucideIcon,
+  ArrowUpRight, KeyRound, Sun, Moon, Menu, X, Tags, CalendarClock, type LucideIcon,
 } from 'lucide-react';
 import { NotificationManager } from '@/components/NotificationManager';
 
@@ -53,6 +53,7 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
   {
     title: 'Laboratorio',
     items: [
+      { href: '/produzione', label: 'Produzione', icon: CalendarClock },
       { href: '/magazzino', label: 'Magazzino', icon: Box },
       { href: '/manutenzione', label: 'Manutenzione', icon: Wrench },
       { href: '/dashboard', label: 'Statistiche', icon: BarChart3 },
