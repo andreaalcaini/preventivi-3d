@@ -161,8 +161,54 @@ export default function RichiediPreventivoPage() {
     });
   };
 
+  // Import da Printables, Thingiverse, MyMiniFactory e altri siti (MakerWorld ha il suo flusso con tempi e grammi)
+  const [importInfo, setImportInfo] = useState<{
+    sourceLabel: string; title: string; author: string; license: string; images: string[];
+    files: Array<{ name: string; proxyUrl: string }>; note?: string;
+  } | null>(null);
+  const [importStatus, setImportStatus] = useState('');
+  const importTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const IMPORT_HOSTS = /(printables\.com|thingiverse\.com|myminifactory\.com|cults3d\.com|thangs\.com)\//i;
+
+  const runExternalImport = async (url: string) => {
+    setLoadingMw(true);
+    setImportStatus('Lettura del modello…');
+    try {
+      const res = await fetch(`/api/public/model-import?url=${encodeURIComponent(url)}`);
+      const data = await res.json();
+      if (!res.ok) {
+        setMwError(data.error || 'Impossibile leggere il modello da questo link');
+        return;
+      }
+      setImportInfo(data);
+      const files: File[] = [];
+      for (const [i, f] of (data.files as Array<{ name: string; proxyUrl: string }>).slice(0, 6).entries()) {
+        setImportStatus(`Download file ${i + 1} di ${Math.min(6, data.files.length)}…`);
+        const r = await fetch(f.proxyUrl);
+        if (!r.ok) continue;
+        files.push(new File([await r.blob()], f.name, { type: 'application/octet-stream' }));
+      }
+      if (files.length) addFiles(files);
+      if (data.title) setProjectName(data.title);
+    } catch {
+      setMwError("Errore di connessione durante l'importazione");
+    } finally {
+      setImportStatus('');
+      setLoadingMw(false);
+    }
+  };
+
   const handleMakerWorldUrlChange = async (url: string) => {
     setMakerWorldUrl(url);
+    setImportInfo(null);
+    if (importTimer.current) clearTimeout(importTimer.current);
+    if (IMPORT_HOSTS.test(url)) {
+      setMwError('');
+      setMwInfo(null);
+      // attende che l'utente finisca di incollare o scrivere
+      importTimer.current = setTimeout(() => runExternalImport(url.trim()), 600);
+      return;
+    }
     setMwError('');
     if (!url.trim()) {
       setMwInfo(null);
@@ -509,7 +555,7 @@ export default function RichiediPreventivoPage() {
 
                   {/* 3D Model & MakerWorld Viewer */}
                   <MakerWorldModelViewer 
-                    makerWorldUrl={makerWorldUrl}
+                    makerWorldUrl={makerWorldUrl.includes('makerworld.com/') ? makerWorldUrl : ''}
                     modelTitle={activeModelInfo?.title}
                     coverUrl={activeModelInfo?.coverUrl}
                     authorName={activeModelInfo?.author}
@@ -608,11 +654,16 @@ export default function RichiediPreventivoPage() {
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-ink flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5 text-accent-ink" strokeWidth={1.75} />
-                      Link Progetto MakerWorld
+                      Link al modello
                     </label>
                     {makerWorldUrl.includes('makerworld.com/') && (
-                      <span className="text-[10px] bg-accent-soft text-accent-ink border border-accent-line px-2.5 py-0.5 rounded-full font-mono font-medium">
-                        Profilo Riconosciuto
+                      <span className="text-[11px] bg-accent-soft text-accent-ink border border-accent-line px-2.5 py-0.5 rounded-full font-medium">
+                        MakerWorld
+                      </span>
+                    )}
+                    {importInfo && (
+                      <span className="text-[11px] bg-accent-soft text-accent-ink border border-accent-line px-2.5 py-0.5 rounded-full font-medium">
+                        {importInfo.sourceLabel}
                       </span>
                     )}
                   </div>
@@ -621,14 +672,41 @@ export default function RichiediPreventivoPage() {
                     type="url"
                     value={makerWorldUrl}
                     onChange={e => handleMakerWorldUrlChange(e.target.value)}
-                    placeholder="https://makerworld.com/it/models/..."
+                    placeholder="https://www.printables.com/model/..."
+                    aria-describedby="model-link-help"
                     className="w-full bg-surface border border-line-strong rounded-xl p-3 text-xs text-ink placeholder:text-ink-faint focus:outline-none focus:border-accent focus:ring-[3px] focus:ring-accent/20 transition-all font-mono"
                   />
 
+                  <p id="model-link-help" className="text-xs text-ink-faint">
+                    MakerWorld, Printables, Thingiverse, MyMiniFactory, Cults3D: i file disponibili vengono caricati da soli.
+                  </p>
+
                   {loadingMw && (
-                    <div className="flex items-center gap-2 text-xs text-accent-ink animate-pulse pt-1">
+                    <div className="flex items-center gap-2 text-xs text-accent-ink pt-1">
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Estrazione specifiche tecniche e calcolo stima in corso...</span>
+                      <span>{importStatus || 'Estrazione specifiche tecniche e calcolo stima in corso...'}</span>
+                    </div>
+                  )}
+
+                  {importInfo && !loadingMw && (
+                    <div className="rounded-xl border border-line bg-sunken p-3 text-xs space-y-2">
+                      <div className="flex items-center gap-3">
+                        {importInfo.images[0] && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={importInfo.images[0]} alt="" className="h-12 w-12 shrink-0 rounded-lg border border-line object-cover bg-surface" />
+                        )}
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-ink">{importInfo.title || 'Modello importato'}</p>
+                          <p className="truncate text-ink-muted">
+                            {[importInfo.author && `di ${importInfo.author}`, importInfo.license].filter(Boolean).join(' · ')}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-ink-muted">
+                        {importInfo.files.length > 0
+                          ? `${importInfo.files.length} file caricati nel viewer: la stima viene calcolata come per un file tuo.`
+                          : importInfo.note}
+                      </p>
                     </div>
                   )}
 

@@ -50,6 +50,10 @@
 - Esportazione istantanea di un archivio compresso `.zip` contenente tutti i database JSON (`quotes.json`, `inventory.json`, `maintenance.json`, `users.json`, `api_keys.json`).
 - Ripristino completo e storico dei backup scaricabili.
 
+### Importazione da siti di modelli 3D
+- Nel portale "Richiedi preventivo" il campo **Link al modello** accetta MakerWorld (con tempi e grammi dei profili), **Printables** (titolo, autore, licenza, immagini e download automatico di STL/3MF), **Thingiverse** e **MyMiniFactory** (file scaricati se sul server sono impostati `THINGIVERSE_TOKEN` o `MYMINIFACTORY_API_KEY`), Cults3D e Thangs (solo informazioni, file da caricare a mano).
+- I file passano da un proxy che accetta solo gli host dei siti supportati, solo STL/3MF e massimo 60 MB; la lettura dei link blocca gli indirizzi di rete interni.
+
 ### Integrazioni API e agenti AI
 - **Chiavi personali** (`/integrazioni`): gli amministratori e gli operatori a cui un amministratore ha concesso il permesso (interruttore "Chiavi API" nella pagina Utenti) creano e gestiscono le proprie chiavi `p3d_...`; gli amministratori vedono quelle di tutti e possono crearne a nome di chi ha il permesso. Revocando il permesso le chiavi dell'utente vengono sospese. Una chiave non supera mai i permessi del ruolo attuale del proprietario e smette di funzionare se l'utente viene eliminato.
 - **Permessi per area**: Preventivi, Clienti, Magazzino, Manutenzione e Statistiche, ciascuna con nessun accesso, lettura o scrittura. Preset pronti: Assistente AI, Automazione produzione, Report economici, Accesso completo. Le statistiche economiche sono riservate agli amministratori.
