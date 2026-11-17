@@ -12,12 +12,16 @@ interface PublicUser {
   username: string;
   displayName: string;
   role: 'admin' | 'operatore';
+  canCreateApiKeys?: boolean;
   createdAt: string;
 }
 
 export default function UtentiPage() {
   const [users, setUsers] = useState<PublicUser[]>([]);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [actorRole, setActorRole] = useState<'admin' | 'operatore' | null>(null);
+  const isAdmin = actorRole === 'admin';
+  const [newCanCreateKeys, setNewCanCreateKeys] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -40,6 +44,7 @@ export default function UtentiPage() {
       if (res.ok) {
         const data = await res.json();
         setUsers(data.users || []);
+        setActorRole(data.actor?.role || null);
       }
     } catch {
       setError('Errore durante il recupero degli utenti');
@@ -78,7 +83,8 @@ export default function UtentiPage() {
           username: newUsername,
           displayName: newDisplayName,
           password: newPassword,
-          role: newRole
+          role: newRole,
+          canCreateApiKeys: newRole === 'admin' || newCanCreateKeys
         })
       });
 
@@ -94,6 +100,7 @@ export default function UtentiPage() {
       setNewUsername('');
       setNewDisplayName('');
       setNewPassword('');
+      setNewCanCreateKeys(false);
       fetchUsers();
       setTimeout(() => setSuccess(''), 3000);
     } catch {
@@ -131,6 +138,32 @@ export default function UtentiPage() {
       setTimeout(() => setSuccess(''), 3000);
     } catch {
       setError('Errore di connessione');
+    }
+  };
+
+  const handleToggleApiKeys = async (user: PublicUser) => {
+    setError('');
+    const next = !user.canCreateApiKeys;
+    setUsers(prev => prev.map(u => (u.id === user.id ? { ...u, canCreateApiKeys: next } : u)));
+    try {
+      const res = await fetch('/api/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, canCreateApiKeys: next })
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || 'Impossibile aggiornare il permesso');
+        fetchUsers();
+        return;
+      }
+      setSuccess(next
+        ? `${user.displayName} ora può creare chiavi API`
+        : `${user.displayName} non può più creare chiavi API: le sue chiavi sono sospese`);
+      setTimeout(() => setSuccess(''), 3000);
+    } catch {
+      setError('Errore di connessione');
+      fetchUsers();
     }
   };
 
@@ -173,13 +206,13 @@ export default function UtentiPage() {
             <p className="text-ink-muted text-xs">Crea e gestisci gli account operatori per l&apos;accesso al laboratorio</p>
           </div>
 
-          <button
+          {isAdmin && <button
             onClick={() => setAddModalOpen(true)}
             className="px-3.5 py-2 bg-accent hover:bg-accent-hover text-on-accent font-semibold text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md "
           >
             <UserPlus className="w-3.5 h-3.5" />
             <span>Aggiungi Nuovo Utente</span>
-          </button>
+          </button>}
         </div>
 
         {/* Notifiche */}
@@ -236,7 +269,26 @@ export default function UtentiPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 self-end sm:self-center">
+                    <div className="flex flex-wrap items-center gap-2 self-end sm:self-center">
+                      {u.role === 'admin' ? (
+                        <span className="text-xs text-ink-faint px-2" title="Gli amministratori possono sempre creare chiavi API">Chiavi API sempre</span>
+                      ) : (
+                        <label className={`flex items-center gap-2 rounded-lg border border-line px-2.5 min-h-9 text-xs ${isAdmin ? 'cursor-pointer hover:bg-raised' : 'opacity-70'}`}
+                          title={isAdmin ? 'Consenti a questo utente di creare e gestire le proprie chiavi API' : 'Solo un amministratore può cambiare questo permesso'}>
+                          <span className="text-ink-muted">Chiavi API</span>
+                          <button
+                            type="button"
+                            role="switch"
+                            aria-checked={Boolean(u.canCreateApiKeys)}
+                            aria-label={`Chiavi API per ${u.displayName}`}
+                            disabled={!isAdmin}
+                            onClick={() => handleToggleApiKeys(u)}
+                            className={`relative h-5 w-9 rounded-full transition-colors disabled:cursor-not-allowed ${u.canCreateApiKeys ? 'bg-accent' : 'bg-muted'}`}
+                          >
+                            <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-surface shadow-sm transition-transform ${u.canCreateApiKeys ? 'translate-x-4' : 'translate-x-0.5'}`} />
+                          </button>
+                        </label>
+                      )}
                       <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border ${
                         u.role === 'admin' 
                           ? 'bg-info-soft border-info-line text-info-ink' 
@@ -246,7 +298,7 @@ export default function UtentiPage() {
                       </span>
 
                       {/* Tasto Modifica Password */}
-                      <button
+                      {(isAdmin || isSelf) && <button
                         onClick={() => {
                           setTargetUser(u);
                           setPwdModalOpen(true);
@@ -255,10 +307,10 @@ export default function UtentiPage() {
                         title="Cambia password"
                       >
                         <KeyRound className="w-4 h-4" />
-                      </button>
+                      </button>}
 
                       {/* Tasto Elimina Utente */}
-                      {!isSelf && (
+                      {isAdmin && !isSelf && (
                         <button
                           onClick={() => handleDeleteUser(u)}
                           className="p-2 bg-raised hover:bg-danger-soft text-ink-muted hover:text-danger-ink rounded-lg transition-colors"
@@ -339,6 +391,18 @@ export default function UtentiPage() {
                   <option value="admin">Amministratore (Gestione team)</option>
                 </select>
               </div>
+
+              {newRole === 'operatore' && (
+                <label className="flex items-start gap-2.5 text-sm text-ink-muted cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={newCanCreateKeys}
+                    onChange={e => setNewCanCreateKeys(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 accent-accent"
+                  />
+                  <span>Può creare chiavi API <span className="block text-xs text-ink-faint">Per collegare assistenti AI e automazioni con i permessi del suo ruolo.</span></span>
+                </label>
+              )}
 
               <div className="pt-2 flex justify-end gap-2">
                 <button

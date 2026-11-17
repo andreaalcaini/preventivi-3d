@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifySessionToken, SESSION_COOKIE_NAME, getAllPublicUsers, getUserById } from '@/lib/auth';
+import { verifySessionToken, SESSION_COOKIE_NAME, getAllPublicUsers, getUserById, userCanManageApiKeys } from '@/lib/auth';
 import {
   listApiKeys, createApiKey, updateApiKey, rotateApiKey, revokeApiKey, deleteApiKey, type Actor,
 } from '@/lib/apiKeys';
@@ -9,7 +9,7 @@ function getActor(request: NextRequest): Actor | null {
   const session = verifySessionToken(request.cookies.get(SESSION_COOKIE_NAME)?.value);
   if (!session) return null;
   const user = getUserById(session.userId);
-  return user ? { id: user.id, username: user.username, role: user.role } : null;
+  return user ? { id: user.id, username: user.username, role: user.role, canCreateApiKeys: userCanManageApiKeys(user) } : null;
 }
 
 const unauthorized = () => NextResponse.json({ error: 'Non autorizzato' }, { status: 401 });
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     actor,
     keys: listApiKeys(actor),
     users: actor.role === 'admin'
-      ? getAllPublicUsers().map(u => ({ id: u.id, username: u.username, displayName: u.displayName, role: u.role }))
+      ? getAllPublicUsers().map(u => ({ id: u.id, username: u.username, displayName: u.displayName, role: u.role, canCreateApiKeys: userCanManageApiKeys(u) }))
       : [],
   });
 }
@@ -29,6 +29,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const actor = getActor(request);
   if (!actor) return unauthorized();
+  if (!actor.canCreateApiKeys) {
+    return NextResponse.json({ error: 'Non hai il permesso di creare chiavi API: chiedilo a un amministratore' }, { status: 403 });
+  }
   const body = await request.json().catch(() => null);
   if (!body) return NextResponse.json({ error: 'Richiesta non valida' }, { status: 400 });
   const result = createApiKey(actor, body);

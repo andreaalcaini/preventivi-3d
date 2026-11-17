@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
-import { getAllUsers, type User } from '@/lib/auth';
+import { getAllUsers, userCanManageApiKeys, type User } from '@/lib/auth';
 import {
   normalizeScopes, scopeAllowedForRole, requiredScope, RATE_LIMIT_OPTIONS,
   type Scope, type Role,
@@ -35,13 +35,13 @@ export interface ApiKeyRecord {
   revokedAt: string | null;
 }
 
-export type PublicApiKey = Omit<ApiKeyRecord, 'hash'> & { ownerActive: boolean; usage: KeyUsageSummary };
+export type PublicApiKey = Omit<ApiKeyRecord, 'hash'> & { ownerActive: boolean; ownerAllowed: boolean; usage: KeyUsageSummary };
 
 export interface UsageEvent { at: string; method: string; path: string; ip: string; status: number }
 interface KeyUsage { total: number; denied: number; daily: Record<string, number>; recent: UsageEvent[] }
 export interface KeyUsageSummary { total: number; denied: number; last7Days: number[]; recent: UsageEvent[] }
 
-export interface Actor { id: string; username: string; role: Role }
+export interface Actor { id: string; username: string; role: Role; canCreateApiKeys: boolean }
 
 export const API_KEY_PREFIX = 'p3d_';
 const DEFAULT_RATE_LIMIT = 120;
@@ -212,7 +212,8 @@ export function clientIp(headers: Headers): string {
 
 function toPublic(k: ApiKeyRecord, users: User[]): PublicApiKey {
   const { hash: _hash, ...rest } = k;
-  return { ...rest, ownerActive: users.some(u => u.id === k.ownerId), usage: summarizeUsage(k.id) };
+  const owner = users.find(u => u.id === k.ownerId);
+  return { ...rest, ownerActive: Boolean(owner), ownerAllowed: userCanManageApiKeys(owner), usage: summarizeUsage(k.id) };
 }
 
 function canManage(actor: Actor, key: ApiKeyRecord) {
@@ -286,12 +287,18 @@ function hashKey(rawKey: string): string {
   return crypto.createHash('sha256').update(rawKey).digest('hex');
 }
 
+const NOT_ALLOWED = 'Non hai il permesso di creare chiavi API: chiedilo a un amministratore';
+
 export function createApiKey(actor: Actor, input: KeyInput): { key: PublicApiKey; secret: string } | { error: string } {
+  if (!actor.canCreateApiKeys) return { error: NOT_ALLOWED };
   const users = getAllUsers();
   // Un amministratore può creare una chiave a nome di un altro utente; gli operatori solo per sé
   const ownerId = actor.role === 'admin' && typeof input.ownerId === 'string' && input.ownerId ? input.ownerId : actor.id;
   const owner = users.find(u => u.id === ownerId);
   if (!owner) return { error: 'Utente proprietario non trovato' };
+  if (!userCanManageApiKeys(owner)) {
+    return { error: `@${owner.username} non ha il permesso per le chiavi API: concedilo prima nella pagina Utenti` };
+  }
 
   const v = validate(input, owner.role, false);
   if ('error' in v) return v;
@@ -326,6 +333,7 @@ export function updateApiKey(actor: Actor, id: string, input: KeyInput): { key: 
   const keys = readKeys();
   const key = keys.find(k => k.id === id);
   if (!key || !canManage(actor, key)) return { error: 'Chiave non trovata', status: 404 };
+  if (!actor.canCreateApiKeys) return { error: NOT_ALLOWED, status: 403 };
   if (key.revokedAt) return { error: 'Una chiave revocata non si può modificare', status: 409 };
 
   const users = getAllUsers();
@@ -342,6 +350,7 @@ export function rotateApiKey(actor: Actor, id: string): { key: PublicApiKey; sec
   const keys = readKeys();
   const key = keys.find(k => k.id === id);
   if (!key || !canManage(actor, key)) return { error: 'Chiave non trovata', status: 404 };
+  if (!actor.canCreateApiKeys) return { error: NOT_ALLOWED, status: 403 };
   if (key.revokedAt) return { error: 'Una chiave revocata non si può rigenerare', status: 409 };
   const { secret, prefix, hash } = newSecret();
   const now = new Date().toISOString();
@@ -422,6 +431,10 @@ export function authorizeApiKey(rawKey: string, pathname: string, method: string
   if (!owner) {
     log(401);
     return { ok: false, status: 401, error: "L'utente proprietario della chiave non esiste più" };
+  }
+  if (!userCanManageApiKeys(owner)) {
+    log(401);
+    return { ok: false, status: 401, error: 'Il proprietario della chiave non ha più il permesso di usare chiavi API' };
   }
 
   if (record.allowedIps.length && !record.allowedIps.some(rule => ipMatches(ip, rule))) {

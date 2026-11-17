@@ -19,6 +19,7 @@ interface ApiKey {
   ownerId: string;
   ownerUsername: string;
   ownerActive: boolean;
+  ownerAllowed: boolean;
   scopes: Scope[];
   allowedIps: string[];
   rateLimitPerMinute: number;
@@ -32,8 +33,8 @@ interface ApiKey {
   revokedAt: string | null;
   usage: { total: number; denied: number; last7Days: number[]; recent: UsageEvent[] };
 }
-interface Actor { id: string; username: string; role: Role }
-interface UserOption { id: string; username: string; displayName: string; role: Role }
+interface Actor { id: string; username: string; role: Role; canCreateApiKeys: boolean }
+interface UserOption { id: string; username: string; displayName: string; role: Role; canCreateApiKeys: boolean }
 
 const EXPIRY_OPTIONS = [
   { value: '', label: 'Nessuna scadenza' },
@@ -64,6 +65,7 @@ function relative(iso: string | null) {
 function keyState(k: ApiKey): { label: string; cls: string; active: boolean } {
   if (k.revokedAt) return { label: 'Revocata', cls: 'bg-danger-soft text-danger-ink border-danger-line', active: false };
   if (!k.ownerActive) return { label: 'Proprietario rimosso', cls: 'bg-danger-soft text-danger-ink border-danger-line', active: false };
+  if (!k.ownerAllowed) return { label: 'Permesso revocato', cls: 'bg-warn-soft text-warn-ink border-warn-line', active: false };
   if (k.expiresAt && Date.parse(k.expiresAt) < Date.now()) return { label: 'Scaduta', cls: 'bg-warn-soft text-warn-ink border-warn-line', active: false };
   return { label: 'Attiva', cls: 'bg-accent-soft text-accent-ink border-accent-line', active: true };
 }
@@ -223,12 +225,12 @@ function KeyEditor({
                   setS({ ...s, ownerId: e.target.value, scopes: s.scopes.filter(sc => scopeAllowedForRole(sc, role)) });
                 }}>
                   {users.map(u => (
-                    <option key={u.id} value={u.id}>
-                      {u.displayName} (@{u.username}, {u.role === 'admin' ? 'amministratore' : 'operatore'})
+                    <option key={u.id} value={u.id} disabled={!u.canCreateApiKeys}>
+                      {u.displayName} (@{u.username}, {u.role === 'admin' ? 'amministratore' : 'operatore'}){u.canCreateApiKeys ? '' : ' - senza permesso'}
                     </option>
                   ))}
                 </select>
-                <p className="mt-1.5 text-xs text-ink-faint">La chiave non potrà mai fare più di quanto consente il ruolo del proprietario, e smette di funzionare se l&apos;utente viene eliminato.</p>
+                <p className="mt-1.5 text-xs text-ink-faint">La chiave non potrà mai fare più di quanto consente il ruolo del proprietario, e smette di funzionare se l&apos;utente viene eliminato o perde il permesso. Il permesso si concede nella pagina Utenti.</p>
               </div>
             )}
           </section>
@@ -331,9 +333,10 @@ function KeyEditor({
 /* ---------------- dettaglio chiave ---------------- */
 
 function KeyDetail({
-  k, onClose, onEdit, onRotate, onRevoke, onDelete,
+  k, canEdit, onClose, onEdit, onRotate, onRevoke, onDelete,
 }: {
   k: ApiKey;
+  canEdit: boolean;
   onClose: () => void;
   onEdit: () => void;
   onRotate: () => void;
@@ -428,8 +431,12 @@ function KeyDetail({
           {!k.revokedAt ? (
             <>
               <button onClick={onRevoke} className="btn btn-danger mr-auto"><Ban className="h-4 w-4" strokeWidth={1.75} /> Revoca</button>
-              <button onClick={onRotate} className="btn btn-secondary"><RefreshCw className="h-4 w-4" strokeWidth={1.75} /> Rigenera</button>
-              <button onClick={onEdit} className="btn btn-primary"><Pencil className="h-4 w-4" strokeWidth={1.75} /> Modifica</button>
+              {canEdit && (
+                <>
+                  <button onClick={onRotate} className="btn btn-secondary"><RefreshCw className="h-4 w-4" strokeWidth={1.75} /> Rigenera</button>
+                  <button onClick={onEdit} className="btn btn-primary"><Pencil className="h-4 w-4" strokeWidth={1.75} /> Modifica</button>
+                </>
+              )}
             </>
           ) : (
             <button onClick={onDelete} className="btn btn-secondary"><Trash2 className="h-4 w-4" strokeWidth={1.75} /> Elimina dall&apos;elenco</button>
@@ -576,10 +583,24 @@ export default function IntegrazioniPage() {
             Chiavi personali per collegare il gestionale ad assistenti AI, automazioni e script, con permessi per area, limiti e registro di utilizzo.
           </p>
         </div>
-        <button onClick={openCreate} disabled={!actor} className="btn btn-primary shrink-0">
-          <Plus className="h-4 w-4" strokeWidth={2} /> Nuova chiave
-        </button>
+        {actor?.canCreateApiKeys && (
+          <button onClick={openCreate} className="btn btn-primary shrink-0">
+            <Plus className="h-4 w-4" strokeWidth={2} /> Nuova chiave
+          </button>
+        )}
       </header>
+
+      {actor && !actor.canCreateApiKeys && (
+        <section className="rounded-xl border border-line bg-surface p-5 flex items-start gap-3">
+          <ShieldCheck className="h-5 w-5 text-ink-faint mt-0.5 shrink-0" strokeWidth={1.75} />
+          <div>
+            <h2 className="font-medium text-ink">Non puoi creare chiavi API</h2>
+            <p className="mt-1 text-sm text-ink-muted max-w-[64ch]">
+              Un amministratore deve concederti il permesso dalla pagina Utenti. Le chiavi già create a tuo nome restano visibili qui e puoi revocarle in qualsiasi momento.
+            </p>
+          </div>
+        </section>
+      )}
 
       {revealed && (
         <section className="rounded-xl border border-accent-line bg-accent-soft p-5 sm:p-6" aria-live="polite">
@@ -630,8 +651,12 @@ export default function IntegrazioniPage() {
             <div className="px-5 py-14 text-center">
               <KeyRound className="mx-auto h-6 w-6 text-ink-faint" strokeWidth={1.5} />
               <p className="mt-3 font-medium text-ink">{keys.length ? 'Nessuna chiave attiva' : 'Nessuna chiave'}</p>
-              <p className="mt-1 text-sm text-ink-muted">Crea una chiave e scegli solo i permessi che servono all&apos;integrazione.</p>
-              <button onClick={openCreate} className="btn btn-secondary mt-5"><Plus className="h-4 w-4" strokeWidth={2} /> Nuova chiave</button>
+              <p className="mt-1 text-sm text-ink-muted">
+                {actor?.canCreateApiKeys ? "Crea una chiave e scegli solo i permessi che servono all'integrazione." : 'Qui compariranno le tue chiavi quando avrai il permesso di crearle.'}
+              </p>
+              {actor?.canCreateApiKeys && (
+                <button onClick={openCreate} className="btn btn-secondary mt-5"><Plus className="h-4 w-4" strokeWidth={2} /> Nuova chiave</button>
+              )}
             </div>
           ) : (
             <ul className="divide-y divide-line">
@@ -733,6 +758,7 @@ export default function IntegrazioniPage() {
       {detail && (
         <KeyDetail
           k={detail}
+          canEdit={Boolean(actor?.canCreateApiKeys)}
           onClose={() => setDetailId(null)}
           onEdit={() => openEdit(detail)}
           onRotate={() => act(detail, 'rotate')}

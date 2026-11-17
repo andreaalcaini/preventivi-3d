@@ -7,6 +7,8 @@ export interface User {
   username: string;
   displayName: string;
   role: 'admin' | 'operatore';
+  /** Concesso da un amministratore: l'utente può creare e gestire le proprie chiavi API. Gli admin lo hanno sempre. */
+  canCreateApiKeys?: boolean;
   passwordHash: string;
   salt: string;
   createdAt: string;
@@ -123,6 +125,7 @@ export function createUser(data: {
   displayName: string;
   password: string;
   role: 'admin' | 'operatore';
+  canCreateApiKeys?: boolean;
 }): { user?: PublicUser; error?: string } {
   const users = getAllUsers();
   const normalized = data.username.trim().toLowerCase();
@@ -140,7 +143,8 @@ export function createUser(data: {
     id: crypto.randomUUID(),
     username: normalized,
     displayName: data.displayName.trim() || normalized,
-    role: data.role || 'operatore',
+    role: data.role === 'admin' ? 'admin' : 'operatore',
+    canCreateApiKeys: data.canCreateApiKeys === true,
     passwordHash: hash,
     salt,
     createdAt: new Date().toISOString()
@@ -168,6 +172,20 @@ export function updateUserPassword(id: string, newPassword: string): { success: 
   users[index].passwordHash = hash;
   users[index].salt = salt;
 
+  fs.writeFileSync(usersFilePath, JSON.stringify(users, null, 2), 'utf-8');
+  return { success: true };
+}
+
+/** Un utente può gestire chiavi API se è amministratore o se un amministratore gliel'ha concesso. */
+export function userCanManageApiKeys(user: Pick<User, 'role' | 'canCreateApiKeys'> | null | undefined): boolean {
+  return Boolean(user && (user.role === 'admin' || user.canCreateApiKeys === true));
+}
+
+export function setUserApiKeyPermission(id: string, allowed: boolean): { success: boolean; error?: string } {
+  const users = getAllUsers();
+  const user = users.find(u => u.id === id);
+  if (!user) return { success: false, error: 'Utente non trovato' };
+  user.canCreateApiKeys = allowed;
   fs.writeFileSync(usersFilePath, JSON.stringify(users, null, 2), 'utf-8');
   return { success: true };
 }

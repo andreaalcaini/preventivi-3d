@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifySessionToken, SESSION_COOKIE_NAME, getUserById } from '@/lib/auth';
+import { verifySessionToken, SESSION_COOKIE_NAME, getUserById, userCanManageApiKeys } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
   const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
@@ -19,7 +19,8 @@ export async function GET(request: NextRequest) {
       id: user.id,
       username: user.username,
       displayName: user.displayName,
-      role: user.role
+      role: user.role,
+      canCreateApiKeys: userCanManageApiKeys(user)
     }
   });
 }

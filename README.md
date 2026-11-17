@@ -51,7 +51,7 @@
 - Ripristino completo e storico dei backup scaricabili.
 
 ### Integrazioni API e agenti AI
-- **Chiavi personali** (`/integrazioni`): ogni utente crea e gestisce le proprie chiavi `p3d_...`; gli amministratori vedono quelle di tutti e possono crearne a nome di altri. Una chiave non supera mai i permessi del ruolo attuale del proprietario e smette di funzionare se l'utente viene eliminato.
+- **Chiavi personali** (`/integrazioni`): gli amministratori e gli operatori a cui un amministratore ha concesso il permesso (interruttore "Chiavi API" nella pagina Utenti) creano e gestiscono le proprie chiavi `p3d_...`; gli amministratori vedono quelle di tutti e possono crearne a nome di chi ha il permesso. Revocando il permesso le chiavi dell'utente vengono sospese. Una chiave non supera mai i permessi del ruolo attuale del proprietario e smette di funzionare se l'utente viene eliminato.
 - **Permessi per area**: Preventivi, Clienti, Magazzino, Manutenzione e Statistiche, ciascuna con nessun accesso, lettura o scrittura. Preset pronti: Assistente AI, Automazione produzione, Report economici, Accesso completo. Le statistiche economiche sono riservate agli amministratori.
 - **Restrizioni**: indirizzi IP o reti consentite (CIDR), limite di richieste al minuto (header `X-RateLimit-*`, `429` con `Retry-After`), scadenza.
 - **Ciclo di vita**: modifica dei permessi senza cambiare la chiave, rigenerazione con gli stessi permessi, revoca immediata, eliminazione. Su disco resta solo l'hash SHA-256.
