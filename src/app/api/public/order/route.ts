@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 
     const targetCodes = codesParam
       .split(',')
-      .map(c => c.trim())
+      .map(c => c.trim().toUpperCase())
       .filter(Boolean);
 
     if (targetCodes.length === 0) {
@@ -52,15 +52,15 @@ export async function GET(request: NextRequest) {
     const quotes: RawQuote[] = JSON.parse(raw);
 
     // Trova tutti gli ordini corrispondenti ai codici richiesti
-    const foundQuotes = quotes.filter(q => q.id && targetCodes.includes(q.id.toString().trim()));
+    const foundQuotes = quotes.filter(q => q.id && targetCodes.includes(q.id.toString().trim().toUpperCase()));
     if (foundQuotes.length === 0) {
       return NextResponse.json({ error: 'Nessun ordine trovato con i codici inseriti.' }, { status: 404 });
     }
 
     // Ordina i pezzi mantenendo l'ordine dei codici richiesti oppure cronologico
     foundQuotes.sort((a, b) => {
-      const idxA = targetCodes.indexOf(a.id.toString().trim());
-      const idxB = targetCodes.indexOf(b.id.toString().trim());
+      const idxA = targetCodes.indexOf(a.id.toString().trim().toUpperCase());
+      const idxB = targetCodes.indexOf(b.id.toString().trim().toUpperCase());
       if (idxA !== -1 && idxB !== -1) return idxA - idxB;
       return (b.savedAt || '').localeCompare(a.savedAt || '');
     });

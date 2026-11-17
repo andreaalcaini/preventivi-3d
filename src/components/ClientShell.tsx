@@ -6,7 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   Calculator, FolderKanban, Users, Box,
   Eye, EyeOff, Shield, LogOut, BarChart3, Wrench, HardDrive,
-  ArrowUpRight, KeyRound, Sun, Moon, Menu, X, type LucideIcon,
+  ArrowUpRight, KeyRound, Sun, Moon, Menu, X, Tags, type LucideIcon,
 } from 'lucide-react';
 import { NotificationManager } from '@/components/NotificationManager';
 
@@ -47,6 +47,7 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
       { href: '/', label: 'Calcolatore', icon: Calculator },
       { href: '/preventivi', label: 'Preventivi', icon: FolderKanban },
       { href: '/clienti', label: 'Clienti', icon: Users },
+      { href: '/listino', label: 'Listino', icon: Tags },
     ],
   },
   {

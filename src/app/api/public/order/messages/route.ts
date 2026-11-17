@@ -6,9 +6,9 @@ import { sendPushNotificationToAll } from '@/lib/push';
 
 /** Il codice ordine è la "chiave" del cliente: senza un codice esistente non si legge né si scrive nulla. */
 function findOrder(code: string | null | undefined) {
-  const id = String(code || '').trim();
+  const id = String(code || '').trim().toUpperCase();
   if (!id) return null;
-  return readQuotes().find(q => String(q.id) === id) || null;
+  return readQuotes().find(q => String(q.id).toUpperCase() === id) || null;
 }
 
 const publicView = (orderId: string) =>

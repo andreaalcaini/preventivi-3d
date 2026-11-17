@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readQuotes, writeQuotes, summarizeQuote, JOB_STATUSES, type JobStatus, type QuoteRecord } from '@/lib/labData';
 import { broadcastLabNotification } from '@/lib/notification-bus';
 import { actorLabel } from '@/lib/keyContext';
+import { newOrderCode } from '@/lib/orderCode';
 
 /**
  * GET /api/v1/quotes?status=in_attesa&client=mario&q=supporto&limit=50
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
   const minutes = Math.max(0, Number(body.printTimeMinutes) || 0);
   const now = new Date();
   const savedAt = now.toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-  const id = Date.now().toString();
+  const id = newOrderCode(new Set(readQuotes().map(q => String(q.id))));
 
   const quote: QuoteRecord = {
     id,

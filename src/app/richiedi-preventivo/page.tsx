@@ -7,6 +7,7 @@ import {
   ExternalLink, Layers, Sparkles, Lock, ArrowRight, Loader2, Copy, UploadCloud, X
 } from 'lucide-react';
 import MakerWorldModelViewer from '@/components/MakerWorldModelViewer';
+import { analyzeModelFile, combineStats, type MeshStats } from '@/lib/meshAnalysis';
 import type { MakerWorldPlateInfo, MakerWorldPicture } from '@/app/api/makerworld/route';
 import { parseSlicerFiles, isSlicerFileName } from '@/lib/slicerParser';
 
@@ -14,35 +15,6 @@ const MODEL_FILE_ACCEPT = '.stl,.3mf';
 
 function fileKey(file: File) {
   return `${file.name}-${file.size}-${file.lastModified}`;
-}
-
-export function calculateClientEstimate(
-  hours: number,
-  mins: number,
-  weightGrams: number,
-  qty: number,
-  materialName: string,
-  isAms: boolean
-) {
-  const printHours = Math.max(0.1, hours + (mins / 60));
-  const grams = Math.max(1, weightGrams);
-
-  const matUpper = (materialName || '').toUpperCase();
-  let costPerGram = 0.025; // Base PLA/PETG (~25€/kg)
-  if (matUpper.includes('TPU') || matUpper.includes('FLESSIBILE')) costPerGram = 0.038;
-  else if (matUpper.includes('ABS') || matUpper.includes('ASA')) costPerGram = 0.030;
-  else if (matUpper.includes('CF') || matUpper.includes('CARBON')) costPerGram = 0.050;
-
-  const effectiveGrams = isAms ? grams * 1.25 : grams;
-  const materialCost = effectiveGrams * costPerGram;
-  const machineCost = printHours * 0.48; // Corrente + ammortamento macchina
-  const laborBase = 2.00; // Avvio piatto, preparazione e distacco
-
-  const rawCost = (materialCost + machineCost + laborBase) * 1.35; // Margine servizio
-  const singlePrice = Math.max(3.50, Math.round(rawCost * 10) / 10);
-  const total = Math.round(singlePrice * Math.max(1, qty) * 100) / 100;
-
-  return { singlePrice, total, printHours, effectiveGrams };
 }
 
 export default function RichiediPreventivoPage() {
@@ -59,6 +31,14 @@ export default function RichiediPreventivoPage() {
   const [activeFileIndex, setActiveFileIndex] = useState(0);
   const [dimensionsByFile, setDimensionsByFile] = useState<Record<string, { x: number; y: number; z: number }>>({});
   const [fileError, setFileError] = useState('');
+  // Analisi geometrica per file (volume, superficie, ingombro) e stima calcolata dal server con il listino
+  const [statsByFile, setStatsByFile] = useState<Record<string, MeshStats | null>>({});
+  const [urgent, setUrgent] = useState(false);
+  const [estimate, setEstimate] = useState<{
+    singlePrice: number; total: number; grams: number; hours: number; discountPct: number;
+    source: 'slicer' | 'geometria'; calibrated: boolean;
+  } | null>(null);
+  const [warnings, setWarnings] = useState<Array<{ level: 'errore' | 'avviso'; text: string }>>([]);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -109,6 +89,9 @@ export default function RichiediPreventivoPage() {
     setSelectedFiles(next);
     setActiveFileIndex(next.findIndex(f => fileKey(f) === fileKey(target)));
     if (fresh.length > 0) refreshSlicerInfo(next);
+    for (const f of fresh) {
+      analyzeModelFile(f, f.name).then(stats => setStatsByFile(prev => ({ ...prev, [fileKey(f)]: stats })));
+    }
 
     if (!projectName) {
       const cleanName = valid[0].name.replace(/\.[^/.]+$/, "").replace(/_/g, " ");
@@ -122,6 +105,11 @@ export default function RichiediPreventivoPage() {
     setSelectedFiles(next);
     refreshSlicerInfo(next);
     setDimensionsByFile(prev => {
+      const next = { ...prev };
+      delete next[fileKey(removed)];
+      return next;
+    });
+    setStatsByFile(prev => {
       const next = { ...prev };
       delete next[fileKey(removed)];
       return next;
@@ -318,17 +306,44 @@ export default function RichiediPreventivoPage() {
     author: undefined
   } : null;
 
-  const estimate = useMemo(() => {
-    if (!activeModelInfo) return null;
-    return calculateClientEstimate(
-      activeModelInfo.hours,
-      activeModelInfo.mins,
-      activeModelInfo.weight,
-      numQuantity,
-      material || activeModelInfo.material,
-      activeModelInfo.needAms
-    );
-  }, [activeModelInfo, numQuantity, material]);
+  const meshStats = useMemo(
+    () => combineStats(selectedFiles.map(f => statsByFile[fileKey(f)]).filter((m): m is MeshStats => Boolean(m))),
+    [selectedFiles, statsByFile]
+  );
+  const analyzing = selectedFiles.some(f => !(fileKey(f) in statsByFile));
+
+  useEffect(() => {
+    if (!activeModelInfo && !meshStats) {
+      setEstimate(null);
+      setWarnings([]);
+      return;
+    }
+    const ctrl = new AbortController();
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/public/estimate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          signal: ctrl.signal,
+          body: JSON.stringify({
+            material: material || activeModelInfo?.material || 'PLA',
+            qty: numQuantity,
+            urgent,
+            multicolor: Boolean(activeModelInfo?.needAms),
+            slicer: activeModelInfo ? { hours: activeModelInfo.hours, mins: activeModelInfo.mins, grams: activeModelInfo.weight } : undefined,
+            mesh: meshStats || undefined,
+          }),
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        setEstimate(data.estimate);
+        setWarnings(data.warnings || []);
+      } catch {
+        // richiesta annullata o rete assente: resta l'ultima stima
+      }
+    }, 250);
+    return () => { clearTimeout(timer); ctrl.abort(); };
+  }, [activeModelInfo, meshStats, material, numQuantity, urgent]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -379,9 +394,12 @@ export default function RichiediPreventivoPage() {
           modelUrl: modelFiles[0]?.url || '',
           modelFileName: modelFiles[0]?.fileName || '',
           modelFiles,
-          hours: activeModelInfo?.hours || 0,
-          mins: activeModelInfo?.mins || 0,
-          weight: activeModelInfo?.weight || 0,
+          hours: activeModelInfo ? activeModelInfo.hours : Math.floor(estimate?.hours || 0),
+          mins: activeModelInfo ? activeModelInfo.mins : Math.round(((estimate?.hours || 0) % 1) * 60),
+          weight: activeModelInfo ? activeModelInfo.weight : (estimate?.grams || 0),
+          weightSource: activeModelInfo ? 'slicer' : estimate ? 'geometria' : '',
+          meshStats,
+          urgent,
           multiColor: Boolean(activeModelInfo?.needAms),
           totalCalculated: estimate?.total || 0
         })
@@ -894,14 +912,29 @@ export default function RichiediPreventivoPage() {
                     </div>
 
                     {/* BOX RIEPILOGO STIMA ISTANTANEA */}
-                    {activeModelInfo && estimate ? (
+                    {warnings.length > 0 && (
+                      <ul className="space-y-2" aria-live="polite">
+                        {warnings.map((w, i) => (
+                          <li key={i} className={`flex items-start gap-2 rounded-lg border px-3 py-2 text-sm ${w.level === 'errore' ? 'border-danger-line bg-danger-soft text-danger-ink' : 'border-warn-line bg-warn-soft text-warn-ink'}`}>
+                            <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" strokeWidth={1.75} /> {w.text}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+
+                    <label className="flex items-start gap-2.5 text-sm text-ink-muted cursor-pointer">
+                      <input type="checkbox" checked={urgent} onChange={e => setUrgent(e.target.checked)} className="mt-0.5 h-4 w-4 accent-accent" />
+                      <span>Mi serve con urgenza <span className="block text-xs text-ink-faint">Il lavoro passa avanti in coda, con un supplemento.</span></span>
+                    </label>
+
+                    {estimate ? (
                       <div className="p-5 border border-accent-line rounded-xl space-y-3 shadow-lg">
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-bold text-accent-ink flex items-center gap-1.5 font-mono">
                             <Sparkles className="w-3.5 h-3.5 text-accent-ink" strokeWidth={1.75} /> Stima Economica Indicativa
                           </span>
-                          <span className="text-[10px] bg-accent-soft text-accent-ink px-3 py-0.5 rounded-full font-semibold border border-accent-line">
-                            {activeModelInfo.badge}
+                          <span className="text-[11px] bg-accent-soft text-accent-ink px-3 py-0.5 rounded-full font-medium border border-accent-line">
+                            {estimate.source === 'slicer' ? (activeModelInfo?.badge || 'Dati slicer') : estimate.calibrated ? 'Stima dal modello, calibrata' : 'Stima dal modello'}
                           </span>
                         </div>
 
@@ -917,14 +950,17 @@ export default function RichiediPreventivoPage() {
                           </div>
 
                           <div className="text-xs text-ink-muted space-y-1 sm:text-right bg-raised px-3.5 py-2.5 rounded-xl border border-line w-full sm:w-auto font-mono">
-                            <div>Stampa: <strong className="text-ink">{activeModelInfo.hours}h {activeModelInfo.mins}m</strong> {numQuantity > 1 ? `x ${numQuantity}pz` : ''}</div>
-                            <div>Filamento: <strong className="text-ink">{activeModelInfo.weight * numQuantity}g</strong> ({material || activeModelInfo.material})</div>
-                            {activeModelInfo.needAms && <div className="text-warn-ink text-[11px]">Multicolore AMS</div>}
+                            <div>Stampa: <strong className="text-ink">{Math.floor(estimate.hours)}h {Math.round((estimate.hours % 1) * 60)}m</strong> {numQuantity > 1 ? `x ${numQuantity}pz` : ''}</div>
+                            <div>Filamento: <strong className="text-ink">{estimate.grams * numQuantity}g</strong> ({material || activeModelInfo?.material})</div>
+                            {estimate.discountPct > 0 && <div className="text-accent-ink">Sconto quantità {estimate.discountPct}%</div>}
+                            {activeModelInfo?.needAms && <div className="text-warn-ink text-[11px]">Multicolore AMS</div>}
                           </div>
                         </div>
 
                         <p className="text-[11px] text-ink-muted italic pt-1 leading-relaxed">
-                          La stima considera tempi macchina e consumo estrusione. Il laboratorio confermerà la fattibilità prima della messa in stampa.
+                          {estimate.source === 'geometria'
+                            ? 'Stima ricavata dal volume del modello con impostazioni di stampa standard. Il laboratorio confermerà prezzo e fattibilità.'
+                            : 'La stima considera tempi macchina e consumo estrusione. Il laboratorio confermerà la fattibilità prima della messa in stampa.'}
                         </p>
                       </div>
                     ) : (
@@ -934,11 +970,11 @@ export default function RichiediPreventivoPage() {
                             <Sparkles className="w-3.5 h-3.5 text-accent-ink" strokeWidth={1.75} /> Stima Economica
                           </span>
                           <span className="text-[10px] bg-raised text-ink-faint px-3 py-0.5 rounded-full border border-line">
-                            In attesa file 3D
+                            {analyzing ? 'Analisi del modello…' : 'In attesa file 3D'}
                           </span>
                         </div>
                         <p className="text-xs text-ink-muted leading-relaxed">
-                          Incolla un link MakerWorld oppure carica un file <strong>.3MF</strong> nel pannello a sinistra per calcolare istantaneamente i costi e i tempi di lavorazione.
+                          Carica un file <strong>.STL</strong> o <strong>.3MF</strong>, oppure incolla il link di un modello, per vedere subito una stima di costi e tempi.
                         </p>
                         <div className="pt-1">
                           <button
@@ -963,7 +999,7 @@ export default function RichiediPreventivoPage() {
                         <span>
                           {loading 
                             ? 'Invio richiesta in corso...' 
-                            : (activeModelInfo && estimate) 
+                            : estimate 
                               ? `Invia Richiesta con Stima (~€${estimate.total.toFixed(2)})` 
                               : 'Invia Richiesta al Laboratorio'}
                         </span>

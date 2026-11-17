@@ -3,8 +3,24 @@ import fs from 'fs';
 import path from 'path';
 import { broadcastLabNotification } from '@/lib/notification-bus';
 import { sendPushNotificationToAll } from '@/lib/push';
+import { newOrderCode } from '@/lib/orderCode';
 
 const quotesFilePath = path.join(process.cwd(), 'data', 'quotes.json');
+
+function sanitizeMesh(m: unknown) {
+  if (!m || typeof m !== 'object') return null;
+  const o = m as Record<string, unknown>;
+  const n = (v: unknown) => (Number.isFinite(Number(v)) ? Math.round(Number(v) * 100) / 100 : 0);
+  const size = (o.sizeMm || {}) as Record<string, unknown>;
+  if (!(n(o.volumeCm3) > 0)) return null;
+  return {
+    volumeCm3: n(o.volumeCm3),
+    surfaceCm2: n(o.surfaceCm2),
+    sizeMm: { x: n(size.x), y: n(size.y), z: n(size.z) },
+    baseAreaMm2: n(o.baseAreaMm2),
+    openEdges: Math.round(n(o.openEdges)),
+  };
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,7 +42,11 @@ export async function POST(request: NextRequest) {
       mins,
       weight,
       multiColor,
-      totalCalculated
+      totalCalculated,
+      weightSource,
+      meshStats,
+      urgent,
+      privacyConsent
     } = body;
 
     if (!name || !contact || !projectName) {
@@ -49,7 +69,7 @@ export async function POST(request: NextRequest) {
           }))
       : [];
 
-    const orderId = Date.now().toString();
+    const orderId = newOrderCode();
     const now = new Date();
     const savedAt = now.toLocaleDateString('it-IT', {
       day: '2-digit',
@@ -91,7 +111,11 @@ export async function POST(request: NextRequest) {
       modelUrl: modelUrl || '',
       modelFileName: modelFileName || '',
       modelFiles: sanitizedModelFiles,
-      inventoryDeducted: false
+      inventoryDeducted: false,
+      weightSource: weightSource === 'slicer' || weightSource === 'geometria' ? weightSource : '',
+      meshStats: sanitizeMesh(meshStats),
+      urgent: Boolean(urgent),
+      privacyConsentAt: privacyConsent ? now.toISOString() : null
     };
 
     let quotes = [];
