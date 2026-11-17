@@ -1,23 +1,174 @@
 @import "tailwindcss";
 
+/*
+ * Preventivi 3D, design system "Officina" (v2).
+ * Base neutra calda, un solo accento verde profondo, toni di stato usati solo per gli stati.
+ * Tema chiaro di default, scuro da preferenza di sistema o scelta manuale (html[data-theme]).
+ * Le pagine usano solo token semantici: canvas, surface, sunken, raised, muted, line, ink, accent, warn, danger, info.
+ */
+
 :root {
-  --background: #020617;
-  --foreground: #f8fafc;
+  color-scheme: light;
+
+  --canvas: #f1f0ed;
+  --surface: #ffffff;
+  --sunken: #f7f6f4;
+  --raised: #ecebe7;
+  --muted: #e2e0db;
+  --line: #e0ddd7;
+  --line-strong: #c9c5bd;
+
+  --ink: #161615;
+  --ink-muted: #4f4b46;
+  --ink-faint: #6b665f;
+
+  --accent: #1d6a50;
+  --accent-hover: #175a43;
+  --accent-soft: #e2efe9;
+  --accent-ink: #165440;
+  --accent-line: #a9cdbd;
+  --on-accent: #ffffff;
+
+  --warn: #a35f00;
+  --warn-soft: #f8eedc;
+  --warn-ink: #7f4a00;
+  --warn-line: #e5c793;
+
+  --danger: #b3261e;
+  --danger-soft: #fae8e6;
+  --danger-ink: #962019;
+  --danger-line: #eab5b0;
+
+  --info: #39598a;
+  --info-soft: #e7edf6;
+  --info-ink: #2f4a73;
+  --info-line: #b6c6de;
+
+  --scrim: rgb(22 22 21 / 0.45);
+  --shadow-tint: 30 28 24;
+
   --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
   --ease-out-quad: cubic-bezier(0.25, 1, 0.5, 1);
 }
 
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --canvas: #121211;
+    --surface: #1a1a19;
+    --sunken: #151514;
+    --raised: #242422;
+    --muted: #2e2e2b;
+    --line: #2b2b29;
+    --line-strong: #3c3b38;
+    --ink: #eeedea;
+    --ink-muted: #b3b0aa;
+    --ink-faint: #9a968f;
+    --accent: #5cbf98;
+    --accent-hover: #74cda9;
+    --accent-soft: #17302a;
+    --accent-ink: #84d6b4;
+    --accent-line: #2f5c4c;
+    --on-accent: #0c1d16;
+    --warn: #e0a44a;
+    --warn-soft: #33270f;
+    --warn-ink: #edbd72;
+    --warn-line: #5c4620;
+    --danger: #ef7d74;
+    --danger-soft: #3a1b18;
+    --danger-ink: #f39b93;
+    --danger-line: #6a2f2a;
+    --info: #8eaad6;
+    --info-soft: #1c2533;
+    --info-ink: #a9c0e3;
+    --info-line: #34445d;
+    --scrim: rgb(0 0 0 / 0.6);
+    --shadow-tint: 0 0 0;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: #121211;
+  --surface: #1a1a19;
+  --sunken: #151514;
+  --raised: #242422;
+  --muted: #2e2e2b;
+  --line: #2b2b29;
+  --line-strong: #3c3b38;
+  --ink: #eeedea;
+  --ink-muted: #b3b0aa;
+  --ink-faint: #9a968f;
+  --accent: #5cbf98;
+  --accent-hover: #74cda9;
+  --accent-soft: #17302a;
+  --accent-ink: #84d6b4;
+  --accent-line: #2f5c4c;
+  --on-accent: #0c1d16;
+  --warn: #e0a44a;
+  --warn-soft: #33270f;
+  --warn-ink: #edbd72;
+  --warn-line: #5c4620;
+  --danger: #ef7d74;
+  --danger-soft: #3a1b18;
+  --danger-ink: #f39b93;
+  --danger-line: #6a2f2a;
+  --info: #8eaad6;
+  --info-soft: #1c2533;
+  --info-ink: #a9c0e3;
+  --info-line: #34445d;
+  --scrim: rgb(0 0 0 / 0.6);
+  --shadow-tint: 0 0 0;
+}
+
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-jakarta), var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-sunken: var(--sunken);
+  --color-raised: var(--raised);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-accent-line: var(--accent-line);
+  --color-on-accent: var(--on-accent);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-warn-ink: var(--warn-ink);
+  --color-warn-line: var(--warn-line);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-ink: var(--danger-ink);
+  --color-danger-line: var(--danger-line);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-info-ink: var(--info-ink);
+  --color-info-line: var(--info-line);
+  --color-scrim: var(--scrim);
+
+  --color-background: var(--canvas);
+  --color-foreground: var(--ink);
+
+  --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+
+  --shadow-sm: 0 1px 2px rgb(var(--shadow-tint) / 0.06);
+  --shadow-md: 0 2px 6px -1px rgb(var(--shadow-tint) / 0.08), 0 1px 2px rgb(var(--shadow-tint) / 0.05);
+  --shadow-lg: 0 8px 24px -6px rgb(var(--shadow-tint) / 0.14), 0 2px 4px rgb(var(--shadow-tint) / 0.05);
+  --shadow-xl: 0 16px 40px -10px rgb(var(--shadow-tint) / 0.18), 0 2px 6px rgb(var(--shadow-tint) / 0.06);
+  --shadow-2xl: 0 24px 60px -16px rgb(var(--shadow-tint) / 0.24);
 }
 
 html {
   min-height: 100dvh;
-  background-color: #020617;
-  color: #f8fafc;
+  background-color: var(--canvas);
+  color: var(--ink);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
@@ -25,93 +176,133 @@ html {
 
 body {
   min-height: 100dvh;
-  background-color: #020617;
-  color: #f8fafc;
+  background-color: var(--canvas);
+  color: var(--ink);
   font-family: var(--font-sans);
+  font-feature-settings: "ss01", "cv11";
   -webkit-tap-highlight-color: transparent;
-  selection-background-color: rgba(16, 185, 129, 0.25);
-  selection-color: #ffffff;
 }
 
-/* Texture di fondo con mesh radiale discreta (accelerata via GPU e fissa) */
-.ambient-mesh {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  background-image: 
-    radial-gradient(circle at 15% 15%, rgba(16, 185, 129, 0.04) 0%, transparent 45%),
-    radial-gradient(circle at 85% 85%, rgba(6, 182, 212, 0.03) 0%, transparent 50%);
+::selection {
+  background: color-mix(in srgb, var(--accent) 22%, transparent);
+  color: var(--ink);
 }
 
-/* Architettura Doppelrand (Doppio Bordo Concentrico Aptico) */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Campi: i form nativi seguono il tema */
+input, select, textarea {
+  color: var(--ink);
+}
+input::placeholder, textarea::placeholder {
+  color: var(--ink-faint);
+  opacity: 1;
+}
+select option {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+/* Cifre allineate per prezzi, pesi e tempi */
+.font-mono, .tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+ * Superfici. Una sola famiglia di card: bordo sottile, raggio 12px, nessuna sfocatura.
+ * .bezel-shell/.bezel-core restano come alias della versione precedente.
+ */
+.panel,
 .bezel-shell {
-  background: rgba(255, 255, 255, 0.025);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 1.75rem;
-  padding: 0.375rem;
-  transition: all 0.5s var(--ease-spring);
-}
-
-.bezel-shell:hover {
-  border-color: rgba(255, 255, 255, 0.14);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  box-shadow: var(--shadow-sm);
 }
 
 .bezel-core {
-  background: rgba(2, 6, 23, 0.85);
-  border-radius: calc(1.75rem - 0.375rem);
-  box-shadow: inset 0 1px 1px 0 rgba(255, 255, 255, 0.12);
-  transition: all 0.5s var(--ease-spring);
+  background: transparent;
+  border-radius: 0.75rem;
 }
 
-/* Micro-transizione con curva fisica personalizzata */
+/* Pulsanti: una coppia sola, primario pieno e secondario a filo */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  transition: background-color 150ms var(--ease-out-quad), border-color 150ms var(--ease-out-quad), color 150ms var(--ease-out-quad), transform 150ms var(--ease-out-quad);
+}
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { background: var(--accent); color: var(--on-accent); }
+.btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
+.btn-secondary { background: var(--surface); color: var(--ink); border-color: var(--line-strong); }
+.btn-secondary:hover:not(:disabled) { background: var(--raised); }
+.btn-danger { background: var(--surface); color: var(--danger-ink); border-color: var(--danger-line); }
+.btn-danger:hover:not(:disabled) { background: var(--danger-soft); }
+.btn-sm { min-height: 2rem; padding: 0 0.75rem; font-size: 0.8125rem; }
+
+.field {
+  width: 100%;
+  min-height: 2.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--line-strong);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 0.875rem;
+  transition: border-color 150ms, box-shadow 150ms;
+}
+.field:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--ink-muted);
+  margin-bottom: 0.375rem;
+}
+
+/* Compatibilità con le classi precedenti */
 .transition-spring {
   transition-timing-function: var(--ease-spring);
-  transition-duration: 500ms;
+  transition-duration: 300ms;
 }
 
-/* Scrollbar sottile scura moderna */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 9999px; border: 2px solid var(--canvas); }
+::-webkit-scrollbar-thumb:hover { background: var(--ink-faint); }
 
-::-webkit-scrollbar-track {
-  background: rgba(15, 23, 42, 0.5);
-}
+.pb-safe { padding-bottom: env(safe-area-inset-bottom, 1rem); }
+.pt-safe { padding-top: env(safe-area-inset-top, 1rem); }
 
-::-webkit-scrollbar-thumb {
-  background: rgba(51, 65, 85, 0.7);
-  border-radius: 9999px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(16, 185, 129, 0.7);
-}
-
-/* Safe area padding per iPhone e dispositivi moderni */
-.pb-safe {
-  padding-bottom: env(safe-area-inset-bottom, 1rem);
-}
-
-.pt-safe {
-  padding-top: env(safe-area-inset-top, 1rem);
-}
-
-/* Animazione fluida slide drawer per mobile con spring physics */
 @keyframes slideInLeftSpring {
-  from {
-    transform: translateX(-100%);
-    opacity: 0.5;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
 }
+.animate-slide-in { animation: slideInLeftSpring 0.32s var(--ease-spring) forwards; }
 
-.animate-slide-in {
-  animation: slideInLeftSpring 0.4s var(--ease-spring) forwards;
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Stili dedicati alla stampa di etichette QR */
@@ -131,4 +322,3 @@ body {
     border: 1px solid #111 !important;
   }
 }
-

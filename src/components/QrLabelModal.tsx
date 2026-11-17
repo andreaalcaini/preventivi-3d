@@ -67,20 +67,20 @@ export default function QrLabelModal({ data, onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-scrim animate-in fade-in duration-150">
       
       {/* Box Principale */}
-      <div className="relative w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-2xl flex flex-col gap-6">
+      <div className="relative w-full max-w-lg bg-surface border border-line rounded-xl p-6 shadow-lg flex flex-col gap-6">
         
         {/* Header Modal (nascosto in stampa) */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800 print:hidden">
-          <div className="flex items-center gap-2 text-white font-bold text-base">
-            <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+        <div className="flex items-center justify-between pb-3 border-b border-line print:hidden">
+          <div className="flex items-center gap-2 text-ink font-bold text-base">
+            <div className="p-2 rounded-xl bg-info-soft text-info-ink border border-info-line">
               {data.type === 'spool' ? <Box className="w-5 h-5" /> : <Package className="w-5 h-5" />}
             </div>
             <div>
               <span>{data.type === 'spool' ? 'Etichetta QR Bobina' : 'Etichetta Pacco Commessa'}</span>
-              <span className="block text-[11px] font-normal text-slate-400">
+              <span className="block text-[11px] font-normal text-ink-muted">
                 {data.type === 'spool' ? 'Da attaccare sulla bobina fisica per pesarla' : 'Da applicare sulla scatola di consegna al cliente'}
               </span>
             </div>
@@ -88,14 +88,14 @@ export default function QrLabelModal({ data, onClose }: Props) {
 
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors"
+            className="p-1.5 text-ink-muted hover:text-ink rounded-xl hover:bg-raised transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* ANTEPRIMA ETICHETTA (Questo blocco sarà stampato) */}
-        <div className="bg-slate-950/50 p-4 rounded-2xl border border-slate-800/80 flex justify-center items-center">
+        <div className="bg-sunken p-4 rounded-xl border border-line flex justify-center items-center">
           
           <div id="printable-qr-label" className="bg-white text-black p-4 rounded-xl shadow-lg w-[320px] font-sans border-2 border-dashed border-gray-400 print:border-none print:shadow-none print:w-[60mm] print:h-[40mm] print:p-2 print:rounded-none">
             
@@ -106,10 +106,10 @@ export default function QrLabelModal({ data, onClose }: Props) {
                 {/* Header Marca & Materiale */}
                 <div className="border-b border-black pb-1 mb-2 flex justify-between items-baseline">
                   <div>
-                    <span className="font-black text-xs uppercase tracking-wider block leading-tight">
+                    <span className="font-semibold text-xs block leading-tight">
                       {data.brand || 'Filamento'}
                     </span>
-                    <span className="text-[10px] font-bold text-gray-700 uppercase">
+                    <span className="text-[11px] font-bold text-gray-700">
                       {data.material || 'PLA'}
                     </span>
                   </div>
@@ -139,12 +139,12 @@ export default function QrLabelModal({ data, onClose }: Props) {
 
                   <div className="text-[11px] leading-tight space-y-1 min-w-0">
                     <div>
-                      <span className="text-[9px] text-gray-500 uppercase block">Rimanente</span>
-                      <strong className="text-sm font-black text-black">{data.weightRemaining}g</strong>
+                      <span className="text-[11px] text-gray-500 block">Rimanente</span>
+                      <strong className="text-sm font-semibold text-black">{data.weightRemaining}g</strong>
                     </div>
                     {data.tareWeight !== undefined && (
                       <div>
-                        <span className="text-[9px] text-gray-500 uppercase block">Tara Vuoto</span>
+                        <span className="text-[11px] text-gray-500 block">Tara Vuoto</span>
                         <span className="font-semibold text-gray-800">{data.tareWeight}g</span>
                       </div>
                     )}
@@ -170,10 +170,10 @@ export default function QrLabelModal({ data, onClose }: Props) {
                 {/* Header Laboratorio */}
                 <div className="border-b border-black pb-1 mb-2 flex justify-between items-baseline">
                   <div>
-                    <span className="font-black text-xs uppercase tracking-tight block">
+                    <span className="font-semibold text-xs tracking-tight block">
                       Preventivi 3D Lab
                     </span>
-                    <span className="text-[9px] text-gray-600 uppercase">Commessa di Stampa</span>
+                    <span className="text-[11px] text-gray-600">Commessa di Stampa</span>
                   </div>
                   <span className="font-mono text-[9px] font-bold">
                     #{data.orderId.slice(0, 8)}
@@ -195,11 +195,11 @@ export default function QrLabelModal({ data, onClose }: Props) {
 
                   <div className="text-[11px] leading-tight space-y-1 min-w-0">
                     <div>
-                      <span className="text-[9px] text-gray-500 uppercase block">Destinatario</span>
+                      <span className="text-[11px] text-gray-500 block">Destinatario</span>
                       <strong className="text-xs font-bold text-black truncate block">{data.clientName}</strong>
                     </div>
                     <div>
-                      <span className="text-[9px] text-gray-500 uppercase block">Oggetto</span>
+                      <span className="text-[11px] text-gray-500 block">Oggetto</span>
                       <span className="font-medium text-gray-800 truncate block text-[10px]">{data.projectName}</span>
                     </div>
                     <div className="text-[10px] text-gray-600">
@@ -210,8 +210,8 @@ export default function QrLabelModal({ data, onClose }: Props) {
 
                 {/* Totale & Footer */}
                 <div className="mt-2 pt-1 border-t-2 border-black flex justify-between items-baseline">
-                  <span className="text-[9px] uppercase font-bold text-gray-600">Totale Dovuto</span>
-                  <span className="text-base font-black text-black">€{data.totalCalculated.toFixed(2)}</span>
+                  <span className="text-[11px] font-bold text-gray-600">Totale Dovuto</span>
+                  <span className="text-base font-semibold text-black">€{data.totalCalculated.toFixed(2)}</span>
                 </div>
 
                 <div className="mt-1 text-center text-[7px] text-gray-500">
@@ -226,12 +226,12 @@ export default function QrLabelModal({ data, onClose }: Props) {
         </div>
 
         {/* Pulsanti Azione (nascosti in stampa) */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-slate-800 print:hidden">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-line print:hidden">
           <a 
             href={targetUrl}
             target="_blank"
             rel="noreferrer"
-            className="text-xs text-slate-400 hover:text-cyan-400 transition-colors inline-flex items-center gap-1.5"
+            className="text-xs text-ink-muted hover:text-info-ink transition-colors inline-flex items-center gap-1.5"
           >
             <span>Apri link collegato al QR</span>
             <ExternalLink className="w-3.5 h-3.5" />
@@ -240,14 +240,14 @@ export default function QrLabelModal({ data, onClose }: Props) {
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <button
               onClick={onClose}
-              className="flex-1 sm:flex-initial py-2 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-semibold transition-colors"
+              className="flex-1 sm:flex-initial py-2 px-4 rounded-xl bg-raised hover:bg-muted text-ink-muted text-xs font-semibold transition-colors"
             >
               Chiudi
             </button>
 
             <button
               onClick={handlePrint}
-              className="flex-1 sm:flex-initial py-2 px-5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold transition-all shadow-md shadow-cyan-950 flex items-center justify-center gap-1.5"
+              className="flex-1 sm:flex-initial py-2 px-5 rounded-xl bg-info hover:bg-info text-on-accent text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5"
             >
               <Printer className="w-4 h-4" />
               <span>Stampa Etichetta</span>

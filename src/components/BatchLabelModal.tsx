@@ -175,25 +175,25 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-scrim animate-in fade-in duration-150">
       
       {/* Box Principale */}
-      <div className="relative w-full max-w-6xl max-h-[95vh] bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl flex flex-col overflow-hidden text-slate-100">
+      <div className="relative w-full max-w-6xl max-h-[95vh] bg-surface border border-line rounded-xl shadow-lg flex flex-col overflow-hidden text-ink">
         
         {/* HEADER MODALE (Nascosto in stampa) */}
-        <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-slate-800 print:hidden">
+        <div className="flex-shrink-0 flex items-center justify-between p-4 border-b border-line print:hidden">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+            <div className="p-2 rounded-xl bg-info-soft text-info-ink border border-info-line">
               <Printer className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <h2 className="text-base font-bold text-ink flex items-center gap-2">
                 Stampa Foglio Etichette A4 Multiplo
-                <span className="text-xs font-normal text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                <span className="text-xs font-normal text-accent-ink bg-accent-soft border border-accent-line px-2 py-0.5 rounded-full">
                   Zero Spreco Carta
                 </span>
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-ink-muted">
                 Stampa più etichette contemporaneamente su un unico foglio per evitare sprechi.
               </p>
             </div>
@@ -203,7 +203,7 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
             <button
               onClick={handlePrint}
               disabled={flatLabelsToPrint.length === 0}
-              className="py-1.5 px-4 rounded-xl bg-cyan-600 hover:bg-cyan-500 disabled:opacity-40 disabled:hover:bg-cyan-600 text-white text-xs font-bold transition-all shadow-md shadow-cyan-950 flex items-center gap-1.5 cursor-pointer"
+              className="py-1.5 px-4 rounded-xl bg-info hover:bg-info disabled:opacity-40 disabled:hover:bg-info text-on-accent text-xs font-bold transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
             >
               <Printer className="w-4 h-4" />
               <span>Stampa Foglio ({flatLabelsToPrint.length} Etichette)</span>
@@ -211,7 +211,7 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
 
             <button
               onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors"
+              className="p-1.5 text-ink-muted hover:text-ink rounded-xl hover:bg-raised transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -219,35 +219,35 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
         </div>
 
         {/* CORPO MODALE DIVISO: SINISTRA SELEZIONE / DESTRA ANTEPRIMA FOGLIO A4 (Nascosto in stampa) */}
-        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-slate-800 overflow-hidden print:hidden">
+        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 divide-y lg:divide-y-0 lg:divide-x divide-line overflow-hidden print:hidden">
           
           {/* COLONNA SINISTRA: SELEZIONE BOBINE & OPZIONI (4 Colonne) */}
           <div className="lg:col-span-4 p-4 flex flex-col min-h-0 space-y-3 overflow-y-auto">
             
             {/* Opzioni di Layout & Formato */}
-            <div className="p-3 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-2">
-              <span className="text-[11px] font-bold text-cyan-400 uppercase tracking-wider flex items-center gap-1">
+            <div className="p-3 bg-sunken border border-line rounded-xl space-y-2">
+              <span className="text-[11px] font-bold text-info-ink flex items-center gap-1">
                 <SlidersHorizontal className="w-3.5 h-3.5" /> Formato Foglio A4
               </span>
               
               <div className="space-y-1.5">
-                <span className="text-[10px] text-slate-400 font-semibold block">Formati per Bobina (Consigliati):</span>
+                <span className="text-[10px] text-ink-muted font-semibold block">Formati per Bobina (Consigliati):</span>
                 <div className="grid grid-cols-2 gap-1.5 text-xs">
                   <button
                     type="button"
                     onClick={() => setLayout('4x8')}
                     className={`p-2 rounded-lg border text-left transition-all ${
                       layout === '4x8'
-                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 font-bold shadow-sm'
-                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                        ? 'bg-accent-soft border-accent text-accent-ink font-bold shadow-sm'
+                        : 'bg-surface border-line text-ink-muted hover:text-ink'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-bold">4 x 8</span>
-                      <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-1 rounded border border-emerald-500/20 font-mono">32 pz</span>
+                      <span className="text-[10px] bg-accent-soft text-accent-ink px-1 rounded border border-accent-line font-mono">32 pz</span>
                     </div>
-                    <div className="text-[10px] text-emerald-400 font-medium mt-0.5">🎯 Bobina Universale</div>
-                    <div className="text-[9px] text-slate-400 font-mono">~48 x 33 mm</div>
+                    <div className="text-[10px] text-accent-ink font-medium mt-0.5">Bobina universale</div>
+                    <div className="text-[9px] text-ink-muted font-mono">~48 x 33 mm</div>
                   </button>
 
                   <button
@@ -255,32 +255,32 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
                     onClick={() => setLayout('4x10')}
                     className={`p-2 rounded-lg border text-left transition-all ${
                       layout === '4x10'
-                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 font-bold shadow-sm'
-                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                        ? 'bg-accent-soft border-accent text-accent-ink font-bold shadow-sm'
+                        : 'bg-surface border-line text-ink-muted hover:text-ink'
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <span className="font-bold">4 x 10</span>
-                      <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-1 rounded border border-emerald-500/20 font-mono">40 pz</span>
+                      <span className="text-[10px] bg-accent-soft text-accent-ink px-1 rounded border border-accent-line font-mono">40 pz</span>
                     </div>
-                    <div className="text-[10px] text-emerald-400 font-medium mt-0.5">🎯 Slot Bambu / Mini</div>
-                    <div className="text-[9px] text-slate-400 font-mono">~48 x 26 mm</div>
+                    <div className="text-[10px] text-accent-ink font-medium mt-0.5">Slot Bambu / Mini</div>
+                    <div className="text-[9px] text-ink-muted font-mono">~48 x 26 mm</div>
                   </button>
                 </div>
 
-                <span className="text-[10px] text-slate-400 font-semibold block pt-1">Altri Formati (Avery / Scatole):</span>
+                <span className="text-[10px] text-ink-muted font-semibold block pt-1">Altri Formati (Avery / Scatole):</span>
                 <div className="grid grid-cols-3 gap-1.5 text-xs">
                   <button
                     type="button"
                     onClick={() => setLayout('3x7')}
                     className={`p-1.5 rounded-lg border text-center transition-all ${
                       layout === '3x7'
-                        ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300 font-bold'
-                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                        ? 'bg-info-soft border-info text-info-ink font-bold'
+                        : 'bg-surface border-line text-ink-muted hover:text-ink'
                     }`}
                   >
                     <div className="font-bold">3 x 7 (21 pz)</div>
-                    <div className="text-[9px] text-slate-400">Avery (~65x38)</div>
+                    <div className="text-[9px] text-ink-muted">Avery (~65x38)</div>
                   </button>
 
                   <button
@@ -288,12 +288,12 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
                     onClick={() => setLayout('3x6')}
                     className={`p-1.5 rounded-lg border text-center transition-all ${
                       layout === '3x6'
-                        ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300 font-bold'
-                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                        ? 'bg-info-soft border-info text-info-ink font-bold'
+                        : 'bg-surface border-line text-ink-muted hover:text-ink'
                     }`}
                   >
                     <div className="font-bold">3 x 6 (18 pz)</div>
-                    <div className="text-[9px] text-slate-400">Medio (~65x45)</div>
+                    <div className="text-[9px] text-ink-muted">Medio (~65x45)</div>
                   </button>
 
                   <button
@@ -301,54 +301,54 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
                     onClick={() => setLayout('2x4')}
                     className={`p-1.5 rounded-lg border text-center transition-all ${
                       layout === '2x4'
-                        ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300 font-bold'
-                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                        ? 'bg-info-soft border-info text-info-ink font-bold'
+                        : 'bg-surface border-line text-ink-muted hover:text-ink'
                     }`}
                   >
                     <div className="font-bold">2 x 4 (8 pz)</div>
-                    <div className="text-[9px] text-slate-400">Box (~95x65)</div>
+                    <div className="text-[9px] text-ink-muted">Box (~95x65)</div>
                   </button>
                 </div>
               </div>
 
               {/* Toggle Campi Inclusi */}
-              <div className="pt-2 border-t border-slate-800/80 grid grid-cols-2 gap-2 text-[11px]">
-                <label className="flex items-center gap-1.5 cursor-pointer text-slate-300">
+              <div className="pt-2 border-t border-line grid grid-cols-2 gap-2 text-[11px]">
+                <label className="flex items-center gap-1.5 cursor-pointer text-ink-muted">
                   <input
                     type="checkbox"
                     checked={showQr}
                     onChange={e => setShowQr(e.target.checked)}
-                    className="rounded bg-slate-900 border-slate-700 text-cyan-500"
+                    className="rounded bg-surface border-line-strong text-info-ink"
                   />
                   <span>Includi QR Code</span>
                 </label>
 
-                <label className="flex items-center gap-1.5 cursor-pointer text-slate-300">
+                <label className="flex items-center gap-1.5 cursor-pointer text-ink-muted">
                   <input
                     type="checkbox"
                     checked={showTare}
                     onChange={e => setShowTare(e.target.checked)}
-                    className="rounded bg-slate-900 border-slate-700 text-cyan-500"
+                    className="rounded bg-surface border-line-strong text-info-ink"
                   />
                   <span>Includi Tara Vuoto</span>
                 </label>
 
-                <label className="flex items-center gap-1.5 cursor-pointer text-slate-300">
+                <label className="flex items-center gap-1.5 cursor-pointer text-ink-muted">
                   <input
                     type="checkbox"
                     checked={showCost}
                     onChange={e => setShowCost(e.target.checked)}
-                    className="rounded bg-slate-900 border-slate-700 text-cyan-500"
+                    className="rounded bg-surface border-line-strong text-info-ink"
                   />
                   <span>Includi Prezzo</span>
                 </label>
 
-                <label className="flex items-center gap-1.5 cursor-pointer text-slate-300">
+                <label className="flex items-center gap-1.5 cursor-pointer text-ink-muted">
                   <input
                     type="checkbox"
                     checked={showCutLines}
                     onChange={e => setShowCutLines(e.target.checked)}
-                    className="rounded bg-slate-900 border-slate-700 text-cyan-500"
+                    className="rounded bg-surface border-line-strong text-info-ink"
                   />
                   <span>Linee di Taglio</span>
                 </label>
@@ -358,13 +358,13 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
             {/* Ricerca & Filtri Bobine */}
             <div className="space-y-2">
               <div className="relative">
-                <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
+                <Search className="w-3.5 h-3.5 text-ink-faint absolute left-2.5 top-2.5" />
                 <input
                   type="text"
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   placeholder="Cerca bobine..."
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-white outline-none focus:border-cyan-500"
+                  className="w-full bg-surface border border-line-strong rounded-lg pl-8 pr-3 py-1.5 text-xs text-ink outline-none focus:border-accent"
                 />
               </div>
 
@@ -372,7 +372,7 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
                 <select
                   value={filterMaterial}
                   onChange={e => setFilterMaterial(e.target.value)}
-                  className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-300 outline-none"
+                  className="bg-sunken border border-line rounded-lg px-2 py-1.5 text-xs text-ink-muted outline-none"
                 >
                   <option value="all">Tutti i Materiali</option>
                   {uniqueMaterials.map(m => (
@@ -383,7 +383,7 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
                 <select
                   value={filterBrand}
                   onChange={e => setFilterBrand(e.target.value)}
-                  className="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-xs text-slate-300 outline-none"
+                  className="bg-sunken border border-line rounded-lg px-2 py-1.5 text-xs text-ink-muted outline-none"
                 >
                   <option value="all">Tutte le Marche</option>
                   {uniqueBrands.map(b => (
@@ -397,26 +397,26 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
                   <button
                     type="button"
                     onClick={handleSelectAllVisible}
-                    className="text-[11px] text-cyan-400 hover:text-cyan-300 hover:underline flex items-center gap-1 cursor-pointer"
+                    className="text-[11px] text-info-ink hover:text-info-ink hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     <CheckSquare className="w-3 h-3" /> Seleziona visibili
                   </button>
                   <button
                     type="button"
                     onClick={handleDeselectAllVisible}
-                    className="text-[11px] text-slate-400 hover:text-slate-300 hover:underline flex items-center gap-1 cursor-pointer"
+                    className="text-[11px] text-ink-muted hover:text-ink-muted hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     <Square className="w-3 h-3" /> Deseleziona
                   </button>
                 </div>
-                <span className="text-[11px] text-slate-400 font-mono">
+                <span className="text-[11px] text-ink-muted font-mono">
                   {filteredSpools.length} bobine
                 </span>
               </div>
             </div>
 
             {/* Lista Selezionabile Bobine */}
-            <div className="flex-1 min-h-0 overflow-y-auto space-y-1.5 pr-1 border-t border-slate-800 pt-2">
+            <div className="flex-1 min-h-0 overflow-y-auto space-y-1.5 pr-1 border-t border-line pt-2">
               {filteredSpools.map(spool => {
                 const count = selectedQuantities[spool.id] || 0;
                 const isSelected = count > 0;
@@ -426,8 +426,8 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
                     key={spool.id}
                     className={`p-2 rounded-xl border transition-all flex items-center justify-between gap-2 text-xs ${
                       isSelected
-                        ? 'bg-slate-950 border-cyan-500/50'
-                        : 'bg-slate-950/40 border-slate-800/60 opacity-60 hover:opacity-100'
+                        ? 'bg-sunken border-info-line'
+                        : 'bg-sunken border-line opacity-60 hover:opacity-100'
                     }`}
                   >
                     <div 
@@ -438,19 +438,19 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => toggleSpool(spool.id)}
-                        className="rounded bg-slate-900 border-slate-700 text-cyan-500 cursor-pointer"
+                        className="rounded bg-surface border-line-strong text-info-ink cursor-pointer"
                       />
                       {spool.colorHex && (
                         <span 
-                          className="w-3 h-3 rounded-full border border-white/20 flex-shrink-0"
+                          className="w-3 h-3 rounded-full border border-line-strong flex-shrink-0"
                           style={{ backgroundColor: spool.colorHex }}
                         />
                       )}
                       <div className="min-w-0">
-                        <div className="font-bold text-white truncate">
+                        <div className="font-bold text-ink truncate">
                           {spool.brand} {spool.material}
                         </div>
-                        <div className="text-[10px] text-slate-400 truncate">
+                        <div className="text-[10px] text-ink-muted truncate">
                           {spool.color} • {spool.weightRemaining}g rem.
                         </div>
                       </div>
@@ -458,21 +458,21 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
 
                     {/* Contatore copie etichetta */}
                     {isSelected && (
-                      <div className="flex items-center gap-1 bg-slate-900 border border-slate-800 rounded-lg p-0.5">
+                      <div className="flex items-center gap-1 bg-surface border border-line rounded-lg p-0.5">
                         <button
                           type="button"
                           onClick={() => setQuantity(spool.id, -1)}
-                          className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-white rounded hover:bg-slate-800 text-xs font-bold cursor-pointer"
+                          className="w-5 h-5 flex items-center justify-center text-ink-muted hover:text-ink rounded hover:bg-raised text-xs font-bold cursor-pointer"
                         >
                           -
                         </button>
-                        <span className="text-xs font-mono font-bold w-4 text-center text-cyan-300">
+                        <span className="text-xs font-mono font-bold w-4 text-center text-info-ink">
                           {count}
                         </span>
                         <button
                           type="button"
                           onClick={() => setQuantity(spool.id, 1)}
-                          className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-white rounded hover:bg-slate-800 text-xs font-bold cursor-pointer"
+                          className="w-5 h-5 flex items-center justify-center text-ink-muted hover:text-ink rounded hover:bg-raised text-xs font-bold cursor-pointer"
                         >
                           +
                         </button>
@@ -484,14 +484,14 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
             </div>
 
             {/* Riepilogo Etichette e Fogli */}
-            <div className="p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs flex items-center justify-between text-slate-300">
+            <div className="p-2.5 bg-sunken border border-line rounded-xl text-xs flex items-center justify-between text-ink-muted">
               <div>
-                <span className="text-[10px] text-slate-500 uppercase block">Etichette Selezionate</span>
-                <strong className="text-white text-sm font-mono">{flatLabelsToPrint.length}</strong>
+                <span className="text-[11px] text-ink-faint block">Etichette Selezionate</span>
+                <strong className="text-ink text-sm font-mono">{flatLabelsToPrint.length}</strong>
               </div>
               <div className="text-right">
-                <span className="text-[10px] text-slate-500 uppercase block">Fogli A4 Necessari</span>
-                <strong className="text-cyan-400 text-sm font-mono">
+                <span className="text-[11px] text-ink-faint block">Fogli A4 Necessari</span>
+                <strong className="text-info-ink text-sm font-mono">
                   {totalSheetsNeeded} {totalSheetsNeeded === 1 ? 'foglio' : 'fogli'}
                 </strong>
               </div>
@@ -500,13 +500,13 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
           </div>
 
           {/* COLONNA DESTRA: ANTEPRIMA LIVE FOGLIO A4 A VIDEO (8 Colonne) */}
-          <div className="lg:col-span-8 p-4 bg-slate-950/70 flex flex-col min-h-0 overflow-y-auto items-center">
-            <div className="flex items-center justify-between w-full max-w-[650px] mb-2 text-xs text-slate-400">
-              <span className="font-semibold flex items-center gap-1 text-slate-300">
-                <FileText className="w-3.5 h-3.5 text-cyan-400" />
+          <div className="lg:col-span-8 p-4 bg-sunken flex flex-col min-h-0 overflow-y-auto items-center">
+            <div className="flex items-center justify-between w-full max-w-[650px] mb-2 text-xs text-ink-muted">
+              <span className="font-semibold flex items-center gap-1 text-ink-muted">
+                <FileText className="w-3.5 h-3.5 text-info-ink" />
                 Anteprima Foglio A4 ({layout} • {labelsPerPage} slot per foglio)
               </span>
-              <span className="text-[11px] text-slate-500">
+              <span className="text-[11px] text-ink-faint">
                 {flatLabelsToPrint.length % labelsPerPage === 0 
                   ? 'Foglio pieno al 100%' 
                   : `${labelsPerPage - (flatLabelsToPrint.length % labelsPerPage)} slot liberi nell'ultimo foglio`}
@@ -514,20 +514,20 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
             </div>
 
             {flatLabelsToPrint.length === 0 ? (
-              <div className="m-auto text-center py-20 text-slate-500 text-sm space-y-2">
-                <AlertCircle className="w-8 h-8 text-slate-600 mx-auto" />
+              <div className="m-auto text-center py-20 text-ink-faint text-sm space-y-2">
+                <AlertCircle className="w-8 h-8 text-ink-faint mx-auto" />
                 <p>Nessuna etichetta selezionata.</p>
                 <button
                   type="button"
                   onClick={handleSelectAllVisible}
-                  className="text-xs text-cyan-400 underline hover:text-cyan-300 cursor-pointer"
+                  className="text-xs text-info-ink underline hover:text-info-ink cursor-pointer"
                 >
                   Seleziona tutte le bobine visibili
                 </button>
               </div>
             ) : (
               /* FOGLIO BIANCO SIMULATO A4 */
-              <div className="w-full max-w-[680px] bg-white text-black p-4 rounded-xl shadow-2xl border border-slate-300 font-sans">
+              <div className="w-full max-w-[680px] bg-white text-black p-4 rounded-xl shadow-lg border border-gray-300 font-sans">
                 
                 <div 
                   className={`grid gap-1.5 ${
@@ -563,10 +563,10 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
                         {/* Riga Header: Marca, Materiale, Colore */}
                         <div className="border-b border-black pb-0.5 mb-1 flex items-baseline justify-between leading-tight">
                           <div className="min-w-0 pr-1">
-                            <span className={`font-black uppercase tracking-wider block truncate ${isCompact ? 'text-[8.5px]' : 'text-[10px]'}`}>
+                            <span className={`font-semibold block truncate ${isCompact ? 'text-[8.5px]' : 'text-[11px]'}`}>
                               {spool.brand}
                             </span>
-                            <span className={`font-bold text-gray-800 uppercase ${isCompact ? 'text-[7.5px]' : 'text-[9px]'}`}>
+                            <span className={`font-bold text-gray-800 ${isCompact ? 'text-[7.5px]' : 'text-[11px]'}`}>
                               {spool.material}
                             </span>
                           </div>
@@ -615,13 +615,13 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
 
                           <div className="text-[8.5px] leading-tight space-y-0.5 min-w-0">
                             <div>
-                              <span className="text-[6.5px] text-gray-500 uppercase block">Residuo:</span>
-                              <strong className={`${isCompact ? 'text-[10px]' : 'text-[11px]'} font-black text-black`}>{spool.weightRemaining}g</strong>
+                              <span className="text-[6.5px] text-gray-500 block">Residuo:</span>
+                              <strong className={`${isCompact ? 'text-[10px]' : 'text-[11px]'} font-semibold text-black`}>{spool.weightRemaining}g</strong>
                             </div>
 
                             {showTare && (
                               <div>
-                                <span className="text-[6.5px] text-gray-500 uppercase block">Tara:</span>
+                                <span className="text-[6.5px] text-gray-500 block">Tara:</span>
                                 <span className="font-bold text-gray-800">{tare}g</span>
                               </div>
                             )}
@@ -720,10 +720,10 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
                 {/* Header Marca / Materiale */}
                 <div className="border-b border-black pb-0.5 mb-1 flex items-baseline justify-between leading-tight">
                   <div className="min-w-0 pr-1">
-                    <span className={`font-black uppercase tracking-wider block truncate ${isCompact ? 'text-[9px]' : 'text-xs'}`}>
+                    <span className={`font-semibold block truncate ${isCompact ? 'text-[11px]' : 'text-xs'}`}>
                       {spool.brand}
                     </span>
-                    <span className={`font-bold text-gray-800 uppercase ${isCompact ? 'text-[8px]' : 'text-[10px]'}`}>
+                    <span className={`font-bold text-gray-800 ${isCompact ? 'text-[8px]' : 'text-[11px]'}`}>
                       {spool.material}
                     </span>
                   </div>
@@ -760,13 +760,13 @@ export default function BatchLabelModal({ spools, preselectedIds, onClose }: Pro
 
                   <div className="text-[9px] leading-tight space-y-0.5 min-w-0">
                     <div>
-                      <span className="text-[7px] text-gray-500 uppercase block">Residuo:</span>
-                      <strong className={`${isCompact ? 'text-xs' : 'text-sm'} font-black text-black`}>{spool.weightRemaining}g</strong>
+                      <span className="text-[7px] text-gray-500 block">Residuo:</span>
+                      <strong className={`${isCompact ? 'text-xs' : 'text-sm'} font-semibold text-black`}>{spool.weightRemaining}g</strong>
                     </div>
 
                     {showTare && (
                       <div>
-                        <span className="text-[7px] text-gray-500 uppercase block">Tara:</span>
+                        <span className="text-[7px] text-gray-500 block">Tara:</span>
                         <span className="font-bold text-gray-800">{tare}g</span>
                       </div>
                     )}

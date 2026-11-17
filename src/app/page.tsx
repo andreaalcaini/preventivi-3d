@@ -666,50 +666,50 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
   const activeClientStat = exactClientMatch ? clientStats[exactClientMatch] : null;
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-slate-950 text-slate-200 p-2 sm:p-4 font-sans relative">
+    <div className="flex-1 flex flex-col min-h-0 bg-sunken text-ink p-2 sm:p-4 font-sans relative">
       
       {/* FOGLIO DI LAVORO / RICEVUTA PDF MINIMALE */}
-      <div className="hidden print:block text-black bg-white p-8 max-w-2xl mx-auto font-sans">
-        <div className="border-b-2 border-black pb-4 mb-6 flex justify-between items-start">
+      <div className="hidden print:block text-canvas bg-ink p-8 max-w-2xl mx-auto font-sans">
+        <div className="border-b-2 border-line pb-4 mb-6 flex justify-between items-start">
           <div>
-            <h1 className="text-2xl font-black uppercase tracking-tight">Ricevuta / Foglio di Lavoro</h1>
-            <p className="text-xs text-gray-600 mt-1">Laboratorio Stampa 3D FDM & Prototipazione</p>
+            <h1 className="text-2xl font-semibold tracking-tight">Ricevuta / Foglio di Lavoro</h1>
+            <p className="text-xs text-ink-faint mt-1">Laboratorio Stampa 3D FDM & Prototipazione</p>
           </div>
           <div className="text-right text-xs">
             <p className="font-bold">Data: {new Date().toLocaleDateString('it-IT')}</p>
-            <p className="text-gray-600">Doc ID: {quote.id || 'NEW-JOB'}</p>
+            <p className="text-ink-faint">Doc ID: {quote.id || 'NEW-JOB'}</p>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-6 text-xs">
-          <div className="p-3 border border-gray-300 rounded">
-            <span className="text-gray-500 uppercase font-semibold text-[10px] block">Cliente</span>
+          <div className="p-3 border border-line rounded">
+            <span className="text-ink-faint font-semibold text-[11px] block">Cliente</span>
             <p className="text-sm font-bold mt-0.5">{quote.clientName || 'Cliente / Richiedente'}</p>
           </div>
-          <div className="p-3 border border-gray-300 rounded">
-            <span className="text-gray-500 uppercase font-semibold text-[10px] block">Oggetto / Commessa</span>
+          <div className="p-3 border border-line rounded">
+            <span className="text-ink-faint font-semibold text-[11px] block">Oggetto / Commessa</span>
             <p className="text-sm font-bold mt-0.5">{quote.name || 'Progetto 3D'}</p>
           </div>
         </div>
 
-        <h3 className="text-xs font-bold uppercase tracking-wider border-b border-gray-300 pb-1 mb-3">Dettagli di Fabbricazione</h3>
+        <h3 className="text-xs font-bold border-b border-line pb-1 mb-3">Dettagli di Fabbricazione</h3>
         <table className="w-full text-xs text-left mb-6">
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-line">
             <tr>
-              <td className="py-2 text-gray-600">Materiale / Filamento</td>
+              <td className="py-2 text-ink-faint">Materiale / Filamento</td>
               <td className="py-2 font-medium text-right">{quote.material}</td>
             </tr>
             <tr>
-              <td className="py-2 text-gray-600">Tempo Macchina Stimato</td>
+              <td className="py-2 text-ink-faint">Tempo Macchina Stimato</td>
               <td className="py-2 font-medium text-right">{quote.hours} ore e {quote.mins} minuti</td>
             </tr>
             <tr>
-              <td className="py-2 text-gray-600">Peso Totale Estruso</td>
+              <td className="py-2 text-ink-faint">Peso Totale Estruso</td>
               <td className="py-2 font-medium text-right">{(parseFloat(quote.weight.toString()) || 0) + (parseFloat(quote.purgeWeight.toString()) || 0)} grammi</td>
             </tr>
             {quote.multiColor && (
               <tr>
-                <td className="py-2 text-gray-600">Configurazione</td>
+                <td className="py-2 text-ink-faint">Configurazione</td>
                 <td className="py-2 font-medium text-right">Multi-colore AMS ({quote.colorChanges} cambi)</td>
               </tr>
             )}
@@ -718,8 +718,8 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
 
         {quote.extraBom.length > 0 && (
           <>
-            <h3 className="text-xs font-bold uppercase tracking-wider border-b border-gray-300 pb-1 mb-2">Hardware & Viteria Inclusi</h3>
-            <ul className="text-xs space-y-1 mb-6 list-disc list-inside text-gray-800">
+            <h3 className="text-xs font-bold border-b border-line pb-1 mb-2">Hardware & Viteria Inclusi</h3>
+            <ul className="text-xs space-y-1 mb-6 list-disc list-inside text-ink">
               {quote.extraBom.map((item, i) => (
                 <li key={i}>{item.qty}x {item.name}</li>
               ))}
@@ -727,12 +727,12 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
           </>
         )}
 
-        <div className="border-t-2 border-black pt-4 flex justify-between items-baseline">
-          <span className="text-sm font-bold uppercase">Totale Dovuto</span>
-          <span className="text-3xl font-black">€{totals.finalPrice.toFixed(2)}</span>
+        <div className="border-t-2 border-line pt-4 flex justify-between items-baseline">
+          <span className="text-sm font-bold">Totale Dovuto</span>
+          <span className="text-3xl font-semibold">€{totals.finalPrice.toFixed(2)}</span>
         </div>
 
-        <div className="mt-12 pt-4 border-t border-gray-200 text-[10px] text-gray-500 text-center">
+        <div className="mt-12 pt-4 border-t border-line text-[10px] text-ink-faint text-center">
           Documento generato tramite PrintQuote Pro • Grazie per il supporto al maker lab
         </div>
       </div>
@@ -742,20 +742,20 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
         
         {/* BANNER NOTIFICA SE STAI MODIFICANDO UN PREVENTIVO */}
         {quote.id && (
-          <div className="flex-shrink-0 mb-2 p-2 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center justify-between gap-2 shadow-sm">
+          <div className="flex-shrink-0 mb-2 p-2 bg-warn-soft border border-warn-line rounded-xl flex items-center justify-between gap-2 shadow-sm">
             <div className="flex items-center gap-2 min-w-0">
-              <div className="p-1 bg-amber-500/20 rounded-lg text-amber-400 flex-shrink-0">
+              <div className="p-1 bg-warn-soft rounded-lg text-warn-ink flex-shrink-0">
                 <Pencil className="w-3.5 h-3.5" />
               </div>
               <div className="flex items-center gap-1.5 text-xs truncate">
-                <span className="font-bold text-white">Modalità Modifica:</span>
-                <span className="font-mono text-amber-400 truncate">{quote.name || 'Senza nome'}</span>
+                <span className="font-bold text-ink">Modalità Modifica:</span>
+                <span className="font-mono text-warn-ink truncate">{quote.name || 'Senza nome'}</span>
               </div>
             </div>
 
             <button 
               onClick={resetQuote}
-              className="px-2.5 py-1 bg-slate-900 border border-slate-700 hover:bg-slate-800 text-slate-300 text-xs font-medium rounded-lg flex items-center gap-1 transition-colors flex-shrink-0"
+              className="px-2.5 py-1 bg-surface border border-line-strong hover:bg-raised text-ink-muted text-xs font-medium rounded-lg flex items-center gap-1 transition-colors flex-shrink-0"
             >
               <X className="w-3 h-3" /> Esci
             </button>
@@ -765,15 +765,15 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
         {/* HEADER COMPATTO CON PRESET A PILLOLE */}
         <header className="flex-shrink-0 flex items-center justify-between mb-2 gap-2 flex-wrap sm:flex-nowrap">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="p-1.5 bg-emerald-500/10 rounded-xl text-emerald-400 border border-emerald-500/20 shadow-sm flex-shrink-0">
+            <div className="p-1.5 bg-accent-soft rounded-xl text-accent-ink border border-accent-line shadow-sm flex-shrink-0">
               <Calculator className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-sm sm:text-base font-bold text-white tracking-tight leading-tight truncate">
+              <h1 className="text-sm sm:text-base font-bold text-ink tracking-tight leading-tight truncate">
                 Calcolatore Preventivi FDM
               </h1>
-              <p className="text-slate-400 text-[11px] truncate">
-                {isPrivacyMode && <span className="text-amber-400 font-semibold mr-1">[Cliente]</span>}
+              <p className="text-ink-muted text-[11px] truncate">
+                {isPrivacyMode && <span className="text-warn-ink font-semibold mr-1">[Cliente]</span>}
                 {quote.id ? 'Modifica preventivo attivo' : 'Parametri per determinare il prezzo'}
               </p>
             </div>
@@ -782,28 +782,28 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
           <div className="flex items-center gap-1.5 flex-shrink-0">
             <button 
               onClick={resetQuote} 
-              className="px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg hover:bg-slate-800 text-slate-300 text-xs flex items-center gap-1 transition-colors shadow-sm"
+              className="px-2.5 py-1.5 bg-surface border border-line rounded-lg hover:bg-raised text-ink-muted text-xs flex items-center gap-1 transition-colors shadow-sm"
               title="Azzera campi e crea nuovo preventivo"
             >
-              <FilePlus2 className="w-3.5 h-3.5 text-blue-400" /> 
+              <FilePlus2 className="w-3.5 h-3.5 text-info-ink" /> 
               <span className="hidden sm:inline">Nuovo</span>
             </button>
 
             <Link 
               href="/preventivi"
-              className="px-2.5 py-1.5 bg-slate-900 border border-slate-800 rounded-lg hover:bg-slate-800 text-slate-300 text-xs flex items-center gap-1 transition-colors shadow-sm"
+              className="px-2.5 py-1.5 bg-surface border border-line rounded-lg hover:bg-raised text-ink-muted text-xs flex items-center gap-1 transition-colors shadow-sm"
             >
-              <FolderOpen className="w-3.5 h-3.5 text-emerald-400" /> 
+              <FolderOpen className="w-3.5 h-3.5 text-accent-ink" /> 
               <span>Lavori ({savedQuotes.length})</span>
             </Link>
 
-            <div className="flex bg-slate-900 border border-slate-800 p-0.5 rounded-lg gap-0.5 shadow-sm">
+            <div className="flex bg-surface border border-line p-0.5 rounded-lg gap-0.5 shadow-sm">
               <button 
                 onClick={() => applyPreset('amico')} 
                 className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
                   quote.pricingType === 'amico' 
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm' 
-                    : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                    ? 'bg-accent-soft text-accent-ink border border-accent-line shadow-sm' 
+                    : 'text-ink-muted hover:text-ink border border-transparent'
                 }`}
               >
                 Amico
@@ -812,8 +812,8 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                 onClick={() => applyPreset('collega')} 
                 className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
                   quote.pricingType === 'collega' 
-                    ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40 shadow-sm' 
-                    : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                    ? 'bg-info-soft text-info-ink border border-info-line shadow-sm' 
+                    : 'text-ink-muted hover:text-ink border border-transparent'
                 }`}
               >
                 Collega
@@ -822,14 +822,14 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                 onClick={() => applyPreset('commerciale')} 
                 className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
                   quote.pricingType === 'commerciale' 
-                    ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-sm' 
-                    : 'text-slate-400 hover:text-slate-200 border border-transparent'
+                    ? 'bg-info-soft text-info-ink border border-info-line shadow-sm' 
+                    : 'text-ink-muted hover:text-ink border border-transparent'
                 }`}
               >
                 Azienda
               </button>
               {quote.pricingType === 'richiesta_cliente' && (
-                <span className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm flex items-center gap-1" title="Preventivo originato da richiesta autonoma del cliente">
+                <span className="px-2.5 py-1 rounded-md text-[11px] font-semibold bg-warn-soft text-warn-ink border border-warn-line shadow-sm flex items-center gap-1" title="Preventivo originato da richiesta autonoma del cliente">
                   Richiesta Cliente
                 </span>
               )}
@@ -841,18 +841,18 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
         <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-3 overflow-hidden">
           
           {/* LEFT: FORM PRINCIPALE A SCHEDE */}
-          <div className="lg:col-span-8 flex flex-col min-h-0 bg-slate-900 border border-slate-800 rounded-xl p-3 overflow-hidden">
+          <div className="lg:col-span-8 flex flex-col min-h-0 bg-surface border border-line rounded-xl p-3 overflow-hidden">
             
             {/* TABS HEADER */}
-            <div className="flex-shrink-0 flex items-center justify-between border-b border-slate-800 pb-2 mb-2 gap-2 flex-wrap">
-              <div className="flex bg-slate-950 border border-slate-800 p-0.5 rounded-lg gap-0.5">
+            <div className="flex-shrink-0 flex items-center justify-between border-b border-line pb-2 mb-2 gap-2 flex-wrap">
+              <div className="flex bg-sunken border border-line p-0.5 rounded-lg gap-0.5">
                 <button
                   type="button"
                   onClick={() => setCalcTab('print')}
                   className={`px-3 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all ${
                     calcTab === 'print'
-                      ? 'bg-emerald-600 text-white shadow-sm'
-                      : 'text-slate-400 hover:text-white'
+                      ? 'bg-accent text-on-accent shadow-sm'
+                      : 'text-ink-muted hover:text-ink'
                   }`}
                 >
                   <Layers className="w-3.5 h-3.5" />
@@ -863,8 +863,8 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                   onClick={() => setCalcTab('costs')}
                   className={`px-3 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all ${
                     calcTab === 'costs'
-                      ? 'bg-emerald-600 text-white shadow-sm'
-                      : 'text-slate-400 hover:text-white'
+                      ? 'bg-accent text-on-accent shadow-sm'
+                      : 'text-ink-muted hover:text-ink'
                   }`}
                 >
                   <Clock className="w-3.5 h-3.5" />
@@ -875,8 +875,8 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                   onClick={() => setCalcTab('extra')}
                   className={`px-3 py-1 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all ${
                     calcTab === 'extra'
-                      ? 'bg-emerald-600 text-white shadow-sm'
-                      : 'text-slate-400 hover:text-white'
+                      ? 'bg-accent text-on-accent shadow-sm'
+                      : 'text-ink-muted hover:text-ink'
                   }`}
                 >
                   <Wrench className="w-3.5 h-3.5" />
@@ -890,8 +890,8 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                   onClick={() => setShowSettings(!showSettings)}
                   className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors flex items-center gap-1 ${
                     showSettings 
-                      ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' 
-                      : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
+                      ? 'bg-accent-soft border-accent-line text-accent-ink' 
+                      : 'bg-sunken border-line text-ink-muted hover:text-ink'
                   }`}
                   title="Mostra / Nascondi parametri base stampante (kWh, Watt, Ammortamento)"
                 >
@@ -907,60 +907,60 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
               
               {/* ACCORDION PARAMETRI STAMPANTE (SE APERTO) */}
               {!isPrivacyMode && showSettings && (
-                <div className="p-3 bg-slate-950/80 border border-slate-800 rounded-xl mb-3 animate-in fade-in duration-200">
+                <div className="p-3 bg-sunken border border-line rounded-xl mb-3 animate-in fade-in duration-200">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                      <Settings className="w-3.5 h-3.5 text-emerald-400" /> Parametri Stampante & Costi Base
+                    <span className="text-xs font-bold text-ink flex items-center gap-1.5">
+                      <Settings className="w-3.5 h-3.5 text-accent-ink" /> Parametri Stampante & Costi Base
                     </span>
-                    <span className="text-[10px] text-slate-500">Salvati in memoria</span>
+                    <span className="text-[10px] text-ink-faint">Salvati in memoria</span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2">
                     <div>
-                      <label className="block text-[10px] text-slate-400 mb-0.5 truncate">Energia (€/kWh)</label>
-                      <input type="number" step="0.01" value={settings.powerCost} onChange={e => updateSetting('powerCost', e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs outline-none text-white" />
+                      <label className="block text-[10px] text-ink-muted mb-0.5 truncate">Energia (€/kWh)</label>
+                      <input type="number" step="0.01" value={settings.powerCost} onChange={e => updateSetting('powerCost', e.target.value)} className="w-full bg-surface border border-line rounded px-2 py-1 text-xs outline-none text-ink" />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-slate-400 mb-0.5 truncate">Potenza (Watt)</label>
-                      <input type="number" value={settings.watt} onChange={e => updateSetting('watt', e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs outline-none text-white" />
+                      <label className="block text-[10px] text-ink-muted mb-0.5 truncate">Potenza (Watt)</label>
+                      <input type="number" value={settings.watt} onChange={e => updateSetting('watt', e.target.value)} className="w-full bg-surface border border-line rounded px-2 py-1 text-xs outline-none text-ink" />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-slate-400 mb-0.5 truncate">Ammort. (€/h)</label>
-                      <input type="number" step="0.10" value={settings.wearCost} onChange={e => updateSetting('wearCost', e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs outline-none text-white" />
+                      <label className="block text-[10px] text-ink-muted mb-0.5 truncate">Ammort. (€/h)</label>
+                      <input type="number" step="0.10" value={settings.wearCost} onChange={e => updateSetting('wearCost', e.target.value)} className="w-full bg-surface border border-line rounded px-2 py-1 text-xs outline-none text-ink" />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-slate-400 mb-0.5 truncate">Operatore (€/h)</label>
-                      <input type="number" step="1" value={settings.laborRate} onChange={e => updateSetting('laborRate', e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs outline-none text-white" />
+                      <label className="block text-[10px] text-ink-muted mb-0.5 truncate">Operatore (€/h)</label>
+                      <input type="number" step="1" value={settings.laborRate} onChange={e => updateSetting('laborRate', e.target.value)} className="w-full bg-surface border border-line rounded px-2 py-1 text-xs outline-none text-ink" />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-slate-400 mb-0.5 truncate">Rischio (%)</label>
-                      <input type="number" value={settings.risk} onChange={e => updateSetting('risk', e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs outline-none text-white" />
+                      <label className="block text-[10px] text-ink-muted mb-0.5 truncate">Rischio (%)</label>
+                      <input type="number" value={settings.risk} onChange={e => updateSetting('risk', e.target.value)} className="w-full bg-surface border border-line rounded px-2 py-1 text-xs outline-none text-ink" />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-slate-400 mb-0.5 truncate">Margine (%)</label>
-                      <input type="number" value={settings.markup} onChange={e => updateSetting('markup', e.target.value)} className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs outline-none text-white" />
+                      <label className="block text-[10px] text-ink-muted mb-0.5 truncate">Margine (%)</label>
+                      <input type="number" value={settings.markup} onChange={e => updateSetting('markup', e.target.value)} className="w-full bg-surface border border-line rounded px-2 py-1 text-xs outline-none text-ink" />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-slate-400 mb-0.5 truncate">Arrot. Base</label>
+                      <label className="block text-[10px] text-ink-muted mb-0.5 truncate">Arrot. Base</label>
                       <select 
                         value={settings.defaultRoundingMode || 'none'} 
                         onChange={e => updateSetting('defaultRoundingMode', e.target.value)} 
-                        className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs outline-none text-white cursor-pointer"
+                        className="w-full bg-surface border border-line rounded px-2 py-1 text-xs outline-none text-ink cursor-pointer"
                       >
                         <option value="none">Nessuno</option>
-                        <option value="excess">Eccesso ⬆️</option>
-                        <option value="defect">Scarto ⬇️</option>
+                        <option value="excess">Per eccesso</option>
+                        <option value="defect">Per difetto</option>
                         <option value="nearest">Più Vicino ≈</option>
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[10px] text-slate-400 mb-0.5 truncate">Passo Base (€)</label>
+                      <label className="block text-[10px] text-ink-muted mb-0.5 truncate">Passo Base (€)</label>
                       <input 
                         type="number" 
                         step="0.05" 
                         min="0.01" 
                         value={settings.defaultRoundingStep ?? 0.50} 
                         onChange={e => updateSetting('defaultRoundingStep', e.target.value)} 
-                        className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs outline-none text-white" 
+                        className="w-full bg-surface border border-line rounded px-2 py-1 text-xs outline-none text-ink" 
                       />
                     </div>
                   </div>
@@ -973,22 +973,22 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                   {/* Riga Nome, Cliente, Cellulare, Tariffa */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
                     <div>
-                      <label className="block text-[11px] font-medium text-slate-400 mb-1">Descrizione Oggetto / File</label>
+                      <label className="block text-[11px] font-medium text-ink-muted mb-1">Descrizione Oggetto / File</label>
                       <input 
                         type="text" 
                         value={quote.name} 
                         onChange={e => updateQuote('name', e.target.value)} 
                         placeholder="Es. Case ESP32, Staffa..."
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 focus:border-emerald-500 outline-none text-xs text-white" 
+                        className="w-full bg-surface border border-line-strong-strong rounded-lg px-3 py-1.5 focus:border-accent outline-none text-xs text-ink" 
                       />
                     </div>
 
                     <div ref={clientInputContainerRef} className="relative">
-                      <label className="block text-[11px] font-medium text-slate-400 mb-1 flex items-center justify-between">
+                      <label className="block text-[11px] font-medium text-ink-muted mb-1 flex items-center justify-between">
                         <span className="flex items-center gap-1">
-                          <User className="w-3 h-3 text-emerald-400" /> Nome Cliente
+                          <User className="w-3 h-3 text-accent-ink" /> Nome Cliente
                         </span>
-                        {activeClientStat && <span className="text-[10px] text-emerald-400">Riconosciuto ✓</span>}
+                        {activeClientStat && <span className="text-[10px] text-accent-ink">Riconosciuto ✓</span>}
                       </label>
                       
                       <input 
@@ -1000,11 +1000,11 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                           setClientDropdownOpen(true);
                         }} 
                         placeholder="Nome cliente..."
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 focus:border-emerald-500 outline-none text-xs text-white" 
+                        className="w-full bg-surface border border-line-strong-strong rounded-lg px-3 py-1.5 focus:border-accent outline-none text-xs text-ink" 
                       />
 
                       {clientDropdownOpen && quote.clientName.trim().length > 0 && (
-                        <div className="absolute left-0 right-0 top-[58px] bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-30 overflow-hidden max-h-56 overflow-y-auto">
+                        <div className="absolute left-0 right-0 top-[58px] bg-surface border border-line-strong rounded-xl shadow-lg z-30 overflow-hidden max-h-56 overflow-y-auto">
                           {clientSuggestions.map((client) => {
                             const stat = clientStats[client];
                             return (
@@ -1018,15 +1018,15 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                                   if (stat.lastType) applyPreset(stat.lastType);
                                   setClientDropdownOpen(false);
                                 }}
-                                className="p-2.5 hover:bg-slate-800 cursor-pointer border-b border-slate-800/60 transition-colors"
+                                className="p-2.5 hover:bg-raised cursor-pointer border-b border-line transition-colors"
                               >
                                 <div className="flex justify-between items-center mb-0.5">
-                                  <span className="font-semibold text-white text-xs">{client}</span>
-                                  <span className="text-[11px] text-emerald-400 font-medium">Tot: €{stat.totalSpent.toFixed(2)}</span>
+                                  <span className="font-semibold text-ink text-xs">{client}</span>
+                                  <span className="text-[11px] text-accent-ink font-medium">Tot: €{stat.totalSpent.toFixed(2)}</span>
                                 </div>
-                                <div className="flex items-center justify-between text-[10px] text-slate-400">
-                                  <span>Ordini: <strong className="text-slate-200">{stat.count}</strong></span>
-                                  {stat.phone && <span className="text-emerald-400 font-mono">{stat.phone}</span>}
+                                <div className="flex items-center justify-between text-[10px] text-ink-muted">
+                                  <span>Ordini: <strong className="text-ink">{stat.count}</strong></span>
+                                  {stat.phone && <span className="text-accent-ink font-mono">{stat.phone}</span>}
                                 </div>
                               </div>
                             );
@@ -1035,9 +1035,9 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                           {!exactClientMatch && quote.clientName.trim() && (
                             <div 
                               onClick={() => setClientDropdownOpen(false)}
-                              className="p-2.5 bg-slate-950/80 hover:bg-slate-800 text-emerald-400 cursor-pointer flex items-center gap-1.5 text-xs font-medium border-t border-slate-700/50"
+                              className="p-2.5 bg-sunken hover:bg-raised text-accent-ink cursor-pointer flex items-center gap-1.5 text-xs font-medium border-t border-line-strong"
                             >
-                              <UserPlus className="w-3.5 h-3.5 text-emerald-400" />
+                              <UserPlus className="w-3.5 h-3.5 text-accent-ink" />
                               <span>Inserisci &quot;{quote.clientName.trim()}&quot; come nuovo</span>
                             </div>
                           )}
@@ -1046,24 +1046,24 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-medium text-slate-400 mb-1 flex items-center gap-1">
-                        <Phone className="w-3 h-3 text-emerald-400" /> WhatsApp
+                      <label className="block text-[11px] font-medium text-ink-muted mb-1 flex items-center gap-1">
+                        <Phone className="w-3 h-3 text-accent-ink" /> WhatsApp
                       </label>
                       <input 
                         type="tel" 
                         value={quote.clientContact || ''} 
                         onChange={e => updateQuote('clientContact', e.target.value)} 
                         placeholder="Es. 340 1234567..."
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 focus:border-emerald-500 outline-none text-xs text-white" 
+                        className="w-full bg-surface border border-line-strong-strong rounded-lg px-3 py-1.5 focus:border-accent outline-none text-xs text-ink" 
                       />
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-medium text-slate-400 mb-1">Tipo Tariffa</label>
+                      <label className="block text-[11px] font-medium text-ink-muted mb-1">Tipo Tariffa</label>
                       <select 
                         value={quote.pricingType} 
                         onChange={e => applyPreset(e.target.value as PricingType)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 focus:border-emerald-500 outline-none text-xs font-medium text-white"
+                        className="w-full bg-surface border border-line-strong-strong rounded-lg px-3 py-1.5 focus:border-accent outline-none text-xs font-medium text-ink"
                       >
                         <option value="amico">Amico (Prezzo Vivo)</option>
                         <option value="collega">Collega (Margine Leggero)</option>
@@ -1073,21 +1073,21 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                   </div>
 
                   {/* Selettore Quantità Pezzi (Funzione Opzionale) */}
-                  <div className="p-2.5 bg-slate-950/60 border border-slate-800/80 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                  <div className="p-2.5 bg-sunken border border-line rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex-shrink-0">
+                      <div className="p-1.5 rounded-lg bg-accent-soft text-accent-ink border border-accent-line flex-shrink-0">
                         <BoxIcon className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-white leading-tight">Quantità Pezzi da Stampare</span>
+                          <span className="text-xs font-bold text-ink leading-tight">Quantità Pezzi da Stampare</span>
                           {(quote.quantity || 1) > 1 && (
-                            <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-1.5 py-0.2 rounded font-mono font-bold">
+                            <span className="text-[10px] bg-accent-soft text-accent-ink border border-accent-line px-1.5 py-0.2 rounded font-mono font-bold">
                               x{quote.quantity} pezzi
                             </span>
                           )}
                         </div>
-                        <span className="text-[10px] text-slate-400 truncate block">
+                        <span className="text-[10px] text-ink-muted truncate block">
                           {(quote.quantity || 1) > 1 
                             ? `Lotto di ${quote.quantity} copie • ${(totals.unitPrice).toFixed(2)}€ cad. • filamento totale: ${(((parseFloat(quote.weight.toString()) || 0) + (parseFloat(quote.purgeWeight.toString()) || 0)) * (quote.quantity || 1)).toFixed(0)}g`
                             : 'Stampa pezzo singolo (1 copia predefinita)'}
@@ -1097,7 +1097,7 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
 
                     <div className="flex items-center gap-2 flex-shrink-0 self-end sm:self-center">
                       {/* Chip rapidi 1, 2, 5, 10, 20 */}
-                      <div className="flex bg-slate-900 border border-slate-800 rounded-lg p-0.5 gap-0.5 text-xs">
+                      <div className="flex bg-surface border border-line rounded-lg p-0.5 gap-0.5 text-xs">
                         {[1, 2, 5, 10, 20].map(n => (
                           <button
                             key={n}
@@ -1105,8 +1105,8 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                             onClick={() => updateQuote('quantity', n)}
                             className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all cursor-pointer ${
                               (quote.quantity || 1) === n 
-                                ? 'bg-emerald-600 text-white shadow-sm' 
-                                : 'text-slate-400 hover:text-white'
+                                ? 'bg-accent text-on-accent shadow-sm' 
+                                : 'text-ink-muted hover:text-ink'
                             }`}
                           >
                             {n}
@@ -1115,11 +1115,11 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                       </div>
 
                       {/* Stepper manuale +/- */}
-                      <div className="flex items-center border border-slate-800 bg-slate-900 rounded-lg overflow-hidden h-7">
+                      <div className="flex items-center border border-line bg-surface rounded-lg overflow-hidden h-7">
                         <button
                           type="button"
                           onClick={() => updateQuote('quantity', Math.max(1, (quote.quantity || 1) - 1))}
-                          className="px-2 h-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-xs font-bold cursor-pointer"
+                          className="px-2 h-full text-ink-muted hover:text-ink hover:bg-raised transition-colors text-xs font-bold cursor-pointer"
                           title="Diminuisci copie"
                         >
                           -
@@ -1129,12 +1129,12 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                           min="1"
                           value={quote.quantity || 1}
                           onChange={e => updateQuote('quantity', Math.max(1, parseInt(e.target.value, 10) || 1))}
-                          className="w-10 bg-transparent text-center text-xs font-bold font-mono text-emerald-400 outline-none"
+                          className="w-10 bg-transparent text-center text-xs font-bold font-mono text-accent-ink outline-none"
                         />
                         <button
                           type="button"
                           onClick={() => updateQuote('quantity', (quote.quantity || 1) + 1)}
-                          className="px-2 h-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-xs font-bold cursor-pointer"
+                          className="px-2 h-full text-ink-muted hover:text-ink hover:bg-raised transition-colors text-xs font-bold cursor-pointer"
                           title="Aumenta copie"
                         >
                           +
@@ -1144,13 +1144,13 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                   </div>
 
                   {/* MakerWorld Link & Import */}
-                  <div className="space-y-1.5 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800/80">
+                  <div className="space-y-1.5 bg-sunken p-2.5 rounded-xl border border-line">
                     <div className="flex items-center justify-between">
-                      <label className="block text-[11px] font-medium text-slate-400 flex items-center gap-1">
-                        <LinkIcon className="w-3 h-3 text-emerald-400" /> Link MakerWorld / Modello 3D
+                      <label className="block text-[11px] font-medium text-ink-muted flex items-center gap-1">
+                        <LinkIcon className="w-3 h-3 text-accent-ink" /> Link MakerWorld / Modello 3D
                       </label>
                       {quote.makerWorldUrl?.includes('makerworld.com') && (
-                        <span className="text-[10px] text-emerald-400 flex items-center gap-1">
+                        <span className="text-[10px] text-accent-ink flex items-center gap-1">
                           <Sparkles className="w-3 h-3" /> Stima automatica disponibile
                         </span>
                       )}
@@ -1172,10 +1172,10 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                             }
                           }}
                           placeholder="https://makerworld.com/it/models/..."
-                          className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-3 pr-8 py-1.5 focus:border-emerald-500 outline-none text-xs text-white placeholder:text-slate-600" 
+                          className="w-full bg-surface border border-line-strong-strong rounded-lg pl-3 pr-8 py-1.5 focus:border-accent outline-none text-xs text-ink placeholder:text-ink-faint" 
                         />
                         {quote.makerWorldUrl && (
-                          <a href={quote.makerWorldUrl} target="_blank" rel="noreferrer" className="absolute right-2 p-1 text-slate-400 hover:text-emerald-400" title="Apri su MakerWorld">
+                          <a href={quote.makerWorldUrl} target="_blank" rel="noreferrer" className="absolute right-2 p-1 text-ink-muted hover:text-accent-ink" title="Apri su MakerWorld">
                             <ExternalLink className="w-3.5 h-3.5" />
                           </a>
                         )}
@@ -1185,7 +1185,7 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                         type="button"
                         onClick={() => handleFetchMakerWorld()}
                         disabled={loadingMakerWorld || !quote.makerWorldUrl?.includes('makerworld.com')}
-                        className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white text-xs font-bold rounded-lg transition-all flex items-center gap-1 shadow-sm whitespace-nowrap cursor-pointer disabled:cursor-not-allowed"
+                        className="px-3 py-1.5 bg-accent hover:bg-accent-hover disabled:opacity-40 text-on-accent text-xs font-bold rounded-lg transition-all flex items-center gap-1 shadow-sm whitespace-nowrap cursor-pointer disabled:cursor-not-allowed"
                       >
                         {loadingMakerWorld ? (
                           <>
@@ -1202,35 +1202,35 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                     </div>
 
                     {makerWorldError && (
-                      <div className="p-2 bg-red-950/40 border border-red-800/60 rounded-lg text-[11px] text-red-300 flex items-center gap-1.5">
-                        <AlertCircle className="w-3.5 h-3.5 text-red-400 flex-shrink-0" />
+                      <div className="p-2 bg-danger-soft border border-danger-line rounded-lg text-[11px] text-danger-ink flex items-center gap-1.5">
+                        <AlertCircle className="w-3.5 h-3.5 text-danger-ink flex-shrink-0" />
                         <span>{makerWorldError}</span>
                       </div>
                     )}
 
                     {makerWorldInfo && (
-                      <div className="p-2.5 bg-emerald-950/30 border border-emerald-800/50 rounded-lg space-y-1.5">
+                      <div className="p-2.5 bg-accent-soft border border-accent-line rounded-lg space-y-1.5">
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-2 min-w-0">
                             {makerWorldInfo.coverUrl && (
                               <img 
                                 src={makerWorldInfo.coverUrl} 
                                 alt={makerWorldInfo.modelTitle} 
-                                className="w-8 h-8 object-cover rounded-md border border-emerald-700/50 flex-shrink-0 bg-slate-900" 
+                                className="w-8 h-8 object-cover rounded-md border border-accent-line flex-shrink-0 bg-surface" 
                               />
                             )}
                             <div className="min-w-0">
-                              <h4 className="text-xs font-bold text-white truncate">
+                              <h4 className="text-xs font-bold text-ink truncate">
                                 {makerWorldInfo.modelTitle}
                               </h4>
-                              <span className="text-[10px] text-slate-400 truncate block">di {makerWorldInfo.authorName}</span>
+                              <span className="text-[10px] text-ink-muted truncate block">di {makerWorldInfo.authorName}</span>
                             </div>
                           </div>
 
                           <button
                             type="button"
                             onClick={() => setMakerWorldInfo(null)}
-                            className="p-1 text-slate-400 hover:text-white rounded"
+                            className="p-1 text-ink-muted hover:text-ink rounded"
                             title="Chiudi"
                           >
                             <X className="w-3 h-3" />
@@ -1239,28 +1239,28 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
 
                         {makerWorldInfo.selectedProfile && (
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[11px]">
-                            <div className="bg-slate-900/80 p-1.5 rounded border border-slate-800">
-                              <span className="text-[9px] text-slate-400 block">Tempo stimato:</span>
-                              <span className="font-mono font-bold text-emerald-300">
+                            <div className="bg-surface p-1.5 rounded border border-line">
+                              <span className="text-[9px] text-ink-muted block">Tempo stimato:</span>
+                              <span className="font-mono font-bold text-accent-ink">
                                 {makerWorldInfo.selectedProfile.printHours}h {makerWorldInfo.selectedProfile.printMinutes}m
                               </span>
                             </div>
-                            <div className="bg-slate-900/80 p-1.5 rounded border border-slate-800">
-                              <span className="text-[9px] text-slate-400 block">Filamento:</span>
-                              <span className="font-mono font-bold text-emerald-300">
+                            <div className="bg-surface p-1.5 rounded border border-line">
+                              <span className="text-[9px] text-ink-muted block">Filamento:</span>
+                              <span className="font-mono font-bold text-accent-ink">
                                 ~{makerWorldInfo.selectedProfile.weightGrams}g
                               </span>
                             </div>
-                            <div className="bg-slate-900/80 p-1.5 rounded border border-slate-800">
-                              <span className="text-[9px] text-slate-400 block">Materiale:</span>
-                              <span className="font-bold text-white truncate block">
+                            <div className="bg-surface p-1.5 rounded border border-line">
+                              <span className="text-[9px] text-ink-muted block">Materiale:</span>
+                              <span className="font-bold text-ink truncate block">
                                 {makerWorldInfo.selectedProfile.material}
                               </span>
                             </div>
-                            <div className="bg-slate-900/80 p-1.5 rounded border border-slate-800">
-                              <span className="text-[9px] text-slate-400 block">Multi-Colore:</span>
-                              <span className="font-bold text-white">
-                                {makerWorldInfo.selectedProfile.needAms ? '🎨 Sì (AMS)' : '⚪ Singolo'}
+                            <div className="bg-surface p-1.5 rounded border border-line">
+                              <span className="text-[9px] text-ink-muted block">Multi-Colore:</span>
+                              <span className="font-bold text-ink">
+                                {makerWorldInfo.selectedProfile.needAms ? 'Sì (AMS)' : 'Singolo'}
                               </span>
                             </div>
                           </div>
@@ -1268,11 +1268,11 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
 
                         {makerWorldInfo.availableProfiles.length > 1 && (
                           <div className="flex items-center gap-1.5 text-xs pt-1">
-                            <span className="text-slate-400 text-[10px] whitespace-nowrap">Profilo:</span>
+                            <span className="text-ink-muted text-[10px] whitespace-nowrap">Profilo:</span>
                             <select
                               value={makerWorldInfo.selectedProfile?.id || ''}
                               onChange={e => handleSelectMakerWorldProfile(Number(e.target.value))}
-                              className="w-full bg-slate-900 border border-slate-800 rounded px-2 py-0.5 text-xs text-white focus:border-emerald-500 outline-none"
+                              className="w-full bg-surface border border-line-strong-strong rounded px-2 py-0.5 text-xs text-ink focus:border-accent outline-none"
                             >
                               {makerWorldInfo.availableProfiles.map(p => (
                                 <option key={p.id} value={p.id}>
@@ -1287,21 +1287,21 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                   </div>
 
                   {/* Slicer File Import */}
-                  <div className="p-2.5 bg-slate-950/60 border border-dashed border-cyan-500/30 hover:border-cyan-500/60 rounded-xl transition-all">
+                  <div className="p-2.5 bg-sunken border border-dashed border-info-line hover:border-info-line rounded-xl transition-all">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0">
-                        <div className="p-1.5 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex-shrink-0">
+                        <div className="p-1.5 rounded-lg bg-info-soft text-info-ink border border-info-line flex-shrink-0">
                           <FileCode2 className="w-4 h-4" />
                         </div>
                         <div className="min-w-0">
-                          <span className="text-xs font-bold text-white block leading-tight">Importa da Slicer (.3mf / .gcode)</span>
-                          <span className="text-[10px] text-slate-400 truncate block">
+                          <span className="text-xs font-bold text-ink block leading-tight">Importa da Slicer (.3mf / .gcode)</span>
+                          <span className="text-[10px] text-ink-muted truncate block">
                             Bambu Studio, OrcaSlicer, PrusaSlicer, Cura • anche più file insieme
                           </span>
                         </div>
                       </div>
 
-                      <label className="cursor-pointer px-3 py-1 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shadow-sm flex-shrink-0">
+                      <label className="cursor-pointer px-3 py-1 bg-info-soft hover:bg-info-soft text-info-ink border border-info-line rounded-lg text-xs font-semibold flex items-center gap-1 transition-all shadow-sm flex-shrink-0">
                         <UploadCloud className="w-3 h-3" />
                         <span>{parsingSlicer ? 'Lettura...' : 'Carica File'}</span>
                         <input 
@@ -1318,8 +1318,8 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                     {slicerFeedback && (
                       <div className={`mt-2 p-2 rounded-lg text-[11px] flex items-center gap-1.5 ${
                         slicerFeedback.type === 'success' 
-                          ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-400' 
-                          : 'bg-red-500/10 border border-red-500/30 text-red-400'
+                          ? 'bg-accent-soft border border-accent-line text-accent-ink' 
+                          : 'bg-danger-soft border border-danger-line text-danger-ink'
                       }`}>
                         {slicerFeedback.type === 'success' ? <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" /> : <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />}
                         <span>{slicerFeedback.message}</span>
@@ -1328,15 +1328,15 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                   </div>
 
                   {/* Filamento & Materiale */}
-                  <div className="p-2.5 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-2.5">
+                  <div className="p-2.5 bg-sunken border border-line rounded-xl space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-xs font-semibold text-emerald-400 flex items-center gap-1.5 uppercase tracking-wider">
+                      <h3 className="text-xs font-semibold text-accent-ink flex items-center gap-1.5">
                         <Layers className="w-3.5 h-3.5" /> Filamento & Peso
                       </h3>
 
                       {spools.length > 0 && (
                         <div className="flex items-center gap-1 text-[11px]">
-                          <span className="text-slate-500">Bobina:</span>
+                          <span className="text-ink-faint">Bobina:</span>
                           <select 
                             value={quote.spoolId || ""}
                             onChange={(e) => {
@@ -1347,7 +1347,7 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                                 updateQuote('spoolCost', chosen.cost);
                               }
                             }}
-                            className="bg-slate-900 border border-emerald-500/40 text-emerald-300 rounded px-2 py-0.5 text-xs outline-none cursor-pointer max-w-[200px] truncate"
+                            className="bg-surface border border-accent-line text-accent-ink rounded px-2 py-0.5 text-xs outline-none cursor-pointer max-w-[200px] truncate"
                           >
                             <option value="">Manuale</option>
                             {spools.map(s => (
@@ -1362,51 +1362,51 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <div>
-                        <label className="block text-[11px] text-slate-400 mb-0.5">Nome Materiale</label>
+                        <label className="block text-[11px] text-ink-muted mb-0.5">Nome Materiale</label>
                         <input 
                           type="text" 
                           value={quote.material}
                           onChange={e => updateQuote('material', e.target.value)}
-                          className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-white outline-none" 
+                          className="w-full bg-surface border border-line rounded px-2.5 py-1 text-xs text-ink outline-none" 
                         />
                       </div>
                       <div>
-                        <label className="block text-[11px] text-slate-400 mb-0.5">Costo Bobina (€/kg)</label>
+                        <label className="block text-[11px] text-ink-muted mb-0.5">Costo Bobina (€/kg)</label>
                         <input 
                           type="number" 
                           step="0.10" 
                           value={quote.spoolCost} 
                           onChange={e => updateQuote('spoolCost', parseFloat(e.target.value) || 0)} 
-                          className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-white outline-none" 
+                          className="w-full bg-surface border border-line rounded px-2.5 py-1 text-xs text-ink outline-none" 
                         />
                       </div>
                       <div>
-                        <label className="block text-[11px] text-slate-400 mb-0.5">Peso Pezzo (g netti)</label>
+                        <label className="block text-[11px] text-ink-muted mb-0.5">Peso Pezzo (g netti)</label>
                         <input 
                           type="number" 
                           value={quote.weight} 
                           onChange={e => updateQuote('weight', parseFloat(e.target.value) || 0)} 
-                          className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-white outline-none" 
+                          className="w-full bg-surface border border-line rounded px-2.5 py-1 text-xs text-ink outline-none" 
                         />
                       </div>
                     </div>
 
                     {/* AMS / Multi-colore */}
-                    <div className="pt-1 border-t border-slate-800/60">
+                    <div className="pt-1 border-t border-line">
                       <label className="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" checked={quote.multiColor} onChange={e => updateQuote('multiColor', e.target.checked)} className="w-3.5 h-3.5 rounded border-slate-700 bg-slate-900 text-emerald-500 focus:ring-emerald-500" />
-                        <span className="text-xs font-medium text-slate-300">Stampa Multi-colore (AMS / Spurghi)</span>
+                        <input type="checkbox" checked={quote.multiColor} onChange={e => updateQuote('multiColor', e.target.checked)} className="w-3.5 h-3.5 rounded border-line-strong-strong-strong bg-surface text-accent-ink focus:ring-accent/20" />
+                        <span className="text-xs font-medium text-ink-muted">Stampa Multi-colore (AMS / Spurghi)</span>
                       </label>
                       
                       {quote.multiColor && (
-                        <div className="grid grid-cols-2 gap-2 mt-2 p-2 bg-slate-900/60 rounded-lg border border-slate-800/60">
+                        <div className="grid grid-cols-2 gap-2 mt-2 p-2 bg-surface rounded-lg border border-line">
                           <div>
-                            <label className="block text-[10px] text-slate-400 mb-0.5">Cambi Filamento</label>
-                            <input type="number" value={quote.colorChanges} onChange={e => updateQuote('colorChanges', parseInt(e.target.value) || 0)} className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-white outline-none" />
+                            <label className="block text-[10px] text-ink-muted mb-0.5">Cambi Filamento</label>
+                            <input type="number" value={quote.colorChanges} onChange={e => updateQuote('colorChanges', parseInt(e.target.value) || 0)} className="w-full bg-sunken border border-line rounded px-2 py-1 text-xs text-ink outline-none" />
                           </div>
                           <div>
-                            <label className="block text-[10px] text-slate-400 mb-0.5">Torre Spurgo (g)</label>
-                            <input type="number" value={quote.purgeWeight} onChange={e => updateQuote('purgeWeight', parseFloat(e.target.value) || 0)} className="w-full bg-slate-950 border border-slate-800 rounded px-2 py-1 text-xs text-white outline-none" />
+                            <label className="block text-[10px] text-ink-muted mb-0.5">Torre Spurgo (g)</label>
+                            <input type="number" value={quote.purgeWeight} onChange={e => updateQuote('purgeWeight', parseFloat(e.target.value) || 0)} className="w-full bg-sunken border border-line rounded px-2 py-1 text-xs text-ink outline-none" />
                           </div>
                         </div>
                       )}
@@ -1419,63 +1419,63 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
               {calcTab === 'costs' && (
                 <div className="space-y-3">
                   {/* Tempi Lavorazione */}
-                  <div className="p-3 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-2">
-                    <h3 className="text-xs font-semibold text-blue-400 flex items-center gap-1.5 uppercase tracking-wider">
+                  <div className="p-3 bg-sunken border border-line rounded-xl space-y-2">
+                    <h3 className="text-xs font-semibold text-info-ink flex items-center gap-1.5">
                       <Clock className="w-3.5 h-3.5"/> Tempi di Produzione
                     </h3>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       <div>
-                        <label className="block text-[11px] text-slate-400 mb-0.5">Ore Stampa</label>
-                        <input type="number" value={quote.hours} onChange={e => updateQuote('hours', parseInt(e.target.value) || 0)} className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-white outline-none" />
+                        <label className="block text-[11px] text-ink-muted mb-0.5">Ore Stampa</label>
+                        <input type="number" value={quote.hours} onChange={e => updateQuote('hours', parseInt(e.target.value) || 0)} className="w-full bg-surface border border-line rounded px-2.5 py-1 text-xs text-ink outline-none" />
                       </div>
                       <div>
-                        <label className="block text-[11px] text-slate-400 mb-0.5">Minuti Stampa</label>
-                        <input type="number" max="59" value={quote.mins} onChange={e => updateQuote('mins', parseInt(e.target.value) || 0)} className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-white outline-none" />
+                        <label className="block text-[11px] text-ink-muted mb-0.5">Minuti Stampa</label>
+                        <input type="number" max="59" value={quote.mins} onChange={e => updateQuote('mins', parseInt(e.target.value) || 0)} className="w-full bg-surface border border-line rounded px-2.5 py-1 text-xs text-ink outline-none" />
                       </div>
                       <div>
-                        <label className="block text-[11px] text-slate-400 mb-0.5">Prep/Slicing (min)</label>
-                        <input type="number" value={quote.prepMins} onChange={e => updateQuote('prepMins', parseInt(e.target.value) || 0)} className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-white outline-none" />
+                        <label className="block text-[11px] text-ink-muted mb-0.5">Prep/Slicing (min)</label>
+                        <input type="number" value={quote.prepMins} onChange={e => updateQuote('prepMins', parseInt(e.target.value) || 0)} className="w-full bg-surface border border-line rounded px-2.5 py-1 text-xs text-ink outline-none" />
                       </div>
                       <div>
-                        <label className="block text-[11px] text-slate-400 mb-0.5">Post-process (min)</label>
-                        <input type="number" value={quote.postMins} onChange={e => updateQuote('postMins', parseInt(e.target.value) || 0)} className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-white outline-none" />
+                        <label className="block text-[11px] text-ink-muted mb-0.5">Post-process (min)</label>
+                        <input type="number" value={quote.postMins} onChange={e => updateQuote('postMins', parseInt(e.target.value) || 0)} className="w-full bg-surface border border-line rounded px-2.5 py-1 text-xs text-ink outline-none" />
                       </div>
                     </div>
                   </div>
 
                   {/* Servizi & Sconto */}
-                  <div className="p-3 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-2">
-                    <h3 className="text-xs font-semibold text-purple-400 flex items-center gap-1.5 uppercase tracking-wider">
+                  <div className="p-3 bg-sunken border border-line rounded-xl space-y-2">
+                    <h3 className="text-xs font-semibold text-info-ink flex items-center gap-1.5">
                       Servizi Aggiuntivi & Sconto
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <div>
-                        <label className="block text-[11px] text-slate-400 mb-0.5">Disegno CAD / Reverse (€)</label>
-                        <input type="number" value={quote.cadCost} onChange={e => updateQuote('cadCost', parseFloat(e.target.value) || 0)} className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-white outline-none" />
+                        <label className="block text-[11px] text-ink-muted mb-0.5">Disegno CAD / Reverse (€)</label>
+                        <input type="number" value={quote.cadCost} onChange={e => updateQuote('cadCost', parseFloat(e.target.value) || 0)} className="w-full bg-surface border border-line rounded px-2.5 py-1 text-xs text-ink outline-none" />
                       </div>
                       <div>
-                        <label className="block text-[11px] text-slate-400 mb-0.5">Supplemento Urgenza (€)</label>
-                        <input type="number" value={quote.urgencyCost} onChange={e => updateQuote('urgencyCost', parseFloat(e.target.value) || 0)} className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-white outline-none" />
+                        <label className="block text-[11px] text-ink-muted mb-0.5">Supplemento Urgenza (€)</label>
+                        <input type="number" value={quote.urgencyCost} onChange={e => updateQuote('urgencyCost', parseFloat(e.target.value) || 0)} className="w-full bg-surface border border-line rounded px-2.5 py-1 text-xs text-ink outline-none" />
                       </div>
                       <div>
-                        <label className="block text-[11px] text-emerald-400 mb-0.5 font-bold">Sconto Finale (%)</label>
-                        <input type="number" value={quote.discount} onChange={e => updateQuote('discount', parseFloat(e.target.value) || 0)} className="w-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 rounded px-2.5 py-1 text-xs outline-none font-bold" />
+                        <label className="block text-[11px] text-accent-ink mb-0.5 font-bold">Sconto Finale (%)</label>
+                        <input type="number" value={quote.discount} onChange={e => updateQuote('discount', parseFloat(e.target.value) || 0)} className="w-full bg-accent-soft border border-accent-line text-accent-ink rounded px-2.5 py-1 text-xs outline-none font-bold" />
                       </div>
                     </div>
                   </div>
 
                   {/* Arrotondamento Prezzo */}
-                  <div className="p-3 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-2.5">
+                  <div className="p-3 bg-sunken border border-line rounded-xl space-y-2.5">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-xs font-semibold text-purple-400 flex items-center gap-1.5 uppercase tracking-wider">
-                        <SlidersHorizontal className="w-3.5 h-3.5 text-purple-400" />
+                      <h3 className="text-xs font-semibold text-info-ink flex items-center gap-1.5">
+                        <SlidersHorizontal className="w-3.5 h-3.5 text-info-ink" />
                         Arrotondamento Prezzo
                       </h3>
-                      <div className="text-[11px] text-slate-400">
+                      <div className="text-[11px] text-ink-muted">
                         {quote.roundingMode === 'none' || !quote.roundingMode ? (
-                          <span className="text-slate-500 font-mono">Disattivato</span>
+                          <span className="text-ink-faint font-mono">Disattivato</span>
                         ) : (
-                          <span className="text-purple-300 font-mono font-medium">
+                          <span className="text-info-ink font-mono font-medium">
                             Passo: €{(parseFloat(quote.roundingStep?.toString() || '0.50') || 0.50).toFixed(2)}
                           </span>
                         )}
@@ -1484,7 +1484,7 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
 
                     {/* Modalità di arrotondamento */}
                     <div>
-                      <label className="block text-[11px] text-slate-400 mb-1.5 font-medium">
+                      <label className="block text-[11px] text-ink-muted mb-1.5 font-medium">
                         Direzione di Arrotondamento
                       </label>
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
@@ -1493,11 +1493,11 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                           onClick={() => updateQuote('roundingMode', 'none')}
                           className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all text-center ${
                             (!quote.roundingMode || quote.roundingMode === 'none')
-                              ? 'bg-slate-800 border-slate-600 text-white shadow-sm'
-                              : 'bg-slate-900/60 border-slate-800/80 text-slate-400 hover:text-slate-200 hover:bg-slate-800/40'
+                              ? 'bg-raised border-line-strong text-ink shadow-sm'
+                              : 'bg-surface border-line text-ink-muted hover:text-ink hover:bg-raised'
                           }`}
                         >
-                          ⚖️ Nessuno (Esatto)
+                          Nessuno (esatto)
                         </button>
 
                         <button
@@ -1505,11 +1505,11 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                           onClick={() => updateQuote('roundingMode', 'excess')}
                           className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all text-center ${
                             quote.roundingMode === 'excess'
-                              ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 font-bold shadow-sm'
-                              : 'bg-slate-900/60 border-slate-800/80 text-slate-400 hover:text-emerald-300 hover:bg-slate-800/40'
+                              ? 'bg-accent-soft border-accent-line text-accent-ink font-bold shadow-sm'
+                              : 'bg-surface border-line text-ink-muted hover:text-accent-ink hover:bg-raised'
                           }`}
                         >
-                          ⬆️ Per Eccesso
+                          Per eccesso
                         </button>
 
                         <button
@@ -1517,11 +1517,11 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                           onClick={() => updateQuote('roundingMode', 'defect')}
                           className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all text-center ${
                             quote.roundingMode === 'defect'
-                              ? 'bg-amber-500/20 border-amber-500/50 text-amber-300 font-bold shadow-sm'
-                              : 'bg-slate-900/60 border-slate-800/80 text-slate-400 hover:text-amber-300 hover:bg-slate-800/40'
+                              ? 'bg-warn-soft border-warn-line text-warn-ink font-bold shadow-sm'
+                              : 'bg-surface border-line text-ink-muted hover:text-warn-ink hover:bg-raised'
                           }`}
                         >
-                          ⬇️ Per Scarto
+                          Per difetto
                         </button>
 
                         <button
@@ -1529,8 +1529,8 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                           onClick={() => updateQuote('roundingMode', 'nearest')}
                           className={`px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all text-center ${
                             quote.roundingMode === 'nearest'
-                              ? 'bg-purple-500/20 border-purple-500/50 text-purple-300 font-bold shadow-sm'
-                              : 'bg-slate-900/60 border-slate-800/80 text-slate-400 hover:text-purple-300 hover:bg-slate-800/40'
+                              ? 'bg-info-soft border-info-line text-info-ink font-bold shadow-sm'
+                              : 'bg-surface border-line text-ink-muted hover:text-info-ink hover:bg-raised'
                           }`}
                         >
                           ≈ Al Più Vicino
@@ -1540,8 +1540,8 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
 
                     {/* Passo di arrotondamento (Centesimi / Euro) */}
                     {quote.roundingMode && quote.roundingMode !== 'none' && (
-                      <div className="pt-2 border-t border-slate-800/60 space-y-2">
-                        <label className="block text-[11px] text-slate-400 font-medium">
+                      <div className="pt-2 border-t border-line space-y-2">
+                        <label className="block text-[11px] text-ink-muted font-medium">
                           Precisione / Passo di Arrotondamento
                         </label>
 
@@ -1563,8 +1563,8 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                                 onClick={() => updateQuote('roundingStep', item.val)}
                                 className={`px-2 py-1 rounded text-[11px] font-medium border transition-all ${
                                   isSelected
-                                    ? 'bg-purple-600/30 border-purple-500 text-purple-200 font-bold'
-                                    : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-800'
+                                    ? 'bg-info-soft border-info text-info-ink font-bold'
+                                    : 'bg-surface border-line text-ink-muted hover:text-ink hover:bg-raised'
                                 }`}
                               >
                                 {item.label}
@@ -1575,7 +1575,7 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
 
                         {/* Input personalizzato per qualsiasi cifra/centesimo */}
                         <div className="flex items-center gap-2 pt-1 flex-wrap">
-                          <label className="text-[11px] text-slate-400 whitespace-nowrap">
+                          <label className="text-[11px] text-ink-muted whitespace-nowrap">
                             Valore Personalizzato (€):
                           </label>
                           <div className="relative max-w-[120px]">
@@ -1585,28 +1585,28 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                               min="0.01"
                               value={quote.roundingStep ?? 0.50}
                               onChange={(e) => updateQuote('roundingStep', Math.max(0.01, parseFloat(e.target.value) || 0.01))}
-                              className="w-full bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-white outline-none focus:border-purple-500"
+                              className="w-full bg-surface border border-line-strong-strong rounded px-2.5 py-1 text-xs text-ink outline-none focus:border-accent"
                               placeholder="0.50"
                             />
                           </div>
-                          <span className="text-[10px] text-slate-500">
+                          <span className="text-[10px] text-ink-faint">
                             (es. 0.05, 0.10, 0.25, 0.50, 1.00, 2.00, 5.00...)
                           </span>
                         </div>
 
                         {/* Box Anteprima Dinamica */}
-                        <div className="mt-2 p-2 bg-slate-900/80 border border-slate-800/80 rounded-lg flex items-center justify-between text-xs flex-wrap gap-1.5">
-                          <div className="text-slate-400 text-[11px]">
-                            Prezzo calcolato: <span className="font-mono text-slate-300 line-through">€{totals.unroundedPrice.toFixed(2)}</span>
+                        <div className="mt-2 p-2 bg-surface border border-line rounded-lg flex items-center justify-between text-xs flex-wrap gap-1.5">
+                          <div className="text-ink-muted text-[11px]">
+                            Prezzo calcolato: <span className="font-mono text-ink-muted line-through">€{totals.unroundedPrice.toFixed(2)}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-[11px] text-slate-400">➔ Arrotondato:</span>
-                            <span className="font-bold text-white font-mono text-xs">€{totals.finalPrice.toFixed(2)}</span>
+                            <span className="text-[11px] text-ink-muted">➔ Arrotondato:</span>
+                            <span className="font-bold text-ink font-mono text-xs">€{totals.finalPrice.toFixed(2)}</span>
                             {totals.roundingDelta !== 0 && (
                               <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
                                 totals.roundingDelta > 0
-                                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                                  : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                                  ? 'bg-accent-soft text-accent-ink border border-accent-line'
+                                  : 'bg-warn-soft text-warn-ink border border-warn-line'
                               }`}>
                                 {totals.roundingDelta > 0 ? `+€${totals.roundingDelta.toFixed(2)}` : `-€${Math.abs(totals.roundingDelta).toFixed(2)}`}
                               </span>
@@ -1618,14 +1618,14 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                   </div>
 
                   {/* Riepilogo Tariffe Macchina in uso */}
-                  <div className="p-3 bg-slate-950/40 border border-slate-800/60 rounded-xl text-xs space-y-1.5">
-                    <span className="font-bold text-slate-300 block text-[11px] uppercase tracking-wider">Parametri Macchinario Applicati:</span>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-slate-400 text-[11px]">
-                      <div>Energia: <strong className="text-white">€{settings.powerCost}/kWh ({settings.watt}W)</strong></div>
-                      <div>Ammortamento: <strong className="text-white">€{settings.wearCost}/h</strong></div>
-                      <div>Manodopera: <strong className="text-white">€{settings.laborRate}/h</strong></div>
-                      <div>Rischio scarto: <strong className="text-white">{settings.risk}%</strong></div>
-                      <div>Margine applicato: <strong className="text-white">{settings.markup}%</strong></div>
+                  <div className="p-3 bg-sunken border border-line rounded-xl text-xs space-y-1.5">
+                    <span className="font-bold text-ink-muted block text-[11px]">Parametri Macchinario Applicati:</span>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-ink-muted text-[11px]">
+                      <div>Energia: <strong className="text-ink">€{settings.powerCost}/kWh ({settings.watt}W)</strong></div>
+                      <div>Ammortamento: <strong className="text-ink">€{settings.wearCost}/h</strong></div>
+                      <div>Manodopera: <strong className="text-ink">€{settings.laborRate}/h</strong></div>
+                      <div>Rischio scarto: <strong className="text-ink">{settings.risk}%</strong></div>
+                      <div>Margine applicato: <strong className="text-ink">{settings.markup}%</strong></div>
                     </div>
                   </div>
                 </div>
@@ -1635,9 +1635,9 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
               {calcTab === 'extra' && (
                 <div className="space-y-3">
                   {/* Hardware BOM */}
-                  <div className="p-3 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-2.5">
+                  <div className="p-3 bg-sunken border border-line rounded-xl space-y-2.5">
                     <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <h3 className="text-xs font-semibold text-purple-400 flex items-center gap-1.5 uppercase tracking-wider">
+                      <h3 className="text-xs font-semibold text-info-ink flex items-center gap-1.5">
                         <Wrench className="w-3.5 h-3.5"/> Hardware & Viteria (BOM)
                       </h3>
 
@@ -1650,7 +1650,7 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                               e.target.value = "";
                             }}
                             defaultValue=""
-                            className="bg-slate-900 border border-purple-500/40 text-purple-300 rounded px-2 py-0.5 text-xs outline-none cursor-pointer max-w-[150px] truncate"
+                            className="bg-surface border border-info-line text-info-ink rounded px-2 py-0.5 text-xs outline-none cursor-pointer max-w-[150px] truncate"
                           >
                             <option value="" disabled>+ Da magazzino...</option>
                             {hardwareStock.map(h => (
@@ -1661,7 +1661,7 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
 
                         <button 
                           onClick={() => addBomItem()} 
-                          className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors"
+                          className="text-xs bg-raised hover:bg-muted text-ink px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors"
                         >
                           <Plus className="w-3 h-3" /> Riga Libera
                         </button>
@@ -1669,15 +1669,15 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                     </div>
                     
                     {quote.extraBom.length === 0 ? (
-                      <p className="text-xs text-slate-500 py-2 text-center">Nessuna viteria o inserto aggiunto a questo preventivo.</p>
+                      <p className="text-xs text-ink-faint py-2 text-center">Nessuna viteria o inserto aggiunto a questo preventivo.</p>
                     ) : (
                       <div className="space-y-1.5">
                         {quote.extraBom.map((item, index) => (
                           <div key={index} className="flex items-center gap-1.5">
-                            <input type="text" value={item.name} onChange={e => updateBomItem(index, 'name', e.target.value)} placeholder="Descrizione" className="flex-1 bg-slate-900 border border-slate-800 rounded px-2.5 py-1 text-xs text-white outline-none" />
-                            <input type="number" value={item.qty} onChange={e => updateBomItem(index, 'qty', parseInt(e.target.value) || 0)} placeholder="Qtà" className="w-14 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white text-center outline-none" />
-                            <input type="number" step="0.01" value={item.cost} onChange={e => updateBomItem(index, 'cost', parseFloat(e.target.value) || 0)} placeholder="€ cad." className="w-16 bg-slate-900 border border-slate-800 rounded px-2 py-1 text-xs text-white text-center outline-none" />
-                            <button onClick={() => removeBomItem(index)} className="p-1 text-slate-500 hover:text-red-400 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                            <input type="text" value={item.name} onChange={e => updateBomItem(index, 'name', e.target.value)} placeholder="Descrizione" className="flex-1 bg-surface border border-line rounded px-2.5 py-1 text-xs text-ink outline-none" />
+                            <input type="number" value={item.qty} onChange={e => updateBomItem(index, 'qty', parseInt(e.target.value) || 0)} placeholder="Qtà" className="w-14 bg-surface border border-line rounded px-2 py-1 text-xs text-ink text-center outline-none" />
+                            <input type="number" step="0.01" value={item.cost} onChange={e => updateBomItem(index, 'cost', parseFloat(e.target.value) || 0)} placeholder="€ cad." className="w-16 bg-surface border border-line rounded px-2 py-1 text-xs text-ink text-center outline-none" />
+                            <button onClick={() => removeBomItem(index)} className="p-1 text-ink-faint hover:text-danger-ink transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                           </div>
                         ))}
                       </div>
@@ -1701,8 +1701,8 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                       onFileSelected={handleModelUpload}
                       onRemoveModel={handleRemoveModel}
                     />
-                    <p className="text-[10px] text-slate-500 leading-tight px-1">
-                      💡 Il file 3D caricato viene memorizzato nel preventivo e visualizzato al cliente nel tracking ordine.
+                    <p className="text-[10px] text-ink-faint leading-tight px-1">
+                      Il file 3D caricato viene memorizzato nel preventivo e visualizzato al cliente nel tracking ordine.
                     </p>
                   </div>
                 </div>
@@ -1712,16 +1712,16 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
           </div>
 
           {/* RIGHT: RIEPILOGO COSTI & AZIONI RAPIDE */}
-          <div className="lg:col-span-4 flex flex-col min-h-0 bg-slate-900 border border-slate-800 rounded-xl p-3 justify-between overflow-y-auto">
+          <div className="lg:col-span-4 flex flex-col min-h-0 bg-surface border border-line rounded-xl p-3 justify-between overflow-y-auto">
             <div className="space-y-3">
-              <div className="flex justify-between items-center pb-2 border-b border-slate-800">
+              <div className="flex justify-between items-center pb-2 border-b border-line">
                 <div>
-                  <h2 className="text-sm font-bold text-white leading-tight">Riepilogo Costi</h2>
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Tariffa {quote.pricingType}</span>
+                  <h2 className="text-sm font-bold text-ink leading-tight">Riepilogo Costi</h2>
+                  <span className="text-[11px] text-ink-muted font-semibold">Tariffa {quote.pricingType}</span>
                 </div>
                 <button 
                   onClick={saveCurrentQuote}
-                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs rounded-lg flex items-center gap-1 transition-colors shadow-sm"
+                  className="px-3 py-1.5 bg-accent hover:bg-accent-hover text-on-accent font-medium text-xs rounded-lg flex items-center gap-1 transition-colors shadow-sm"
                 >
                   <Save className="w-3.5 h-3.5" />
                   {savedSuccess ? 'Salvato!' : quote.id ? 'Aggiorna' : 'Salva Lavoro'}
@@ -1729,42 +1729,42 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
               </div>
               
               <div className="space-y-1.5 text-xs">
-                <div className="flex justify-between items-center text-slate-300">
+                <div className="flex justify-between items-center text-ink-muted">
                   <span>Filamento ({(parseFloat(quote.weight.toString()) || 0) + (parseFloat(quote.purgeWeight.toString()) || 0)}g)</span>
                   <span className="font-medium">€{totals.materialCost.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between items-center text-slate-300">
+                <div className="flex justify-between items-center text-ink-muted">
                   <span>Energia & Macchina</span>
                   <span className="font-medium">€{(totals.energyCost + totals.wearCost).toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between items-center text-slate-300">
+                <div className="flex justify-between items-center text-ink-muted">
                   <span>Lavoro Operatore</span>
                   <span className="font-medium">€{totals.laborCost.toFixed(2)}</span>
                 </div>
                 {totals.extraHardwareCost > 0 && (
-                  <div className="flex justify-between items-center text-slate-300">
+                  <div className="flex justify-between items-center text-ink-muted">
                     <span>Hardware Extra</span>
                     <span className="font-medium">€{totals.extraHardwareCost.toFixed(2)}</span>
                   </div>
                 )}
                 {totals.servicesCost > 0 && (
-                  <div className="flex justify-between items-center text-slate-300">
+                  <div className="flex justify-between items-center text-ink-muted">
                     <span>Servizi (CAD/Urgenza)</span>
                     <span className="font-medium">€{totals.servicesCost.toFixed(2)}</span>
                   </div>
                 )}
                 
                 {!isPrivacyMode && (
-                  <div className="pt-2 border-t border-slate-800 text-[11px]">
-                    <div className="flex justify-between items-center text-slate-400 mb-0.5">
+                  <div className="pt-2 border-t border-line text-[11px]">
+                    <div className="flex justify-between items-center text-ink-muted mb-0.5">
                       <span>Costi Vivi</span>
                       <span>€{totals.subtotalVivo.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between items-center text-slate-400 mb-0.5">
+                    <div className="flex justify-between items-center text-ink-muted mb-0.5">
                       <span>Rischio ({settings.risk}%)</span>
                       <span>+ €{(totals.costWithRisk - totals.subtotalVivo).toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between items-center text-slate-400">
+                    <div className="flex justify-between items-center text-ink-muted">
                       <span>Margine ({settings.markup}%)</span>
                       <span>+ €{(totals.baseFinal - totals.costWithRisk).toFixed(2)}</span>
                     </div>
@@ -1772,29 +1772,29 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                 )}
 
                 {totals.discountAmount > 0 && (
-                  <div className="flex justify-between items-center text-emerald-400 font-medium pt-1.5 border-t border-slate-800">
+                  <div className="flex justify-between items-center text-accent-ink font-medium pt-1.5 border-t border-line">
                     <span>Sconto Applicato</span>
                     <span>- €{totals.discountAmount.toFixed(2)}</span>
                   </div>
                 )}
 
                 {totals.roundingDelta !== 0 && (
-                  <div className={`flex justify-between items-center text-xs font-medium pt-1.5 border-t border-slate-800 ${
-                    totals.roundingDelta > 0 ? 'text-emerald-400' : 'text-amber-400'
+                  <div className={`flex justify-between items-center text-xs font-medium pt-1.5 border-t border-line ${
+                    totals.roundingDelta > 0 ? 'text-accent-ink' : 'text-warn-ink'
                   }`}>
                     <span className="flex items-center gap-1">
                       <SlidersHorizontal className="w-3 h-3 opacity-80" />
-                      Arrotondamento ({quote.roundingMode === 'excess' ? 'Eccesso ⬆️' : quote.roundingMode === 'defect' ? 'Scarto ⬇️' : 'Più vicino ≈'})
+                      Arrotondamento ({quote.roundingMode === 'excess' ? 'per eccesso' : quote.roundingMode === 'defect' ? 'per difetto' : 'al più vicino'})
                     </span>
                     <span>{totals.roundingDelta > 0 ? `+ €${totals.roundingDelta.toFixed(2)}` : `- €${Math.abs(totals.roundingDelta).toFixed(2)}`}</span>
                   </div>
                 )}
               </div>
 
-              <div className="pt-2 border-t border-slate-800">
+              <div className="pt-2 border-t border-line">
                 <div className="flex justify-between items-baseline">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-slate-400 text-xs font-medium">Prezzo Finale</span>
+                    <span className="text-ink-muted text-xs font-medium">Prezzo Finale</span>
                     <button
                       type="button"
                       onClick={() => {
@@ -1808,18 +1808,18 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                         updateQuote('roundingMode', cycle[cur]);
                       }}
                       title="Clicca per cambiare al volo: Nessuno -> Eccesso -> Scarto -> Al Più Vicino"
-                      className="text-[10px] px-1.5 py-0.5 rounded border border-slate-800 hover:border-slate-700 bg-slate-900 text-slate-400 hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
+                      className="text-[10px] px-1.5 py-0.5 rounded border border-line hover:border-line-strong bg-surface text-ink-muted hover:text-ink transition-colors flex items-center gap-1 cursor-pointer"
                     >
-                      {!quote.roundingMode || quote.roundingMode === 'none' ? '⚖️ Esatto' :
-                       quote.roundingMode === 'excess' ? `⬆️ +€${(parseFloat(quote.roundingStep?.toString() || '0.50') || 0.50).toFixed(2)}` :
-                       quote.roundingMode === 'defect' ? `⬇️ -€${(parseFloat(quote.roundingStep?.toString() || '0.50') || 0.50).toFixed(2)}` :
+                      {!quote.roundingMode || quote.roundingMode === 'none' ? 'Esatto' :
+                       quote.roundingMode === 'excess' ? `+€${(parseFloat(quote.roundingStep?.toString() || '0.50') || 0.50).toFixed(2)}` :
+                       quote.roundingMode === 'defect' ? `-€${(parseFloat(quote.roundingStep?.toString() || '0.50') || 0.50).toFixed(2)}` :
                        `≈ €${(parseFloat(quote.roundingStep?.toString() || '0.50') || 0.50).toFixed(2)}`}
                     </button>
                   </div>
                   <div className="text-right">
-                    <span className="text-2xl font-black text-white tracking-tight block">€{totals.finalPrice.toFixed(2)}</span>
+                    <span className="text-2xl font-semibold text-ink tracking-tight block">€{totals.finalPrice.toFixed(2)}</span>
                     {(quote.quantity || 1) > 1 && (
-                      <span className="text-[10px] text-emerald-400 font-mono font-semibold block">
+                      <span className="text-[10px] text-accent-ink font-mono font-semibold block">
                         (€{totals.unitPrice.toFixed(2)} / pezzo)
                       </span>
                     )}
@@ -1827,14 +1827,14 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                 </div>
 
                 {(quote.quantity || 1) > 1 && (
-                  <div className="flex justify-between items-center text-[11px] text-slate-300 bg-slate-900/80 px-2 py-1 rounded-md border border-slate-800 mt-1.5 font-mono">
-                    <span className="text-slate-400">Lotto totale:</span>
-                    <span className="text-white font-bold">{quote.quantity} copie</span>
+                  <div className="flex justify-between items-center text-[11px] text-ink-muted bg-surface px-2 py-1 rounded-md border border-line mt-1.5 font-mono">
+                    <span className="text-ink-muted">Lotto totale:</span>
+                    <span className="text-ink font-bold">{quote.quantity} copie</span>
                   </div>
                 )}
 
                 {!isPrivacyMode && (
-                  <div className="flex justify-between items-center text-[11px] text-emerald-400/90 bg-emerald-500/10 p-1.5 rounded-md border border-emerald-500/20 mt-1">
+                  <div className="flex justify-between items-center text-[11px] text-accent-ink bg-accent-soft p-1.5 rounded-md border border-accent-line mt-1">
                     <span>Utile netto stimato:</span>
                     <span className="font-bold font-mono">€{totals.estimatedProfit.toFixed(2)}</span>
                   </div>
@@ -1842,7 +1842,7 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
               </div>
             </div>
 
-            <div className="space-y-1.5 pt-3 border-t border-slate-800">
+            <div className="space-y-1.5 pt-3 border-t border-line">
               <a 
                 href={getWhatsAppUrl({
                   phone: quote.clientContact,
@@ -1856,16 +1856,16 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                 })}
                 target="_blank"
                 rel="noreferrer"
-                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 text-xs transition-all shadow-sm"
+                className="w-full bg-accent hover:bg-accent-hover text-on-accent font-semibold py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 text-xs transition-all shadow-sm"
               >
                 <MessageSquare className="w-3.5 h-3.5" /> Invia WhatsApp
               </a>
 
               <button 
                 onClick={handleExportText}
-                className="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 text-xs transition-colors"
+                className="w-full bg-raised hover:bg-muted text-ink font-medium py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 text-xs transition-colors"
               >
-                {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
+                {copied ? <CheckCircle2 className="w-3.5 h-3.5 text-accent-ink" /> : <Share2 className="w-3.5 h-3.5" />}
                 {copied ? 'Copiato!' : 'Copia Testo Chat'}
               </button>
 
@@ -1884,14 +1884,14 @@ ${quote.extraBom.length > 0 ? `- Componenti: ${quote.extraBom.map(b => `${b.qty}
                       totalCalculated: totals.finalPrice
                     });
                   }}
-                  className="bg-slate-950 border border-slate-800 hover:bg-slate-800 text-cyan-400 font-medium py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 text-[11px] transition-colors"
+                  className="bg-sunken border border-line hover:bg-raised text-info-ink font-medium py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 text-[11px] transition-colors"
                 >
-                  <QrCode className="w-3 h-3 text-cyan-400" /> Etichetta QR
+                  <QrCode className="w-3 h-3 text-info-ink" /> Etichetta QR
                 </button>
 
                 <button 
                   onClick={() => window.print()}
-                  className="bg-slate-950 border border-slate-800 hover:bg-slate-800 text-slate-400 font-medium py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 text-[11px] transition-colors"
+                  className="bg-sunken border border-line hover:bg-raised text-ink-muted font-medium py-1.5 px-2 rounded-lg flex items-center justify-center gap-1 text-[11px] transition-colors"
                 >
                   <FileText className="w-3 h-3" /> Ricevuta PDF
                 </button>

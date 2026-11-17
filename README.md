@@ -47,8 +47,14 @@
 - Classifica Top Clienti con medaglie di merito 🥇🥈🥉.
 
 ### 7. 🛡️ Backup & Sicurezza 1-Click
-- Esportazione istantanea di un archivio compresso `.zip` contenente tutti i database JSON (`quotes.json`, `inventory.json`, `maintenance.json`, `users.json`).
+- Esportazione istantanea di un archivio compresso `.zip` contenente tutti i database JSON (`quotes.json`, `inventory.json`, `maintenance.json`, `users.json`, `api_keys.json`).
 - Ripristino completo e storico dei backup scaricabili.
+
+### Integrazioni API e agenti AI
+- Pagina **Integrazioni API** (`/integrazioni`): gli amministratori creano chiavi `p3d_...` in sola lettura o con scrittura, con scadenza opzionale, e le revocano in qualsiasi momento. La chiave in chiaro si vede una sola volta; su disco resta solo l'hash SHA-256.
+- Autenticazione con `Authorization: Bearer p3d_...` oppure `X-API-Key`. Le chiavi valgono solo per `/api/*` e non raggiungono utenti, chiavi, backup, login e push.
+- Endpoint pensati per agenti e automazioni: `GET /api/v1/quotes`, `GET|PATCH /api/v1/quotes/{id}`, `GET /api/v1/inventory`, oltre a `GET /api/analytics` e `GET /api/maintenance`.
+- Specifica OpenAPI 3.1 pubblica su `/api/public/openapi.json`, importabile in GPT Actions, bridge OpenAPI verso MCP, LangChain, n8n.
 
 ---
 

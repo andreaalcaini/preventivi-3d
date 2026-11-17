@@ -56,11 +56,11 @@ interface SavedQuote {
 }
 
 const statusConfig: Record<JobStatus, { label: string; text: string; border: string }> = {
-  richiesta: { label: 'Richiesta Cliente', text: 'text-amber-300', border: 'border-amber-400/40' },
-  in_attesa: { label: 'In Attesa', text: 'text-amber-400', border: 'border-amber-500/30' },
-  in_stampa: { label: 'In Stampa', text: 'text-blue-400', border: 'border-blue-500/30' },
-  pronto: { label: 'Pronto / Da Ritirare', text: 'text-purple-400', border: 'border-purple-500/30' },
-  saldato: { label: 'Consegnato & Saldato', text: 'text-emerald-400', border: 'border-emerald-500/30' },
+  richiesta: { label: 'Richiesta Cliente', text: 'text-warn-ink', border: 'border-warn-line' },
+  in_attesa: { label: 'In Attesa', text: 'text-warn-ink', border: 'border-warn-line' },
+  in_stampa: { label: 'In Stampa', text: 'text-info-ink', border: 'border-info-line' },
+  pronto: { label: 'Pronto / Da Ritirare', text: 'text-info-ink', border: 'border-info-line' },
+  saldato: { label: 'Consegnato & Saldato', text: 'text-accent-ink', border: 'border-accent-line' },
 };
 
 function subscribeToStorage(callback: () => void) {
@@ -228,45 +228,45 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
   }, [filteredQuotes, currentPage, pageSize]);
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-slate-950 text-slate-200 p-2 sm:p-4 font-sans relative">
+    <div className="flex-1 flex flex-col min-h-0 bg-sunken text-ink p-2 sm:p-4 font-sans relative">
       <div className="max-w-7xl mx-auto w-full flex-1 min-h-0 flex flex-col gap-2 overflow-hidden">
         
         {/* HEADER & METRICHE */}
         <div className="flex-shrink-0 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
-            <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight flex items-center gap-2">
-              <FolderKanban className="w-5 h-5 text-emerald-400" />
+            <h1 className="text-lg sm:text-xl font-bold text-ink tracking-tight flex items-center gap-2">
+              <FolderKanban className="w-5 h-5 text-accent-ink" />
               Gestione Lavori & Coda Stampe
             </h1>
-            <p className="text-slate-400 text-xs">Traccia avanzamento commesse e modifica preventivi esistenti</p>
+            <p className="text-ink-muted text-xs">Traccia avanzamento commesse e modifica preventivi esistenti</p>
           </div>
 
           <div className="grid grid-cols-3 gap-2 w-full sm:w-auto">
-            <div className="bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl text-center sm:text-left">
-              <span className="text-[10px] text-slate-400 block truncate">Da Saldare</span>
-              <span className="text-xs sm:text-sm font-bold text-amber-400">€{stats.pendingValue.toFixed(2)}</span>
+            <div className="bg-surface border border-line px-3 py-1.5 rounded-xl text-center sm:text-left">
+              <span className="text-[10px] text-ink-muted block truncate">Da Saldare</span>
+              <span className="text-xs sm:text-sm font-bold text-warn-ink">€{stats.pendingValue.toFixed(2)}</span>
             </div>
-            <div className="bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl text-center sm:text-left">
-              <span className="text-[10px] text-slate-400 block truncate">In Stampa</span>
-              <span className="text-xs sm:text-sm font-bold text-blue-400">{stats.printingCount} pezzi</span>
+            <div className="bg-surface border border-line px-3 py-1.5 rounded-xl text-center sm:text-left">
+              <span className="text-[10px] text-ink-muted block truncate">In Stampa</span>
+              <span className="text-xs sm:text-sm font-bold text-info-ink">{stats.printingCount} pezzi</span>
             </div>
-            <div className="bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-xl text-center sm:text-left">
-              <span className="text-[10px] text-slate-400 block truncate">Incassato</span>
-              <span className="text-xs sm:text-sm font-bold text-emerald-400">€{stats.completedTotal.toFixed(2)}</span>
+            <div className="bg-surface border border-line px-3 py-1.5 rounded-xl text-center sm:text-left">
+              <span className="text-[10px] text-ink-muted block truncate">Incassato</span>
+              <span className="text-xs sm:text-sm font-bold text-accent-ink">€{stats.completedTotal.toFixed(2)}</span>
             </div>
           </div>
         </div>
 
         {/* Banner Nuove Richieste dal Portale Clienti */}
         {quotes.filter(q => q.status === 'richiesta').length > 0 && (
-          <div className="flex-shrink-0 p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-xl flex items-center justify-between gap-3 shadow-sm">
+          <div className="flex-shrink-0 p-2.5 bg-warn-soft border border-warn-line rounded-xl flex items-center justify-between gap-3 shadow-sm">
             <div className="flex items-center gap-2">
-              <span className="text-base">🔔</span>
+              
               <div>
-                <h3 className="font-bold text-amber-300 text-xs">
+                <h3 className="font-bold text-warn-ink text-xs">
                   {quotes.filter(q => q.status === 'richiesta').length} Nuove Richieste dal Portale Clienti!
                 </h3>
-                <p className="text-[11px] text-amber-400/80">
+                <p className="text-[11px] text-warn-ink">
                   Apri le richieste nel calcolatore per impostare peso e tempi di stampa.
                 </p>
               </div>
@@ -276,7 +276,7 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
                 setStatusFilter('richiesta');
                 setCurrentPage(1);
               }}
-              className="px-3 py-1 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-lg transition-all whitespace-nowrap shadow-sm flex-shrink-0"
+              className="px-3 py-1 bg-warn hover:bg-warn text-on-accent font-bold text-xs rounded-lg transition-all whitespace-nowrap shadow-sm flex-shrink-0"
             >
               Vedi Richieste ({quotes.filter(q => q.status === 'richiesta').length})
             </button>
@@ -284,9 +284,9 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
         )}
 
         {/* BARRA FILTRI RESPONSIVE */}
-        <div className="flex-shrink-0 bg-slate-900 border border-slate-800 p-2 rounded-xl flex flex-col lg:flex-row gap-2 items-stretch lg:items-center justify-between">
+        <div className="flex-shrink-0 bg-surface border border-line p-2 rounded-xl flex flex-col lg:flex-row gap-2 items-stretch lg:items-center justify-between">
           <div className="relative w-full lg:w-72">
-            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
+            <Search className="w-3.5 h-3.5 text-ink-faint absolute left-3 top-2.5" />
             <input 
               type="text" 
               value={search}
@@ -295,7 +295,7 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
                 setCurrentPage(1);
               }}
               placeholder="Cerca per pezzo, cliente, materiale..." 
-              className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+              className="w-full bg-surface border border-line-strong rounded-lg pl-9 pr-3 py-1.5 text-xs text-ink focus:outline-none focus:border-accent"
             />
           </div>
 
@@ -305,26 +305,26 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
                 onClick={() => { setStatusFilter('richiesta'); setCurrentPage(1); }} 
                 className={`px-2.5 py-1 rounded-lg text-xs font-bold border whitespace-nowrap transition-all ${
                   statusFilter === 'richiesta' 
-                    ? 'bg-amber-500/20 border-amber-500 text-amber-300 ring-1 ring-amber-500/40' 
-                    : 'bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20'
+                    ? 'bg-warn-soft border-warn text-warn-ink ring-1 ring-warn/30' 
+                    : 'bg-warn-soft border-warn-line text-warn-ink hover:bg-warn-soft'
                 }`}
               >
-                🔔 Richieste ({quotes.filter(q => q.status === 'richiesta').length})
+                Richieste ({quotes.filter(q => q.status === 'richiesta').length})
               </button>
             )}
-            <button onClick={() => { setStatusFilter('all'); setCurrentPage(1); }} className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap border transition-all ${statusFilter === 'all' ? 'bg-slate-800 border-slate-700 text-white' : 'border-transparent text-slate-400 hover:text-slate-200'}`}>Tutti ({quotes.length})</button>
-            <button onClick={() => { setStatusFilter('in_attesa'); setCurrentPage(1); }} className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap border transition-all ${statusFilter === 'in_attesa' ? 'bg-amber-500/20 border-amber-500/40 text-amber-300' : 'border-transparent text-slate-400 hover:text-amber-400'}`}>In Attesa</button>
-            <button onClick={() => { setStatusFilter('in_stampa'); setCurrentPage(1); }} className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap border transition-all ${statusFilter === 'in_stampa' ? 'bg-blue-500/20 border-blue-500/40 text-blue-300' : 'border-transparent text-slate-400 hover:text-blue-400'}`}>In Stampa</button>
-            <button onClick={() => { setStatusFilter('pronto'); setCurrentPage(1); }} className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap border transition-all ${statusFilter === 'pronto' ? 'bg-purple-500/20 border-purple-500/40 text-purple-300' : 'border-transparent text-slate-400 hover:text-purple-400'}`}>Pronti</button>
-            <button onClick={() => { setStatusFilter('saldato'); setCurrentPage(1); }} className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap border transition-all ${statusFilter === 'saldato' ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' : 'border-transparent text-slate-400 hover:text-emerald-400'}`}>Saldati</button>
+            <button onClick={() => { setStatusFilter('all'); setCurrentPage(1); }} className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap border transition-all ${statusFilter === 'all' ? 'bg-raised border-line-strong text-ink' : 'border-transparent text-ink-muted hover:text-ink'}`}>Tutti ({quotes.length})</button>
+            <button onClick={() => { setStatusFilter('in_attesa'); setCurrentPage(1); }} className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap border transition-all ${statusFilter === 'in_attesa' ? 'bg-warn-soft border-warn-line text-warn-ink' : 'border-transparent text-ink-muted hover:text-warn-ink'}`}>In Attesa</button>
+            <button onClick={() => { setStatusFilter('in_stampa'); setCurrentPage(1); }} className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap border transition-all ${statusFilter === 'in_stampa' ? 'bg-info-soft border-info-line text-info-ink' : 'border-transparent text-ink-muted hover:text-info-ink'}`}>In Stampa</button>
+            <button onClick={() => { setStatusFilter('pronto'); setCurrentPage(1); }} className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap border transition-all ${statusFilter === 'pronto' ? 'bg-info-soft border-info-line text-info-ink' : 'border-transparent text-ink-muted hover:text-info-ink'}`}>Pronti</button>
+            <button onClick={() => { setStatusFilter('saldato'); setCurrentPage(1); }} className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap border transition-all ${statusFilter === 'saldato' ? 'bg-accent-soft border-accent-line text-accent-ink' : 'border-transparent text-ink-muted hover:text-accent-ink'}`}>Saldati</button>
           </div>
         </div>
 
         {/* LISTA SCHEDE LAVORI */}
         {filteredQuotes.length === 0 ? (
-          <div className="text-center py-20 bg-slate-900/40 border border-slate-800/80 rounded-2xl">
-            <p className="text-slate-500 text-sm">Nessun lavoro trovato.</p>
-            <Link href="/" className="inline-block mt-3 text-emerald-400 hover:underline text-xs">
+          <div className="text-center py-20 bg-surface border border-line rounded-xl">
+            <p className="text-ink-faint text-sm">Nessun lavoro trovato.</p>
+            <Link href="/" className="inline-block mt-3 text-accent-ink hover:underline text-xs">
               + Crea un nuovo preventivo nel calcolatore
             </Link>
           </div>
@@ -335,83 +335,83 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
               const currentStatus: JobStatus = item.status || 'in_attesa';
               const conf = statusConfig[currentStatus];
               const cardBorder = 
-                currentStatus === 'richiesta' ? 'border-amber-500/40 shadow-amber-950/20' :
-                currentStatus === 'in_stampa' ? 'border-blue-500/30 shadow-blue-950/20' :
-                currentStatus === 'pronto' ? 'border-purple-500/30 shadow-purple-950/20' :
-                currentStatus === 'saldato' ? 'border-emerald-500/30 shadow-emerald-950/20' : 'border-slate-800';
+                currentStatus === 'richiesta' ? 'border-warn-line ' :
+                currentStatus === 'in_stampa' ? 'border-info-line ' :
+                currentStatus === 'pronto' ? 'border-info-line ' :
+                currentStatus === 'saldato' ? 'border-accent-line ' : 'border-line';
 
               return (
                 <div 
                   key={item.id} 
-                  className={`bg-slate-900 border ${cardBorder} hover:border-slate-700/80 rounded-2xl p-4 sm:p-5 flex flex-col justify-between transition-all shadow-xl`}
+                  className={`bg-surface border ${cardBorder} hover:border-line-strong rounded-xl p-4 sm:p-5 flex flex-col justify-between transition-all shadow-lg`}
                 >
                   <div>
                     <div className="flex justify-between items-start gap-2 mb-2">
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <h3 className="font-bold text-white text-base truncate">{item.name}</h3>
+                          <h3 className="font-bold text-ink text-base truncate">{item.name}</h3>
                           {item.quantity && item.quantity > 1 && (
-                            <span className="text-[10px] bg-blue-500/20 text-blue-300 border border-blue-500/30 px-1.5 py-0.5 rounded font-mono font-bold flex-shrink-0" title={`Lotto di ${item.quantity} pezzi`}>
+                            <span className="text-[10px] bg-info-soft text-info-ink border border-info-line px-1.5 py-0.5 rounded font-mono font-bold flex-shrink-0" title={`Lotto di ${item.quantity} pezzi`}>
                               x{item.quantity} pz
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
-                          <User className="w-3 h-3 text-slate-500" />
+                        <p className="text-xs text-ink-muted flex items-center gap-1.5 mt-0.5">
+                          <User className="w-3 h-3 text-ink-faint" />
                           {item.clientName ? (
                             <Link 
                               href={`/clienti?client=${encodeURIComponent(item.clientName)}`}
-                              className="font-medium text-slate-300 hover:text-emerald-400 hover:underline transition-colors"
+                              className="font-medium text-ink-muted hover:text-accent-ink hover:underline transition-colors"
                               title="Vedi scheda e conto cliente"
                             >
                               {item.clientName}
                             </Link>
                           ) : (
-                            <span className="font-medium text-slate-500">Cliente Anonimo</span>
+                            <span className="font-medium text-ink-faint">Cliente Anonimo</span>
                           )}
                           {item.clientContact && (
-                            <span className="text-slate-500 text-[11px]">• {item.clientContact}</span>
+                            <span className="text-ink-faint text-[11px]">• {item.clientContact}</span>
                           )}
                         </p>
                       </div>
                       <div className="text-right whitespace-nowrap">
                         {item.status === 'richiesta' && (!item.totalCalculated || item.totalCalculated === 0) ? (
-                          <span className="text-[11px] font-bold text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded block">
+                          <span className="text-[11px] font-bold text-warn-ink bg-warn-soft border border-warn-line px-2 py-0.5 rounded block">
                             Da Quantificare
                           </span>
                         ) : (
                           <>
-                            <span className="text-lg font-bold text-white block">€{item.totalCalculated?.toFixed(2)}</span>
+                            <span className="text-lg font-bold text-ink block">€{item.totalCalculated?.toFixed(2)}</span>
                             {item.quantity && item.quantity > 1 && (
-                              <span className="text-[10px] text-slate-400 font-mono block">
+                              <span className="text-[10px] text-ink-muted font-mono block">
                                 €{(item.totalCalculated / item.quantity).toFixed(2)} /pz
                               </span>
                             )}
                           </>
                         )}
                         {!isPrivacyMode && item.estimatedProfit > 0 && (
-                          <span className="text-[10px] text-emerald-400/90 font-medium">netto: €{item.estimatedProfit?.toFixed(2)}</span>
+                          <span className="text-[10px] text-accent-ink font-medium">netto: €{item.estimatedProfit?.toFixed(2)}</span>
                         )}
                         {item.roundingMode && item.roundingMode !== 'none' && (
-                          <span className="text-[9px] text-purple-300 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20 block text-right mt-0.5 font-medium">
-                            {item.roundingMode === 'excess' ? '⬆️' : item.roundingMode === 'defect' ? '⬇️' : '≈'} Arrot. (€{(item.roundingStep ?? 0.50).toFixed(2)})
+                          <span className="text-[9px] text-info-ink bg-info-soft px-1.5 py-0.5 rounded border border-info-line block text-right mt-0.5 font-medium">
+                            {item.roundingMode === 'excess' ? '+' : item.roundingMode === 'defect' ? '-' : '≈'} Arrot. (€{(item.roundingStep ?? 0.50).toFixed(2)})
                           </span>
                         )}
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 my-3 p-2.5 bg-slate-950/60 border border-slate-800/60 rounded-xl text-xs text-slate-400">
+                    <div className="grid grid-cols-2 gap-2 my-3 p-2.5 bg-sunken border border-line rounded-xl text-xs text-ink-muted">
                       <div>
-                        <span className="text-[10px] text-slate-500 block">Materiale / Colore</span>
-                        <span className="text-slate-200 font-medium truncate block">
+                        <span className="text-[10px] text-ink-faint block">Materiale / Colore</span>
+                        <span className="text-ink font-medium truncate block">
                           {item.material} {item.preferredColor ? `(${item.preferredColor})` : ''}
                         </span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-slate-500 block">
+                        <span className="text-[10px] text-ink-faint block">
                           Tempo & Peso {item.quantity && item.quantity > 1 ? `(x${item.quantity} pz)` : ''}
                         </span>
-                        <span className="text-slate-200 font-medium">
+                        <span className="text-ink font-medium">
                           {item.hours || 0}h {item.mins || 0}m • {((parseFloat(item.weight?.toString() || '0') + parseFloat(item.purgeWeight?.toString() || '0')) * (item.quantity || 1)).toFixed(0)}g
                         </span>
                       </div>
@@ -422,10 +422,10 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
                         {item.modelUrl && (
                           <Link
                             href={`/?id=${encodeURIComponent(item.id)}`}
-                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-purple-300 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-lg hover:bg-purple-500/20 transition-colors"
+                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-info-ink bg-info-soft border border-info-line px-2 py-0.5 rounded-lg hover:bg-info-soft transition-colors"
                             title="Apri e visualizza modello 3D nel calcolatore"
                           >
-                            <Box className="w-3 h-3 text-purple-400" />
+                            <Box className="w-3 h-3 text-info-ink" />
                             <span className="truncate max-w-[120px]">{item.modelFileName || 'Modello 3D'}</span>
                           </Link>
                         )}
@@ -436,27 +436,27 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
                             key={f.url}
                             href={f.url}
                             download={f.fileName || `modello-3d-${index + 2}`}
-                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-purple-300 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-lg hover:bg-purple-500/20 transition-colors"
+                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-info-ink bg-info-soft border border-info-line px-2 py-0.5 rounded-lg hover:bg-info-soft transition-colors"
                             title="Scarica file 3D"
                           >
-                            <Box className="w-3 h-3 text-purple-400" />
+                            <Box className="w-3 h-3 text-info-ink" />
                             <span className="truncate max-w-[120px]">{f.fileName || `Modello ${index + 2}`}</span>
                           </a>
                         ))}
 
                         {item.makerWorldUrl && (
-                          <a href={item.makerWorldUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-slate-400 hover:text-emerald-400 truncate max-w-[140px]">
+                          <a href={item.makerWorldUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-ink-muted hover:text-accent-ink truncate max-w-[140px]">
                             <ExternalLink className="w-3.5 h-3.5 flex-shrink-0" /> MakerWorld
                           </a>
                         )}
                       </div>
 
                       {item.inventoryDeducted ? (
-                        <span className="text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded flex items-center gap-1 font-medium">
+                        <span className="text-[10px] bg-accent-soft text-accent-ink border border-accent-line px-2 py-0.5 rounded flex items-center gap-1 font-medium">
                           <Check className="w-3 h-3" /> Magazzino Scalato
                         </span>
                       ) : (
-                        <span className="text-[10px] text-slate-500 flex items-center gap-1">
+                        <span className="text-[10px] text-ink-faint flex items-center gap-1">
                           <Box className="w-3 h-3" /> Non scalato
                         </span>
                       )}
@@ -464,17 +464,17 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
                   </div>
 
                   {/* BARRA AZIONI CON TASTO MODIFICA */}
-                  <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                  <div className="pt-3 border-t border-line flex items-center justify-between gap-2">
                     <select 
                       value={currentStatus}
                       onChange={(e) => handleStatusChange(item.id, e.target.value as JobStatus)}
-                      className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg border outline-none bg-slate-950 cursor-pointer ${conf.text} ${conf.border}`}
+                      className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg border outline-none bg-sunken cursor-pointer ${conf.text} ${conf.border}`}
                     >
-                      <option value="richiesta" className="bg-slate-900 text-amber-300">🟠 Nuova Richiesta</option>
-                      <option value="in_attesa" className="bg-slate-900 text-amber-400">🟡 In Attesa</option>
-                      <option value="in_stampa" className="bg-slate-900 text-blue-400">🔵 In Stampa</option>
-                      <option value="pronto" className="bg-slate-900 text-purple-400">🟣 Pronto</option>
-                      <option value="saldato" className="bg-slate-900 text-emerald-400">🟢 Saldato</option>
+                      <option value="richiesta" className="bg-surface text-warn-ink">Nuova richiesta</option>
+                      <option value="in_attesa" className="bg-surface text-warn-ink">In attesa</option>
+                      <option value="in_stampa" className="bg-surface text-info-ink">In stampa</option>
+                      <option value="pronto" className="bg-surface text-info-ink">Pronto</option>
+                      <option value="saldato" className="bg-surface text-accent-ink">Saldato</option>
                     </select>
 
                     <div className="flex items-center gap-1">
@@ -492,7 +492,7 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
                         })}
                         target="_blank"
                         rel="noreferrer"
-                        className="p-2 hover:bg-emerald-500/20 text-emerald-400 rounded-lg transition-colors"
+                        className="p-2 hover:bg-accent-soft text-accent-ink rounded-lg transition-colors"
                         title={item.clientContact ? `Invia aggiornamento su WhatsApp a ${item.clientName || 'Cliente'}` : `Invia su WhatsApp`}
                       >
                         <MessageSquare className="w-4 h-4" />
@@ -509,7 +509,7 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
                           savedAt: item.savedAt,
                           totalCalculated: item.totalCalculated || 0
                         })}
-                        className="p-2 hover:bg-cyan-500/20 text-cyan-400 rounded-lg transition-colors"
+                        className="p-2 hover:bg-info-soft text-info-ink rounded-lg transition-colors"
                         title="Stampa Etichetta Pacco QR per scatola/busta"
                       >
                         <QrCode className="w-4 h-4" />
@@ -518,7 +518,7 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
                       {/* Tasto Modifica Preventivo */}
                       <Link
                         href={`/?id=${encodeURIComponent(item.id)}`}
-                        className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-emerald-400 transition-colors"
+                        className="p-2 hover:bg-raised rounded-lg text-ink-muted hover:text-accent-ink transition-colors"
                         title="Modifica parametri preventivo nel calcolatore"
                       >
                         <Pencil className="w-4 h-4" />
@@ -527,23 +527,23 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
                       {/* Tasto Copia Link Tracciamento */}
                       <button 
                         onClick={() => handleCopyTrackingLink(item.id)}
-                        className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-emerald-400 transition-colors"
+                        className="p-2 hover:bg-raised rounded-lg text-ink-muted hover:text-accent-ink transition-colors"
                         title="Copia link diretto di tracciamento per il cliente"
                       >
-                        {copiedLinkId === item.id ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <LinkIcon className="w-4 h-4" />}
+                        {copiedLinkId === item.id ? <CheckCircle2 className="w-4 h-4 text-accent-ink" /> : <LinkIcon className="w-4 h-4" />}
                       </button>
 
                       <button 
                         onClick={() => handleCopyText(item)}
-                        className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
+                        className="p-2 hover:bg-raised rounded-lg text-ink-muted hover:text-ink transition-colors"
                         title="Copia testo per chat"
                       >
-                        {copiedId === item.id ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Share2 className="w-4 h-4" />}
+                        {copiedId === item.id ? <CheckCircle2 className="w-4 h-4 text-accent-ink" /> : <Share2 className="w-4 h-4" />}
                       </button>
 
                       <button 
                         onClick={() => handleDelete(item.id)}
-                        className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-red-400 transition-colors"
+                        className="p-2 hover:bg-raised rounded-lg text-ink-muted hover:text-danger-ink transition-colors"
                         title="Elimina"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -560,27 +560,27 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
 
         {/* FOOTER PAGINAZIONE */}
         {filteredQuotes.length > 0 && (
-          <div className="flex-shrink-0 flex items-center justify-between pt-2 border-t border-slate-800 text-xs text-slate-400">
+          <div className="flex-shrink-0 flex items-center justify-between pt-2 border-t border-line text-xs text-ink-muted">
             <span>
-              Mostrando <strong className="text-white">{((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, filteredQuotes.length)}</strong> di <strong className="text-white">{filteredQuotes.length}</strong> lavori
+              Mostrando <strong className="text-ink">{((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, filteredQuotes.length)}</strong> di <strong className="text-ink">{filteredQuotes.length}</strong> lavori
             </span>
             <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage <= 1}
-                className="px-2.5 py-1 bg-slate-900 border border-slate-800 hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-slate-900 text-slate-300 rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed text-xs"
+                className="px-2.5 py-1 bg-surface border border-line hover:bg-raised disabled:opacity-40 disabled:hover:bg-surface text-ink-muted rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed text-xs"
               >
                 ← Precedente
               </button>
-              <span className="font-mono text-slate-300 text-xs">
+              <span className="font-mono text-ink-muted text-xs">
                 {currentPage} / {totalPages}
               </span>
               <button
                 type="button"
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage >= totalPages}
-                className="px-2.5 py-1 bg-slate-900 border border-slate-800 hover:bg-slate-800 disabled:opacity-40 disabled:hover:bg-slate-900 text-slate-300 rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed text-xs"
+                className="px-2.5 py-1 bg-surface border border-line hover:bg-raised disabled:opacity-40 disabled:hover:bg-surface text-ink-muted rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed text-xs"
               >
                 Successivo →
               </button>

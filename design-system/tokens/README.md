@@ -1,19 +1,18 @@
-# Design Tokens — Preventivi 3D
+# Design Tokens
 
-I token fondamentali risiedono nel layer CSS nativo in `src/app/globals.css`:
+Definiti come variabili CSS in `src/app/globals.css` ed esposti a Tailwind con `@theme inline`.
 
-## Colori Fondamentali
-- Background: OLED Black `#020617` / `#030712`
-- Foreground: White `#f8fafc`
-- Accenti:
-  - Emerald (Produzione / Azioni riuscite): `#10b981`
-  - Cyan (Tracciamento / Info tecniche): `#06b6d4`
-  - Amber (In attesa / Avvisi): `#f59e0b`
+| Token | Chiaro | Scuro | Uso |
+|---|---|---|---|
+| canvas | #f1f0ed | #121211 | Sfondo pagina |
+| surface | #ffffff | #1a1a19 | Card, campi |
+| sunken | #f7f6f4 | #151514 | Aree incassate, intestazioni tabella |
+| raised / muted | #ecebe7 / #e2e0db | #242422 / #2e2e2b | Hover, chip, tracce |
+| line / line-strong | #e0ddd7 / #c9c5bd | #2b2b29 / #3c3b38 | Bordi |
+| ink / ink-muted / ink-faint | #161615 / #4f4b46 / #6b665f | #eeedea / #b3b0aa / #9a968f | Testo |
+| accent | #1d6a50 | #5cbf98 | Azione primaria, selezione, focus |
+| warn / danger / info | ambra / rosso / blu acciaio | versioni chiare | Solo stati |
 
-## Curve di Transizione Fisica (Spring Physics)
-- `--ease-spring`: `cubic-bezier(0.32, 0.72, 0, 1)`
-- `--ease-out-quad`: `cubic-bezier(0.25, 1, 0.5, 1)`
+Ogni tono ha le varianti `-soft` (sfondo), `-ink` (testo su sfondo soft) e `-line` (bordo). `on-accent` è il testo sopra i pieni colorati.
 
-## Raggi Concentrici (Concentric Radii)
-- Guscio esterno: `rounded-[2rem]` (o `1.75rem`)
-- Nucleo interno: `rounded-[calc(2rem-0.375rem)]`
+Il tema segue il sistema; la scelta manuale è salvata in `localStorage.p3d_theme` e applicata come `html[data-theme]` prima del primo paint.

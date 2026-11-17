@@ -119,17 +119,17 @@ export default function BackupPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-slate-950 text-slate-200 p-2 sm:p-4 font-sans relative">
+    <div className="flex-1 flex flex-col min-h-0 bg-sunken text-ink p-2 sm:p-4 font-sans relative">
       <div className="max-w-6xl mx-auto w-full flex-1 min-h-0 flex flex-col gap-2.5 overflow-hidden">
         
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 flex-shrink-0">
           <div>
-            <h1 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-              <HardDrive className="w-5 h-5 text-emerald-400" />
+            <h1 className="text-xl font-bold text-ink tracking-tight flex items-center gap-2">
+              <HardDrive className="w-5 h-5 text-accent-ink" />
               Centro Backup & Sicurezza Dati
             </h1>
-            <p className="text-slate-400 text-xs">
+            <p className="text-ink-muted text-xs">
               Esporta, archivia e ripristina l&apos;intero database per prevenire perdite di dati su Raspberry Pi
             </p>
           </div>
@@ -137,9 +137,9 @@ export default function BackupPage() {
           <button
             onClick={handleCreateSnapshot}
             disabled={loading}
-            className="px-3.5 py-1.5 bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-200 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
+            className="px-3.5 py-1.5 bg-surface border border-line hover:border-line-strong text-ink text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-emerald-400' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-accent-ink' : ''}`} />
             <span>Crea Snapshot Immediato</span>
           </button>
         </div>
@@ -148,13 +148,13 @@ export default function BackupPage() {
         {message && (
           <div className={`p-3 rounded-xl border text-xs flex items-start gap-2.5 flex-shrink-0 ${
             message.type === 'success' 
-              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' 
-              : 'bg-red-500/10 border-red-500/30 text-red-300'
+              ? 'bg-accent-soft border-accent-line text-accent-ink' 
+              : 'bg-danger-soft border-danger-line text-danger-ink'
           }`}>
             {message.type === 'success' ? (
-              <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-emerald-400 mt-0.5" />
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-accent-ink mt-0.5" />
             ) : (
-              <AlertTriangle className="w-4 h-4 flex-shrink-0 text-red-400 mt-0.5" />
+              <AlertTriangle className="w-4 h-4 flex-shrink-0 text-danger-ink mt-0.5" />
             )}
             <div>
               <p className="font-semibold">{message.type === 'success' ? 'Operazione Riuscita' : 'Attenzione'}</p>
@@ -169,13 +169,13 @@ export default function BackupPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           
           {/* Card 1: Esporta / Download */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between space-y-4">
+          <div className="bg-surface border border-line rounded-xl p-6 shadow-lg flex flex-col justify-between space-y-4">
             <div className="space-y-2">
-              <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400 w-fit">
+              <div className="p-3 bg-accent-soft border border-accent-line rounded-xl text-accent-ink w-fit">
                 <Download className="w-6 h-6" />
               </div>
-              <h2 className="text-lg font-bold text-white">Download Backup Completo (.zip)</h2>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <h2 className="text-lg font-bold text-ink">Download Backup Completo (.zip)</h2>
+              <p className="text-xs text-ink-muted leading-relaxed">
                 Scarica subito un archivio compresso contenente tutti i preventivi, anagrafiche clienti, magazzino filamenti, account utenti e registri di manutenzione.
               </p>
             </div>
@@ -183,7 +183,7 @@ export default function BackupPage() {
             <div className="pt-2">
               <button
                 onClick={handleDownloadZip}
-                className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-emerald-950 flex items-center justify-center gap-2"
+                className="w-full py-3 px-4 bg-accent hover:bg-accent-hover text-on-accent text-xs font-bold rounded-xl transition-all shadow-md flex items-center justify-center gap-2"
               >
                 <Download className="w-4 h-4" />
                 <span>Scarica Archivio ZIP (.zip)</span>
@@ -192,13 +192,13 @@ export default function BackupPage() {
           </div>
 
           {/* Card 2: Ripristina / Upload */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between space-y-4">
+          <div className="bg-surface border border-line rounded-xl p-6 shadow-lg flex flex-col justify-between space-y-4">
             <div className="space-y-2">
-              <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-xl text-purple-400 w-fit">
+              <div className="p-3 bg-info-soft border border-info-line rounded-xl text-info-ink w-fit">
                 <Upload className="w-6 h-6" />
               </div>
-              <h2 className="text-lg font-bold text-white">Ripristina da File Backup</h2>
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <h2 className="text-lg font-bold text-ink">Ripristina da File Backup</h2>
+              <p className="text-xs text-ink-muted leading-relaxed">
                 Seleziona un archivio `.zip` generato in precedenza per ripristinare il sistema in caso di nuova installazione o migrazione. Prima di sovrascrivere, il sistema crea automaticamente una copia di salvataggio.
               </p>
             </div>
@@ -215,11 +215,11 @@ export default function BackupPage() {
               />
               <label
                 htmlFor="backup-file-upload"
-                className={`w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold rounded-xl transition-all border border-slate-700 flex items-center justify-center gap-2 cursor-pointer ${
+                className={`w-full py-3 px-4 bg-raised hover:bg-muted text-ink text-xs font-bold rounded-xl transition-all border border-line-strong flex items-center justify-center gap-2 cursor-pointer ${
                   restoring ? 'opacity-50 pointer-events-none' : ''
                 }`}
               >
-                <Upload className="w-4 h-4 text-purple-400" />
+                <Upload className="w-4 h-4 text-info-ink" />
                 <span>{restoring ? 'Ripristino in corso...' : 'Seleziona File .ZIP e Ripristina'}</span>
               </label>
             </div>
@@ -228,51 +228,51 @@ export default function BackupPage() {
         </div>
 
         {/* Tabella Snapshot Locali su Disco */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-          <div className="flex justify-between items-center pb-3 border-b border-slate-800">
+        <div className="bg-surface border border-line rounded-xl p-6 shadow-lg space-y-4">
+          <div className="flex justify-between items-center pb-3 border-b border-line">
             <div>
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Clock className="w-4 h-4 text-emerald-400" />
+              <h3 className="text-base font-bold text-ink flex items-center gap-2">
+                <Clock className="w-4 h-4 text-accent-ink" />
                 Snapshot Locali su Disco Raspberry Pi
               </h3>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-ink-muted">
                 Copie di sicurezza automatiche archiviate in locale su <code>/app/data/backups/</code> (ultimi 15 snapshot)
               </p>
             </div>
 
-            <span className="text-xs bg-slate-950 text-slate-400 px-3 py-1 rounded-lg border border-slate-800">
+            <span className="text-xs bg-sunken text-ink-muted px-3 py-1 rounded-lg border border-line">
               {snapshots.length} archivi
             </span>
           </div>
 
           {snapshots.length === 0 ? (
-            <div className="py-12 text-center text-slate-500 text-xs">
+            <div className="py-12 text-center text-ink-faint text-xs">
               Nessuno snapshot locale archiviato al momento. Clicca su &quot;Crea Snapshot Immediato&quot; per generarne uno.
             </div>
           ) : (
-            <div className="divide-y divide-slate-800/60 overflow-x-auto">
+            <div className="divide-y divide-line overflow-x-auto">
               <table className="w-full text-xs text-left min-w-[500px]">
                 <thead>
-                  <tr className="text-slate-400 uppercase text-[10px] pb-2">
+                  <tr className="text-ink-muted text-[11px] pb-2">
                     <th className="py-2.5 font-semibold">Nome Archivio</th>
                     <th className="py-2.5 font-semibold">Data Creazione</th>
                     <th className="py-2.5 font-semibold">Dimensione</th>
                     <th className="py-2.5 font-semibold text-right">Azione</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-800">
+                <tbody className="divide-y divide-line">
                   {snapshots.map((s) => (
-                    <tr key={s.filename} className="hover:bg-slate-950/40 transition-colors">
-                      <td className="py-3 font-mono text-slate-300 flex items-center gap-2">
-                        <FileArchive className="w-4 h-4 text-emerald-400/80" />
+                    <tr key={s.filename} className="hover:bg-sunken transition-colors">
+                      <td className="py-3 font-mono text-ink-muted flex items-center gap-2">
+                        <FileArchive className="w-4 h-4 text-accent-ink" />
                         <span>{s.filename}</span>
                       </td>
-                      <td className="py-3 text-slate-400">{formatDate(s.createdAt)}</td>
-                      <td className="py-3 text-slate-400">{formatBytes(s.sizeBytes)}</td>
+                      <td className="py-3 text-ink-muted">{formatDate(s.createdAt)}</td>
+                      <td className="py-3 text-ink-muted">{formatBytes(s.sizeBytes)}</td>
                       <td className="py-3 text-right">
                         <button
                           onClick={handleDownloadZip}
-                          className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-[11px] font-medium transition-colors inline-flex items-center gap-1"
+                          className="px-2.5 py-1 bg-raised hover:bg-muted text-ink-muted rounded text-[11px] font-medium transition-colors inline-flex items-center gap-1"
                           title="Scarica questo backup"
                         >
                           <Download className="w-3 h-3" />
@@ -288,14 +288,14 @@ export default function BackupPage() {
         </div>
 
         {/* Box Informativo Raspberry Pi & Cloud */}
-        <div className="p-5 bg-slate-900/60 border border-slate-800/80 rounded-2xl flex items-start gap-3.5 text-xs text-slate-400">
-          <ShieldCheck className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+        <div className="p-5 bg-surface border border-line rounded-xl flex items-start gap-3.5 text-xs text-ink-muted">
+          <ShieldCheck className="w-5 h-5 text-accent-ink flex-shrink-0 mt-0.5" />
           <div className="space-y-1 leading-relaxed">
-            <h4 className="font-bold text-white text-sm">Best Practice per Maker con Raspberry Pi</h4>
+            <h4 className="font-bold text-ink text-sm">Best Practice per Maker con Raspberry Pi</h4>
             <p>
               Le schede microSD dei Raspberry Pi possono usurarsi con cicli continui di lettura e scrittura. Si consiglia di:
             </p>
-            <ul className="list-disc list-inside space-y-0.5 text-slate-300 pt-1">
+            <ul className="list-disc list-inside space-y-0.5 text-ink-muted pt-1">
               <li>Scaricare periodicamente l&apos;archivio ZIP prima di grossi aggiornamenti software.</li>
               <li>Mappare la cartella <code>/app/data</code> su un drive USB / SSD esterno o condivisione NFS/SMB tramite Docker Volume.</li>
               <li>Sincronizzare la cartella <code>/app/data/backups/</code> verso Google Drive o Dropbox tramite strumenti leggeri come <em>rclone</em>.</li>

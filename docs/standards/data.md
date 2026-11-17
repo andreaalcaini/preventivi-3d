@@ -22,3 +22,7 @@ Ogni preventivo salvato include:
 - `hours` & `mins`: durata estrusione
 - `totalCalculated`: totale prezzo calcolato
 - `status`: 'richiesta' | 'in_attesa' | 'in_stampa' | 'pronto' | 'saldato'
+
+## 4. Chiavi API (`api_keys.json`)
+- **Regola**: si salva solo l'hash SHA-256 della chiave, più `prefix` per riconoscerla, `scope` (`read` | `write`), `createdBy`, `createdAt`, `lastUsedAt`, `expiresAt`, `revokedAt`. La chiave in chiaro è restituita una sola volta da `POST /api/api-keys`.
+- **Motivazione**: un backup o un file esposto non permette di usare le chiavi. La verifica avviene nel proxy (`src/proxy.ts`), che blocca le chiavi su utenti, chiavi, backup, login e push.

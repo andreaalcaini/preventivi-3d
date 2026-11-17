@@ -350,7 +350,7 @@ export default function StlViewer({
 
     // Scena
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color('#030712'); // Slate 950
+    scene.background = new THREE.Color('#1a1a19'); // palco neutro scuro in entrambi i temi
     sceneRef.current = scene;
 
     // Camera
@@ -394,7 +394,7 @@ export default function StlViewer({
     scene.add(dirLight3);
 
     // Griglia Piatto di Stampa FDM
-    const grid = new THREE.GridHelper(260, 26, 0x10b981, 0x1e293b);
+    const grid = new THREE.GridHelper(260, 26, 0x10b981, 0x2e2e2b);
     grid.position.y = -0.5;
     gridRef.current = grid;
     scene.add(grid);
@@ -467,41 +467,41 @@ export default function StlViewer({
 
   return (
     <div 
-      className="relative rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 shadow-2xl flex flex-col"
+      className="relative rounded-xl overflow-hidden bg-sunken border border-line shadow-lg flex flex-col"
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
     >
       {/* Barra Superiore Controlli */}
       <div className="absolute top-3 left-3 right-3 z-10 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
-        <div className="flex items-center gap-1.5 pointer-events-auto bg-slate-900/90 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-slate-800 shadow-lg text-xs max-w-full overflow-hidden">
-          <BoxIcon className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
-          <span className="font-semibold text-white truncate">
+        <div className="flex items-center gap-1.5 pointer-events-auto bg-surface px-2.5 py-1.5 rounded-xl border border-line shadow-lg text-xs max-w-full overflow-hidden">
+          <BoxIcon className="w-3.5 h-3.5 text-accent-ink flex-shrink-0" />
+          <span className="font-semibold text-ink truncate">
             {currentFileName ? currentFileName : 'Viewer 3D WebGL'}
           </span>
 
           {activeFormat && (
-            <span className={`text-[10px] font-bold font-mono px-1.5 py-0.2 rounded uppercase ${
+            <span className={`text-[11px] font-bold font-mono px-1.5 py-0.2 rounded ${
               activeFormat === '3MF' 
-                ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30' 
-                : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                ? 'bg-info-soft text-info-ink border border-info-line' 
+                : 'bg-accent-soft text-accent-ink border border-accent-line'
             }`}>
               {activeFormat}
             </span>
           )}
 
           {dimensions && (
-            <span className="font-mono text-[11px] text-slate-400 border-l border-slate-700 pl-1.5 ml-1 hidden sm:inline">
+            <span className="font-mono text-[11px] text-ink-muted border-l border-line-strong pl-1.5 ml-1 hidden sm:inline">
               {dimensions.x} × {dimensions.y} × {dimensions.z} mm
             </span>
           )}
         </div>
 
         {/* Toolbar Azioni */}
-        <div className="flex items-center gap-1 pointer-events-auto bg-slate-900/90 backdrop-blur-md p-1 rounded-xl border border-slate-800 shadow-lg">
+        <div className="flex items-center gap-1 pointer-events-auto bg-surface p-1 rounded-xl border border-line shadow-lg">
           <button
             onClick={() => setAutoRotate(!autoRotate)}
             className={`p-1.5 rounded-lg transition-colors text-xs flex items-center gap-1 ${
-              autoRotate ? 'bg-emerald-500/20 text-emerald-400' : 'text-slate-400 hover:text-white'
+              autoRotate ? 'bg-accent-soft text-accent-ink' : 'text-ink-muted hover:text-ink'
             }`}
             title="Attiva rotazione automatica piatto"
           >
@@ -511,7 +511,7 @@ export default function StlViewer({
           <button
             onClick={() => setWireframe(!wireframe)}
             className={`p-1.5 rounded-lg transition-colors text-xs flex items-center gap-1 ${
-              wireframe ? 'bg-purple-500/20 text-purple-400' : 'text-slate-400 hover:text-white'
+              wireframe ? 'bg-info-soft text-info-ink' : 'text-ink-muted hover:text-ink'
             }`}
             title="Visualizza mesh wireframe (fil di ferro)"
           >
@@ -520,7 +520,7 @@ export default function StlViewer({
 
           <button
             onClick={handleResetCamera}
-            className="p-1.5 rounded-lg transition-colors text-slate-400 hover:text-white text-xs"
+            className="p-1.5 rounded-lg transition-colors text-ink-muted hover:text-ink text-xs"
             title="Ripristina punto di vista telecamera"
           >
             <Maximize2 className="w-3.5 h-3.5" />
@@ -537,9 +537,9 @@ export default function StlViewer({
 
       {/* Loading Overlay */}
       {loading && (
-        <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center gap-2 z-20">
-          <div className="w-7 h-7 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-          <span className="text-xs text-slate-300 font-medium">
+        <div className="absolute inset-0 bg-sunken/95 flex flex-col items-center justify-center gap-2 z-20">
+          <div className="w-7 h-7 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+          <span className="text-xs text-ink-muted font-medium">
             Elaborazione modello 3D ({activeFormat || 'STL/3MF'})...
           </span>
         </div>
@@ -547,11 +547,11 @@ export default function StlViewer({
 
       {/* Error Overlay */}
       {error && (
-        <div className="absolute inset-0 bg-slate-950/90 flex flex-col items-center justify-center p-6 text-center z-20">
-          <AlertCircle className="w-8 h-8 text-red-400 mb-2" />
-          <p className="text-xs text-red-300 font-medium mb-3">{error}</p>
+        <div className="absolute inset-0 bg-sunken/95 flex flex-col items-center justify-center p-6 text-center z-20">
+          <AlertCircle className="w-8 h-8 text-danger-ink mb-2" />
+          <p className="text-xs text-danger-ink font-medium mb-3">{error}</p>
           {allowUpload && (
-            <label className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-white rounded-lg cursor-pointer">
+            <label className="px-3 py-1.5 bg-raised hover:bg-muted text-xs font-semibold text-ink rounded-lg cursor-pointer">
               Carica un altro file 3D (.STL o .3MF)
               <input type="file" accept=".stl,.3mf" onChange={handleFileInput} className="hidden" />
             </label>
@@ -561,14 +561,14 @@ export default function StlViewer({
 
       {/* Empty State / Upload Prompt if no active file or URL */}
       {!activeFile && !url && !loading && (
-        <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center z-10 pointer-events-auto">
-          <UploadCloud className="w-10 h-10 text-emerald-400 mb-2 opacity-80" />
-          <h4 className="text-sm font-bold text-white mb-1">Trascina qui il tuo file 3D (.STL o .3MF)</h4>
-          <p className="text-xs text-slate-400 max-w-xs mb-4">
+        <div className="absolute inset-0 bg-sunken/95 flex flex-col items-center justify-center p-6 text-center z-10 pointer-events-auto">
+          <UploadCloud className="w-10 h-10 text-accent-ink mb-2 opacity-80" />
+          <h4 className="text-sm font-bold text-ink mb-1">Trascina qui il tuo file 3D (.STL o .3MF)</h4>
+          <p className="text-xs text-ink-muted max-w-xs mb-4">
             Visualizza l&apos;anteprima 3D, calcola le quote millimetriche e ispeziona la geometria del pezzo
           </p>
           {allowUpload && (
-            <label className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl cursor-pointer shadow-md shadow-emerald-950 transition-all flex items-center gap-1.5">
+            <label className="px-4 py-2 bg-accent hover:bg-accent-hover text-on-accent text-xs font-bold rounded-xl cursor-pointer shadow-md transition-all flex items-center gap-1.5">
               <UploadCloud className="w-3.5 h-3.5" />
               <span>Seleziona file .STL o .3MF</span>
               <input type="file" accept=".stl,.3mf" onChange={handleFileInput} className="hidden" />
@@ -578,10 +578,10 @@ export default function StlViewer({
       )}
 
       {/* Barra Inferiore: Selettore Colore Filamento & Dettagli */}
-      <div className="p-3 bg-slate-900 border-t border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div className="p-3 bg-surface border-t border-line flex flex-wrap items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-2">
-          <span className="text-slate-400 flex items-center gap-1 text-[11px]">
-            <Palette className="w-3 h-3 text-emerald-400" /> Tinta Filamento:
+          <span className="text-ink-muted flex items-center gap-1 text-[11px]">
+            <Palette className="w-3 h-3 text-accent-ink" /> Tinta Filamento:
           </span>
           <div className="flex items-center gap-1.5">
             {PALETTE_COLORS.map((c) => (
@@ -589,7 +589,7 @@ export default function StlViewer({
                 key={c.hex}
                 onClick={() => setColor(c.hex)}
                 className={`w-4 h-4 rounded-full border transition-transform ${
-                  color === c.hex ? 'scale-125 border-white ring-1 ring-emerald-500' : 'border-slate-700 hover:scale-110'
+                  color === c.hex ? 'scale-125 border-ink ring-1 ring-accent' : 'border-line-strong hover:scale-110'
                 }`}
                 style={{ backgroundColor: c.hex }}
                 title={c.name}
@@ -600,7 +600,7 @@ export default function StlViewer({
 
         <div className="flex items-center gap-3">
           {allowUpload && (activeFile || url) && (
-            <label className="text-[11px] text-slate-400 hover:text-emerald-400 flex items-center gap-1 cursor-pointer transition-colors">
+            <label className="text-[11px] text-ink-muted hover:text-accent-ink flex items-center gap-1 cursor-pointer transition-colors">
               <FileCode className="w-3 h-3" />
               <span>Cambia file 3D</span>
               <input type="file" accept=".stl,.3mf" onChange={handleFileInput} className="hidden" />
@@ -608,8 +608,8 @@ export default function StlViewer({
           )}
 
           {dimensions && (
-            <div className="text-[11px] text-slate-400 font-mono">
-              Triangoli: <strong className="text-slate-200">{dimensions.triangles.toLocaleString()}</strong>
+            <div className="text-[11px] text-ink-muted font-mono">
+              Triangoli: <strong className="text-ink">{dimensions.triangles.toLocaleString()}</strong>
             </div>
           )}
         </div>

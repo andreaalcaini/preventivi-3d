@@ -305,34 +305,34 @@ export default function MagazzinoPage() {
   const remainingValue = weighingSpool ? ((currentNet / (weighingSpool.weightTotal || 1000)) * weighingSpool.cost).toFixed(2) : '0.00';
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-slate-950 text-slate-200 p-2 sm:p-4 font-sans relative">
+    <div className="flex-1 flex flex-col min-h-0 bg-sunken text-ink p-2 sm:p-4 font-sans relative">
       <div className="max-w-7xl mx-auto w-full flex-1 min-h-0 flex flex-col gap-2 overflow-hidden">
         
         {/* HEADER */}
         <div className="flex-shrink-0 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <div>
-            <h1 className="text-lg sm:text-xl font-bold text-white tracking-tight flex items-center gap-2">
-              <Box className="w-5 h-5 text-emerald-400" />
+            <h1 className="text-lg sm:text-xl font-bold text-ink tracking-tight flex items-center gap-2">
+              <Box className="w-5 h-5 text-accent-ink" />
               Magazzino & Materiali
             </h1>
-            <p className="text-slate-400 text-xs">
+            <p className="text-ink-muted text-xs">
               Gestione bobine, tara produttori, pesatura e scorte minuteria
             </p>
           </div>
 
           <div className="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-end">
             {savedSuccess && (
-              <span className="text-xs text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-2.5 py-1 rounded-lg flex items-center gap-1 animate-in fade-in duration-200">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> {feedbackMsg || "Modifiche salvate"}
+              <span className="text-xs text-accent-ink bg-accent-soft border border-accent-line px-2.5 py-1 rounded-lg flex items-center gap-1 animate-in fade-in duration-200">
+                <CheckCircle2 className="w-3.5 h-3.5 text-accent-ink" /> {feedbackMsg || "Modifiche salvate"}
               </span>
             )}
             
             {/* TABS SELECTOR RESPONSIVE */}
-            <div className="flex bg-slate-900 border border-slate-800 p-0.5 rounded-lg shadow-sm">
+            <div className="flex bg-surface border border-line p-0.5 rounded-lg shadow-sm">
               <button
                 onClick={() => setActiveTab('spools')}
                 className={`flex items-center justify-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all ${
-                  activeTab === 'spools' ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-950' : 'text-slate-400 hover:text-white'
+                  activeTab === 'spools' ? 'bg-accent text-on-accent shadow-sm ' : 'text-ink-muted hover:text-on-accent'
                 }`}
               >
                 <Layers className="w-3.5 h-3.5" /> Bobine ({inventory.spools.length})
@@ -340,7 +340,7 @@ export default function MagazzinoPage() {
               <button
                 onClick={() => setActiveTab('hardware')}
                 className={`flex items-center justify-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all ${
-                  activeTab === 'hardware' ? 'bg-purple-600 text-white shadow-sm shadow-purple-950' : 'text-slate-400 hover:text-white'
+                  activeTab === 'hardware' ? 'bg-info text-on-accent shadow-sm ' : 'text-ink-muted hover:text-on-accent'
                 }`}
               >
                 <Wrench className="w-3.5 h-3.5" /> Minuteria ({inventory.hardware.length})
@@ -355,24 +355,24 @@ export default function MagazzinoPage() {
             
             {/* FORM AGGIUNTA BOBINA (4 COLONNE) */}
             <div className="lg:col-span-4 flex flex-col min-h-0 overflow-y-auto">
-              <form onSubmit={handleAddSpool} className="bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-3 shadow-xl">
+              <form onSubmit={handleAddSpool} className="bg-surface border border-line rounded-xl p-3 space-y-3 shadow-lg">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-sm font-bold text-white flex items-center gap-2 uppercase tracking-wider">
-                    <Plus className="w-4 h-4 text-emerald-400" /> Aggiungi Bobina
+                  <h2 className="text-sm font-bold text-ink flex items-center gap-2">
+                    <Plus className="w-4 h-4 text-accent-ink" /> Aggiungi Bobina
                   </h2>
-                  <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20 font-medium">
+                  <span className="text-[10px] bg-accent-soft text-accent-ink px-2 py-0.5 rounded border border-accent-line font-medium">
                     Tara Automatica
                   </span>
                 </div>
 
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Marca / Produttore</label>
+                  <label className="block text-xs text-ink-muted mb-1">Marca / Produttore</label>
                   <input 
                     type="text" 
                     value={newSpool.brand} 
                     onChange={e => handleBrandChange(e.target.value)} 
                     placeholder="Es. Bambu Lab, Sunlu, eSUN, Prusament..."
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:ring-1 focus:ring-emerald-500 outline-none"
+                    className="w-full bg-surface border border-line-strong rounded-lg px-3 py-2 text-xs text-ink focus:ring-1 focus:ring-accent/20 outline-none"
                     required
                   />
                   <div className="mt-1 flex flex-wrap gap-1">
@@ -381,7 +381,7 @@ export default function MagazzinoPage() {
                         type="button"
                         key={b}
                         onClick={() => handleBrandChange(b)}
-                        className="text-[10px] bg-slate-800/80 hover:bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded transition-colors"
+                        className="text-[10px] bg-raised hover:bg-muted text-ink-muted px-1.5 py-0.5 rounded transition-colors"
                       >
                         {b}
                       </button>
@@ -391,11 +391,11 @@ export default function MagazzinoPage() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">Materiale</label>
+                    <label className="block text-xs text-ink-muted mb-1">Materiale</label>
                     <select 
                       value={newSpool.material}
                       onChange={e => setNewSpool({ ...newSpool, material: e.target.value })}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:ring-1 focus:ring-emerald-500 outline-none"
+                      className="w-full bg-surface border border-line-strong rounded-lg px-3 py-2 text-xs text-ink focus:ring-1 focus:ring-accent/20 outline-none"
                     >
                       <option value="PLA">PLA</option>
                       <option value="PLA+">PLA+</option>
@@ -412,14 +412,14 @@ export default function MagazzinoPage() {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">Colore</label>
+                    <label className="block text-xs text-ink-muted mb-1">Colore</label>
                     <div className="flex items-center gap-1.5">
                       <input 
                         type="text" 
                         value={newSpool.color} 
                         onChange={e => setNewSpool({ ...newSpool, color: e.target.value })} 
                         placeholder="Es. Nero, Ash Grey"
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:ring-1 focus:ring-emerald-500 outline-none"
+                        className="w-full bg-surface border border-line-strong rounded-lg px-3 py-2 text-xs text-ink focus:ring-1 focus:ring-accent/20 outline-none"
                         required
                       />
                       <input 
@@ -434,12 +434,12 @@ export default function MagazzinoPage() {
                 </div>
 
                 {/* TARA PREIMPOSTATA & MODELLO ROCHETTO */}
-                <div className="p-3 bg-slate-950/60 border border-slate-800/80 rounded-xl space-y-2">
+                <div className="p-3 bg-sunken border border-line rounded-xl space-y-2">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-300 font-medium flex items-center gap-1.5">
-                      <Scale className="w-3.5 h-3.5 text-emerald-400" /> Tara Rocchetto Vuoto
+                    <span className="text-ink-muted font-medium flex items-center gap-1.5">
+                      <Scale className="w-3.5 h-3.5 text-accent-ink" /> Tara Rocchetto Vuoto
                     </span>
-                    <span className="font-mono text-emerald-400 font-bold">{newSpool.spoolTare || 0}g</span>
+                    <span className="font-mono text-accent-ink font-bold">{newSpool.spoolTare || 0}g</span>
                   </div>
 
                   <select
@@ -454,7 +454,7 @@ export default function MagazzinoPage() {
                         });
                       }
                     }}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-[11px] text-slate-200 outline-none focus:border-emerald-500"
+                    className="w-full bg-surface border border-line-strong rounded-lg px-2.5 py-1.5 text-[11px] text-ink outline-none focus:border-accent"
                   >
                     <option value="">Seleziona produttore/modello...</option>
                     {SPOOL_TARE_PRESETS.map(p => (
@@ -465,30 +465,30 @@ export default function MagazzinoPage() {
                   </select>
 
                   <div className="flex items-center gap-2 pt-1">
-                    <label className="text-[10px] text-slate-500 whitespace-nowrap">Tara personalizzata:</label>
+                    <label className="text-[10px] text-ink-faint whitespace-nowrap">Tara personalizzata:</label>
                     <input 
                       type="number"
                       value={newSpool.spoolTare ?? 0}
                       onChange={e => setNewSpool({ ...newSpool, spoolTare: parseInt(e.target.value) || 0 })}
-                      className="w-20 bg-slate-900 border border-slate-800 rounded px-2 py-0.5 text-xs text-white font-mono text-center outline-none focus:border-emerald-500"
+                      className="w-20 bg-surface border border-line-strong rounded px-2 py-0.5 text-xs text-ink font-mono text-center outline-none focus:border-accent"
                     />
-                    <span className="text-[11px] text-slate-500">grammi</span>
+                    <span className="text-[11px] text-ink-faint">grammi</span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">Prezzo Bobina (€)</label>
+                    <label className="block text-xs text-ink-muted mb-1">Prezzo Bobina (€)</label>
                     <input 
                       type="number" 
                       step="0.10"
                       value={newSpool.cost} 
                       onChange={e => setNewSpool({ ...newSpool, cost: parseFloat(e.target.value) || 0 })} 
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:ring-1 focus:ring-emerald-500 outline-none"
+                      className="w-full bg-surface border border-line-strong rounded-lg px-3 py-2 text-xs text-ink focus:ring-1 focus:ring-accent/20 outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-slate-400 mb-1">Peso Iniziale (g)</label>
+                    <label className="block text-xs text-ink-muted mb-1">Peso Iniziale (g)</label>
                     <input 
                       type="number" 
                       value={newSpool.weightTotal} 
@@ -496,25 +496,25 @@ export default function MagazzinoPage() {
                         const val = parseInt(e.target.value) || 1000;
                         setNewSpool({ ...newSpool, weightTotal: val, weightRemaining: val });
                       }} 
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:ring-1 focus:ring-emerald-500 outline-none"
+                      className="w-full bg-surface border border-line-strong rounded-lg px-3 py-2 text-xs text-ink focus:ring-1 focus:ring-accent/20 outline-none"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Note (opzionali)</label>
+                  <label className="block text-xs text-ink-muted mb-1">Note (opzionali)</label>
                   <input 
                     type="text" 
                     value={newSpool.notes || ''} 
                     onChange={e => setNewSpool({ ...newSpool, notes: e.target.value })} 
                     placeholder="Es. Ripiano A2, temp ideale 220°C..."
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:ring-1 focus:ring-emerald-500 outline-none"
+                    className="w-full bg-surface border border-line-strong rounded-lg px-3 py-2 text-xs text-ink focus:ring-1 focus:ring-accent/20 outline-none"
                   />
                 </div>
 
                 <button 
                   type="submit" 
-                  className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-lg shadow-emerald-950"
+                  className="w-full py-2.5 bg-accent hover:bg-accent-hover text-on-accent font-semibold text-xs rounded-xl flex items-center justify-center gap-1.5 transition-colors shadow-lg "
                 >
                   <Plus className="w-4 h-4" /> Salva Bobina in Magazzino
                 </button>
@@ -527,27 +527,27 @@ export default function MagazzinoPage() {
               {/* BARRA RICERCA & STATISTICHE RAPIDE */}
               <div className="flex-shrink-0 flex flex-col sm:flex-row gap-2">
                 <div className="relative flex-1">
-                  <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
+                  <Search className="w-3.5 h-3.5 text-ink-faint absolute left-3 top-2.5" />
                   <input 
                     type="text" 
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     placeholder="Cerca bobina per marca, materiale, colore o note..." 
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-emerald-500"
+                    className="w-full bg-surface border border-line-strong rounded-lg pl-9 pr-3 py-1.5 text-xs text-ink focus:outline-none focus:border-accent"
                   />
                 </div>
 
-                <div className="bg-slate-900/80 border border-slate-800 px-3 py-1 rounded-lg flex items-center gap-3 text-xs flex-shrink-0">
+                <div className="bg-surface border border-line px-3 py-1 rounded-lg flex items-center gap-3 text-xs flex-shrink-0">
                   <div>
-                    <span className="text-slate-500 text-[9px] block uppercase">Totale Filamento</span>
-                    <strong className="text-white font-mono text-xs">
+                    <span className="text-ink-faint text-[11px] block">Totale Filamento</span>
+                    <strong className="text-ink font-mono text-xs">
                       {(inventory.spools.reduce((acc, s) => acc + (s.weightRemaining || 0), 0) / 1000).toFixed(2)} kg
                     </strong>
                   </div>
-                  <div className="h-5 w-px bg-slate-800" />
+                  <div className="h-5 w-px bg-raised" />
                   <div>
-                    <span className="text-slate-500 text-[9px] block uppercase">Valore Giacenza</span>
-                    <strong className="text-emerald-400 font-mono text-xs">
+                    <span className="text-ink-faint text-[11px] block">Valore Giacenza</span>
+                    <strong className="text-accent-ink font-mono text-xs">
                       €{inventory.spools.reduce((acc, s) => acc + (((s.weightRemaining || 0) / (s.weightTotal || 1000)) * s.cost), 0).toFixed(2)}
                     </strong>
                   </div>
@@ -556,14 +556,14 @@ export default function MagazzinoPage() {
                 <button
                   type="button"
                   onClick={() => setShowBatchLabels(true)}
-                  className="px-3 py-1.5 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 border border-cyan-500/30 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm flex-shrink-0 cursor-pointer"
+                  className="px-3 py-1.5 bg-info-soft hover:bg-info-soft text-info-ink border border-info-line rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm flex-shrink-0 cursor-pointer"
                   title="Stampa foglio unico A4 con etichette multiple (anti-spreco carta)"
                 >
-                  <Printer className="w-3.5 h-3.5 text-cyan-400" />
+                  <Printer className="w-3.5 h-3.5 text-info-ink" />
                   <span className="hidden sm:inline">Stampa Foglio A4</span>
                   <span className="sm:hidden">Foglio A4</span>
                   {selectedSpoolIds.length > 0 && (
-                    <span className="bg-cyan-500 text-slate-950 px-1.5 py-0.2 rounded-full text-[10px] font-bold">
+                    <span className="bg-info text-on-accent px-1.5 py-0.2 rounded-full text-[10px] font-bold">
                       {selectedSpoolIds.length}
                     </span>
                   )}
@@ -574,8 +574,8 @@ export default function MagazzinoPage() {
               <div className="flex-1 min-h-0 overflow-y-auto pr-1">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {filteredSpools.length === 0 ? (
-                  <div className="col-span-2 text-center py-16 bg-slate-900/50 border border-slate-800 rounded-2xl text-slate-500 text-sm flex flex-col items-center justify-center gap-2">
-                    <Box className="w-8 h-8 text-slate-600" />
+                  <div className="col-span-2 text-center py-16 bg-surface border border-line rounded-xl text-ink-faint text-sm flex flex-col items-center justify-center gap-2">
+                    <Box className="w-8 h-8 text-ink-faint" />
                     <span>Nessuna bobina trovata nel magazzino.</span>
                   </div>
                 ) : (
@@ -587,7 +587,7 @@ export default function MagazzinoPage() {
                     return (
                       <div 
                         key={spool.id} 
-                        className="bg-slate-900/90 border border-slate-800 hover:border-slate-700 transition-all rounded-2xl p-4 flex flex-col justify-between shadow-lg relative overflow-hidden group"
+                        className="bg-surface border border-line hover:border-line-strong transition-all rounded-xl p-4 flex flex-col justify-between shadow-lg relative overflow-hidden group"
                       >
                         {/* Indicatore colore laterale decorativo */}
                         {spool.colorHex && (
@@ -602,19 +602,19 @@ export default function MagazzinoPage() {
                           <div className="flex justify-between items-start mb-2 pl-1.5">
                             <div>
                               <div className="flex items-center gap-1.5">
-                                <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider font-semibold">
+                                <span className="text-[11px] font-mono text-ink-muted font-semibold">
                                   {spool.brand}
                                 </span>
                                 {spool.spoolType && (
-                                  <span className="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.2 rounded">
+                                  <span className="text-[9px] bg-raised text-ink-muted px-1.5 py-0.2 rounded">
                                     {spool.spoolType.replace(spool.brand, '').trim() || 'Standard'}
                                   </span>
                                 )}
                               </div>
-                              <h3 className="font-bold text-white text-sm flex items-center gap-2 mt-0.5">
+                              <h3 className="font-bold text-ink text-sm flex items-center gap-2 mt-0.5">
                                 {spool.colorHex && (
                                   <span 
-                                    className="w-2.5 h-2.5 rounded-full inline-block border border-white/20 shadow-sm"
+                                    className="w-2.5 h-2.5 rounded-full inline-block border border-line-strong shadow-sm"
                                     style={{ backgroundColor: spool.colorHex }}
                                   />
                                 )}
@@ -623,22 +623,22 @@ export default function MagazzinoPage() {
                             </div>
 
                             <div className="text-right">
-                              <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20 font-mono">
+                              <span className="text-xs font-bold text-accent-ink bg-accent-soft px-2 py-0.5 rounded border border-accent-line font-mono">
                                 €{spool.cost.toFixed(2)}
                               </span>
-                              <span className="block text-[9px] text-slate-500 font-mono mt-0.5">
+                              <span className="block text-[9px] text-ink-faint font-mono mt-0.5">
                                 {spool.weightTotal}g orig.
                               </span>
                             </div>
                           </div>
 
                           {/* BADGE TARA BOBINA VUOTA */}
-                          <div className="flex items-center justify-between text-[11px] bg-slate-950/70 border border-slate-800/80 px-2.5 py-1 rounded-lg my-2 pl-2">
-                            <span className="text-slate-400 flex items-center gap-1">
-                              <Scale className="w-3 h-3 text-emerald-400" />
-                              Tara rocchetto: <strong className="text-slate-300 font-mono">{tare}g</strong>
+                          <div className="flex items-center justify-between text-[11px] bg-sunken border border-line px-2.5 py-1 rounded-lg my-2 pl-2">
+                            <span className="text-ink-muted flex items-center gap-1">
+                              <Scale className="w-3 h-3 text-accent-ink" />
+                              Tara rocchetto: <strong className="text-ink-muted font-mono">{tare}g</strong>
                             </span>
-                            <span className="text-[10px] text-slate-500 font-mono">
+                            <span className="text-[10px] text-ink-faint font-mono">
                               Lordo est.: ~{spool.weightRemaining + tare}g
                             </span>
                           </div>
@@ -646,16 +646,16 @@ export default function MagazzinoPage() {
                           {/* BARRA AVANZAMENTO LIVELLO FILAMENTO */}
                           <div className="my-2.5 space-y-1 pl-1">
                             <div className="flex justify-between text-[11px]">
-                              <span className="text-slate-400">
-                                Rimanente: <strong className="text-white font-mono">{spool.weightRemaining}g</strong> / {spool.weightTotal}g
+                              <span className="text-ink-muted">
+                                Rimanente: <strong className="text-ink font-mono">{spool.weightRemaining}g</strong> / {spool.weightTotal}g
                               </span>
-                              <span className={`font-mono font-bold ${isLow ? 'text-amber-400' : 'text-emerald-400'}`}>
+                              <span className={`font-mono font-bold ${isLow ? 'text-warn-ink' : 'text-accent-ink'}`}>
                                 {pct}%
                               </span>
                             </div>
-                            <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                            <div className="w-full h-2 bg-sunken rounded-full overflow-hidden border border-line">
                               <div 
-                                className={`h-full transition-all duration-300 ${isLow ? 'bg-amber-500 shadow-amber-500/50 shadow-sm' : 'bg-emerald-500 shadow-emerald-500/50 shadow-sm'}`} 
+                                className={`h-full transition-all duration-300 ${isLow ? 'bg-warn shadow-sm' : 'bg-accent  shadow-sm'}`} 
                                 style={{ width: `${Math.min(100, Math.max(0, pct))}%` }}
                               />
                             </div>
@@ -663,19 +663,19 @@ export default function MagazzinoPage() {
 
                           {/* NOTE BOBINA (SE PRESENTI) */}
                           {spool.notes && (
-                            <p className="text-[11px] text-slate-400 italic bg-slate-950/40 px-2 py-1 rounded border border-slate-800/40 mb-2 truncate">
-                              📌 {spool.notes}
+                            <p className="text-[11px] text-ink-muted italic bg-sunken px-2 py-1 rounded border border-line mb-2 truncate">
+                              {spool.notes}
                             </p>
                           )}
                         </div>
 
                         {/* FOOTER AZIONI: PESA ALLA BILANCIA, MODIFICA COMPLETA, AGGIORNAMENTO RAPIDO GRAMMI, ELIMINA */}
-                        <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between gap-2">
+                        <div className="pt-3 border-t border-line flex items-center justify-between gap-2">
                           {/* PULSANTI RAPIDI PESA, MODIFICA & ETICHETTA QR */}
                           <div className="flex items-center gap-1.5">
                             <button
                               onClick={() => openWeighModal(spool)}
-                              className="px-2.5 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
+                              className="px-2.5 py-1.5 bg-accent-soft hover:bg-accent-soft text-accent-ink border border-accent-line rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
                               title="Pesa questa bobina alla bilancia e scala la tara"
                             >
                               <Scale className="w-3.5 h-3.5" />
@@ -695,7 +695,7 @@ export default function MagazzinoPage() {
                                 tareWeight: spool.spoolTare ?? 200,
                                 cost: spool.cost,
                               })}
-                              className="px-2.5 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
+                              className="px-2.5 py-1.5 bg-info-soft hover:bg-info-soft text-info-ink border border-info-line rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors"
                               title="Stampa etichetta adesiva QR con tara e link di pesata istantanea"
                             >
                               <QrCode className="w-3.5 h-3.5" />
@@ -704,10 +704,10 @@ export default function MagazzinoPage() {
 
                             <button
                               onClick={() => openEditModal(spool)}
-                              className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                              className="px-2.5 py-1.5 bg-raised hover:bg-muted text-ink border border-line-strong rounded-lg text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
                               title="Modifica tutti i parametri della bobina"
                             >
-                              <Pencil className="w-3.5 h-3.5 text-slate-400" />
+                              <Pencil className="w-3.5 h-3.5 text-ink-muted" />
                               <span>Modifica</span>
                             </button>
 
@@ -720,8 +720,8 @@ export default function MagazzinoPage() {
                               }}
                               className={`px-2 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer ${
                                 selectedSpoolIds.includes(spool.id)
-                                  ? 'bg-cyan-500/25 border-cyan-500 text-cyan-300'
-                                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                                  ? 'bg-info-soft border-info text-info-ink'
+                                  : 'bg-surface border-line text-ink-muted hover:text-ink'
                               }`}
                               title={selectedSpoolIds.includes(spool.id) ? "Rimuovi da selezione foglio A4" : "Seleziona per stampa foglio A4"}
                             >
@@ -736,14 +736,14 @@ export default function MagazzinoPage() {
                               type="number" 
                               value={spool.weightRemaining}
                               onChange={e => handleUpdateSpoolWeight(spool.id, parseInt(e.target.value) || 0)}
-                              className="w-16 bg-slate-950 border border-slate-800 rounded-lg px-1.5 py-1 text-xs text-center font-mono text-white outline-none focus:border-emerald-500"
+                              className="w-16 bg-surface border border-line-strong rounded-lg px-1.5 py-1 text-xs text-center font-mono text-ink outline-none focus:border-accent"
                               title="Modifica rapida grammi rimanenti"
                             />
-                            <span className="text-[11px] text-slate-500">g</span>
+                            <span className="text-[11px] text-ink-faint">g</span>
 
                             <button 
                               onClick={() => handleDeleteSpool(spool.id)}
-                              className="p-1.5 hover:bg-red-500/20 rounded-lg text-slate-500 hover:text-red-400 transition-colors ml-1"
+                              className="p-1.5 hover:bg-danger-soft rounded-lg text-ink-faint hover:text-danger-ink transition-colors ml-1"
                               title="Elimina bobina"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -768,48 +768,48 @@ export default function MagazzinoPage() {
             
             {/* FORM AGGIUNTA HARDWARE (4 COLONNE) */}
             <div className="lg:col-span-4 flex flex-col min-h-0 overflow-y-auto">
-              <form onSubmit={handleAddHardware} className="bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-3 shadow-xl">
-                <h2 className="text-xs font-bold text-white flex items-center gap-1.5 uppercase tracking-wider">
-                  <Plus className="w-3.5 h-3.5 text-purple-400" /> Aggiungi Componente
+              <form onSubmit={handleAddHardware} className="bg-surface border border-line rounded-xl p-3 space-y-3 shadow-lg">
+                <h2 className="text-xs font-bold text-ink flex items-center gap-1.5">
+                  <Plus className="w-3.5 h-3.5 text-info-ink" /> Aggiungi Componente
                 </h2>
 
                 <div>
-                  <label className="block text-[11px] text-slate-400 mb-0.5">Nome Articolo / Specifiche</label>
+                  <label className="block text-[11px] text-ink-muted mb-0.5">Nome Articolo / Specifiche</label>
                   <input 
                     type="text" 
                     value={newHardware.name} 
                     onChange={e => setNewHardware({ ...newHardware, name: e.target.value })} 
                     placeholder="Es. Inserti M3, Cuscinetti 608, Viti..."
-                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-white focus:ring-1 focus:ring-purple-500 outline-none"
+                    className="w-full bg-surface border border-line-strong rounded-lg px-2.5 py-1 text-xs text-ink focus:ring-1 focus:ring-accent/20 outline-none"
                     required
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="block text-[11px] text-slate-400 mb-0.5">Quantità a Scorta</label>
+                    <label className="block text-[11px] text-ink-muted mb-0.5">Quantità a Scorta</label>
                     <input 
                       type="number" 
                       value={newHardware.qty} 
                       onChange={e => setNewHardware({ ...newHardware, qty: parseInt(e.target.value) || 0 })} 
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-white focus:ring-1 focus:ring-purple-500 outline-none"
+                      className="w-full bg-surface border border-line-strong rounded-lg px-2.5 py-1 text-xs text-ink focus:ring-1 focus:ring-accent/20 outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-[11px] text-slate-400 mb-0.5">Costo Unitario (€)</label>
+                    <label className="block text-[11px] text-ink-muted mb-0.5">Costo Unitario (€)</label>
                     <input 
                       type="number" 
                       step="0.01"
                       value={newHardware.cost} 
                       onChange={e => setNewHardware({ ...newHardware, cost: parseFloat(e.target.value) || 0 })} 
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-white focus:ring-1 focus:ring-purple-500 outline-none"
+                      className="w-full bg-surface border border-line-strong rounded-lg px-2.5 py-1 text-xs text-ink focus:ring-1 focus:ring-accent/20 outline-none"
                     />
                   </div>
                 </div>
 
                 <button 
                   type="submit" 
-                  className="w-full py-2 bg-purple-600 hover:bg-purple-500 text-white font-semibold text-xs rounded-lg flex items-center justify-center gap-1 transition-colors shadow-md shadow-purple-950"
+                  className="w-full py-2 bg-info hover:bg-info text-on-accent font-semibold text-xs rounded-lg flex items-center justify-center gap-1 transition-colors shadow-md "
                 >
                   <Plus className="w-3.5 h-3.5" /> Salva nel Cassetto Hardware
                 </button>
@@ -819,19 +819,19 @@ export default function MagazzinoPage() {
             {/* TABELLA HARDWARE (8 COLONNE) */}
             <div className="lg:col-span-8 flex flex-col min-h-0 space-y-2 overflow-hidden">
               <div className="relative flex-shrink-0">
-                <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
+                <Search className="w-3.5 h-3.5 text-ink-faint absolute left-3 top-2.5" />
                 <input 
                   type="text" 
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   placeholder="Cerca viteria, dadi, inserti, magneti..." 
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg pl-9 pr-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-purple-500"
+                  className="w-full bg-surface border border-line-strong rounded-lg pl-9 pr-3 py-1.5 text-xs text-ink focus:outline-none focus:border-accent"
                 />
               </div>
 
-              <div className="flex-1 min-h-0 bg-slate-900 border border-slate-800 rounded-xl overflow-y-auto shadow-xl">
+              <div className="flex-1 min-h-0 bg-surface border border-line rounded-xl overflow-y-auto shadow-lg">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-950/80 text-slate-400 border-b border-slate-800 uppercase tracking-wider text-[10px]">
+                  <thead className="bg-sunken text-ink-muted border-b border-line text-[11px]">
                     <tr>
                       <th className="p-3.5 font-semibold">Descrizione Componente</th>
                       <th className="p-3.5 font-semibold">Giacenza</th>
@@ -839,31 +839,31 @@ export default function MagazzinoPage() {
                       <th className="p-3.5 font-semibold text-right">Azioni</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60">
+                  <tbody className="divide-y divide-line">
                     {filteredHardware.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="text-center py-12 text-slate-500">
+                        <td colSpan={4} className="text-center py-12 text-ink-faint">
                           Nessun componente hardware registrato.
                         </td>
                       </tr>
                     ) : (
                       filteredHardware.map((item) => (
-                        <tr key={item.id} className="hover:bg-slate-800/30 transition-colors">
-                          <td className="p-3.5 font-medium text-white">{item.name}</td>
+                        <tr key={item.id} className="hover:bg-raised transition-colors">
+                          <td className="p-3.5 font-medium text-ink">{item.name}</td>
                           <td className="p-3.5">
                             <input 
                               type="number" 
                               value={item.qty}
                               onChange={e => handleUpdateHardwareQty(item.id, parseInt(e.target.value) || 0)}
-                              className="w-16 bg-slate-950 border border-slate-800 rounded px-2 py-1 text-center font-mono text-white outline-none focus:border-purple-500"
+                              className="w-16 bg-surface border border-line-strong rounded px-2 py-1 text-center font-mono text-ink outline-none focus:border-accent"
                             />
-                            <span className="ml-1 text-slate-500 text-[11px]">pz</span>
+                            <span className="ml-1 text-ink-faint text-[11px]">pz</span>
                           </td>
-                          <td className="p-3.5 font-mono text-purple-300">€{item.cost.toFixed(2)}</td>
+                          <td className="p-3.5 font-mono text-info-ink">€{item.cost.toFixed(2)}</td>
                           <td className="p-3.5 text-right">
                             <button 
                               onClick={() => handleDeleteHardware(item.id)}
-                              className="p-1 hover:bg-slate-800 rounded text-slate-500 hover:text-red-400 transition-colors"
+                              className="p-1 hover:bg-raised rounded text-ink-faint hover:text-danger-ink transition-colors"
                               title="Elimina"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -885,23 +885,23 @@ export default function MagazzinoPage() {
         {/* MODALE 1: MODIFICA COMPLETA PARAMETRI BOBINA                              */}
         {/* ========================================================================= */}
         {editingSpool && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 space-y-5">
+          <div className="fixed inset-0 bg-scrim z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="bg-surface border border-line rounded-xl w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-lg p-6 space-y-5">
               
               {/* HEADER MODALE */}
-              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center justify-between pb-3 border-b border-line">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                    <Pencil className="w-5 h-5 text-emerald-400" />
+                  <div className="p-2 bg-accent-soft border border-accent-line rounded-xl">
+                    <Pencil className="w-5 h-5 text-accent-ink" />
                   </div>
                   <div>
-                    <h2 className="text-base font-bold text-white">Modifica Parametri Bobina</h2>
-                    <p className="text-xs text-slate-400">Aggiorna qualsiasi specifica tecnica, prezzo, rimanenza o tara</p>
+                    <h2 className="text-base font-bold text-ink">Modifica Parametri Bobina</h2>
+                    <p className="text-xs text-ink-muted">Aggiorna qualsiasi specifica tecnica, prezzo, rimanenza o tara</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setEditingSpool(null)}
-                  className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
+                  className="p-1.5 hover:bg-raised rounded-lg text-ink-muted hover:text-ink transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -912,7 +912,7 @@ export default function MagazzinoPage() {
                 
                 {/* MARCA & AUTO-SUGGERIMENTO */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Marca / Produttore</label>
+                  <label className="block text-xs font-semibold text-ink-muted mb-1">Marca / Produttore</label>
                   <div className="flex gap-2">
                     <input 
                       type="text" 
@@ -928,7 +928,7 @@ export default function MagazzinoPage() {
                         }) : null);
                       }} 
                       placeholder="Es. Bambu Lab, Sunlu, eSUN..."
-                      className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:ring-1 focus:ring-emerald-500 outline-none"
+                      className="flex-1 bg-surface border border-line-strong rounded-xl px-3 py-2 text-xs text-ink focus:ring-1 focus:ring-accent/20 outline-none"
                       required
                     />
                   </div>
@@ -937,26 +937,26 @@ export default function MagazzinoPage() {
                 {/* MATERIALE E COLORE */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">Materiale</label>
+                    <label className="block text-xs font-semibold text-ink-muted mb-1">Materiale</label>
                     <input 
                       type="text" 
                       value={editingSpool.material} 
                       onChange={e => setEditingSpool({ ...editingSpool, material: e.target.value })} 
                       placeholder="Es. PLA, PETG, TPU 95A, PA-CF..."
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:ring-1 focus:ring-emerald-500 outline-none"
+                      className="w-full bg-surface border border-line-strong rounded-xl px-3 py-2 text-xs text-ink focus:ring-1 focus:ring-accent/20 outline-none"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">Colore & Badge Visivo</label>
+                    <label className="block text-xs font-semibold text-ink-muted mb-1">Colore & Badge Visivo</label>
                     <div className="flex items-center gap-2">
                       <input 
                         type="text" 
                         value={editingSpool.color} 
                         onChange={e => setEditingSpool({ ...editingSpool, color: e.target.value })} 
                         placeholder="Es. Nero, Grigio Cenere"
-                        className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:ring-1 focus:ring-emerald-500 outline-none"
+                        className="flex-1 bg-surface border border-line-strong rounded-xl px-3 py-2 text-xs text-ink focus:ring-1 focus:ring-accent/20 outline-none"
                         required
                       />
                       <input 
@@ -973,34 +973,34 @@ export default function MagazzinoPage() {
                 {/* PREZZO E PESO INIZIALE */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">Costo di Acquisto (€)</label>
+                    <label className="block text-xs font-semibold text-ink-muted mb-1">Costo di Acquisto (€)</label>
                     <input 
                       type="number" 
                       step="0.01"
                       value={editingSpool.cost} 
                       onChange={e => setEditingSpool({ ...editingSpool, cost: parseFloat(e.target.value) || 0 })} 
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:ring-1 focus:ring-emerald-500 outline-none font-mono"
+                      className="w-full bg-surface border border-line-strong rounded-xl px-3 py-2 text-xs text-ink focus:ring-1 focus:ring-accent/20 outline-none font-mono"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-300 mb-1">Peso Iniziale Matassa (g)</label>
+                    <label className="block text-xs font-semibold text-ink-muted mb-1">Peso Iniziale Matassa (g)</label>
                     <input 
                       type="number" 
                       value={editingSpool.weightTotal} 
                       onChange={e => setEditingSpool({ ...editingSpool, weightTotal: parseInt(e.target.value) || 1000 })} 
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:ring-1 focus:ring-emerald-500 outline-none font-mono"
+                      className="w-full bg-surface border border-line-strong rounded-xl px-3 py-2 text-xs text-ink focus:ring-1 focus:ring-accent/20 outline-none font-mono"
                       required
                     />
                   </div>
                 </div>
 
                 {/* PESO RIMANENTE ATTUALE */}
-                <div className="p-3.5 bg-slate-950/70 border border-slate-800 rounded-xl space-y-2">
+                <div className="p-3.5 bg-sunken border border-line rounded-xl space-y-2">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="font-semibold text-white">Filamento Rimanente (g)</span>
-                    <span className="font-mono text-emerald-400 font-bold">
+                    <span className="font-semibold text-ink">Filamento Rimanente (g)</span>
+                    <span className="font-mono text-accent-ink font-bold">
                       {editingSpool.weightRemaining}g / {editingSpool.weightTotal}g ({Math.round((editingSpool.weightRemaining / (editingSpool.weightTotal || 1000)) * 100)}%)
                     </span>
                   </div>
@@ -1008,14 +1008,14 @@ export default function MagazzinoPage() {
                     type="number" 
                     value={editingSpool.weightRemaining} 
                     onChange={e => setEditingSpool({ ...editingSpool, weightRemaining: Math.max(0, parseInt(e.target.value) || 0) })} 
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-sm text-white font-mono focus:border-emerald-500 outline-none"
+                    className="w-full bg-surface border border-line-strong rounded-lg px-3 py-2 text-sm text-ink font-mono focus:border-accent outline-none"
                   />
-                  <div className="flex justify-between text-[10px] text-slate-500">
+                  <div className="flex justify-between text-[10px] text-ink-faint">
                     <span>Valore residuo: €{(((editingSpool.weightRemaining || 0) / (editingSpool.weightTotal || 1000)) * editingSpool.cost).toFixed(2)}</span>
                     <button
                       type="button"
                       onClick={() => setEditingSpool({ ...editingSpool, weightRemaining: editingSpool.weightTotal })}
-                      className="text-emerald-400 hover:underline"
+                      className="text-accent-ink hover:underline"
                     >
                       Ripristina al 100% (Nuova)
                     </button>
@@ -1023,17 +1023,17 @@ export default function MagazzinoPage() {
                 </div>
 
                 {/* TARA BOBINA VUOTA & PRESET PRODUTTORI */}
-                <div className="p-3.5 bg-slate-950/70 border border-slate-800 rounded-xl space-y-2.5">
+                <div className="p-3.5 bg-sunken border border-line rounded-xl space-y-2.5">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="font-semibold text-slate-200 flex items-center gap-1.5">
-                      <Scale className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="font-semibold text-ink flex items-center gap-1.5">
+                      <Scale className="w-3.5 h-3.5 text-accent-ink" />
                       Rocchetto Vuoto & Tara (g)
                     </span>
-                    <span className="font-mono text-emerald-400 font-bold">{editingSpool.spoolTare || 0}g</span>
+                    <span className="font-mono text-accent-ink font-bold">{editingSpool.spoolTare || 0}g</span>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] text-slate-400 mb-1">Preset Produttore:</label>
+                    <label className="block text-[11px] text-ink-muted mb-1">Preset Produttore:</label>
                     <select
                       value={editingSpool.spoolType || ''}
                       onChange={e => {
@@ -1046,7 +1046,7 @@ export default function MagazzinoPage() {
                           });
                         }
                       }}
-                      className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 outline-none focus:border-emerald-500"
+                      className="w-full bg-surface border border-line-strong rounded-lg px-3 py-2 text-xs text-ink outline-none focus:border-accent"
                     >
                       <option value="">Seleziona tara da database...</option>
                       {SPOOL_TARE_PRESETS.map(p => (
@@ -1059,22 +1059,22 @@ export default function MagazzinoPage() {
 
                   <div className="flex items-center gap-3 pt-1">
                     <div className="flex-1">
-                      <label className="block text-[10px] text-slate-400 mb-0.5">Tara personalizzata (g):</label>
+                      <label className="block text-[10px] text-ink-muted mb-0.5">Tara personalizzata (g):</label>
                       <input 
                         type="number" 
                         value={editingSpool.spoolTare ?? 0} 
                         onChange={e => setEditingSpool({ ...editingSpool, spoolTare: parseInt(e.target.value) || 0 })} 
-                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white font-mono outline-none focus:border-emerald-500"
+                        className="w-full bg-surface border border-line-strong rounded-lg px-3 py-1.5 text-xs text-ink font-mono outline-none focus:border-accent"
                       />
                     </div>
                     <div className="flex-1">
-                      <label className="block text-[10px] text-slate-400 mb-0.5">Nome/Tipo rocchetto:</label>
+                      <label className="block text-[10px] text-ink-muted mb-0.5">Nome/Tipo rocchetto:</label>
                       <input 
                         type="text" 
                         value={editingSpool.spoolType || ''} 
                         onChange={e => setEditingSpool({ ...editingSpool, spoolType: e.target.value })} 
                         placeholder="Es. Plastica Sunlu, Cartone..."
-                        className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-emerald-500"
+                        className="w-full bg-surface border border-line-strong rounded-lg px-3 py-1.5 text-xs text-ink outline-none focus:border-accent"
                       />
                     </div>
                   </div>
@@ -1082,28 +1082,28 @@ export default function MagazzinoPage() {
 
                 {/* NOTE EXTRA */}
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">Note Aggiuntive</label>
+                  <label className="block text-xs font-semibold text-ink-muted mb-1">Note Aggiuntive</label>
                   <textarea 
                     rows={2}
                     value={editingSpool.notes || ''} 
                     onChange={e => setEditingSpool({ ...editingSpool, notes: e.target.value })} 
                     placeholder="Es. Temperatura consigliata 215°C/60°C, ripiano magazzino, note di essiccazione..."
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:ring-1 focus:ring-emerald-500 outline-none resize-none"
+                    className="w-full bg-surface border border-line-strong rounded-xl px-3 py-2 text-xs text-ink focus:ring-1 focus:ring-accent/20 outline-none resize-none"
                   />
                 </div>
 
                 {/* BOTTONI CONFERMA */}
-                <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-800">
+                <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-line">
                   <button
                     type="button"
                     onClick={() => setEditingSpool(null)}
-                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition-colors"
+                    className="px-4 py-2 bg-raised hover:bg-muted text-ink-muted rounded-xl text-xs font-semibold transition-colors"
                   >
                     Annulla
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-lg shadow-emerald-950"
+                    className="px-5 py-2 bg-accent hover:bg-accent-hover text-on-accent rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-lg "
                   >
                     <CheckCircle2 className="w-4 h-4" /> Salva Tutte le Modifiche
                   </button>
@@ -1118,43 +1118,43 @@ export default function MagazzinoPage() {
         {/* MODALE 2: PESA BOBINA ALLA BILANCIA & SCALA TARA AUTOMATICA              */}
         {/* ========================================================================= */}
         {weighingSpool && (
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-2xl p-6 space-y-5">
+          <div className="fixed inset-0 bg-scrim z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="bg-surface border border-line rounded-xl w-full max-w-xl max-h-[90vh] overflow-y-auto shadow-lg p-6 space-y-5">
               
               {/* HEADER MODALE */}
-              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+              <div className="flex items-center justify-between pb-3 border-b border-line">
                 <div className="flex items-center gap-2.5">
-                  <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                    <Scale className="w-6 h-6 text-emerald-400" />
+                  <div className="p-2 bg-accent-soft border border-accent-line rounded-xl">
+                    <Scale className="w-6 h-6 text-accent-ink" />
                   </div>
                   <div>
-                    <h2 className="text-base font-bold text-white flex items-center gap-2">
+                    <h2 className="text-base font-bold text-ink flex items-center gap-2">
                       Pesa Bobina alla Bilancia
-                      <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded font-mono">
+                      <span className="text-[10px] bg-accent-soft text-accent-ink px-2 py-0.5 rounded font-mono">
                         Tara Automatica
                       </span>
                     </h2>
-                    <p className="text-xs text-slate-400">
+                    <p className="text-xs text-ink-muted">
                       Metti la bobina sulla bilancia: al peso lordo verrà scalata la tara del rocchetto vuoto
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setWeighingSpool(null)}
-                  className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
+                  className="p-1.5 hover:bg-raised rounded-lg text-ink-muted hover:text-ink transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {/* RIEPILOGO BOBINA SELEZIONATA */}
-              <div className="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3.5 flex items-center justify-between">
+              <div className="bg-sunken border border-line rounded-xl p-3.5 flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">{weighingSpool.brand}</span>
-                  <h3 className="font-bold text-white text-sm flex items-center gap-2">
+                  <span className="text-[11px] font-mono text-ink-faint">{weighingSpool.brand}</span>
+                  <h3 className="font-bold text-ink text-sm flex items-center gap-2">
                     {weighingSpool.colorHex && (
                       <span 
-                        className="w-2.5 h-2.5 rounded-full inline-block border border-white/20"
+                        className="w-2.5 h-2.5 rounded-full inline-block border border-line-strong"
                         style={{ backgroundColor: weighingSpool.colorHex }}
                       />
                     )}
@@ -1162,19 +1162,19 @@ export default function MagazzinoPage() {
                   </h3>
                 </div>
                 <div className="text-right text-xs">
-                  <span className="text-slate-400 block text-[11px]">Rimanenza Attuale:</span>
-                  <strong className="text-emerald-400 font-mono text-sm">{weighingSpool.weightRemaining}g</strong>
+                  <span className="text-ink-muted block text-[11px]">Rimanenza Attuale:</span>
+                  <strong className="text-accent-ink font-mono text-sm">{weighingSpool.weightRemaining}g</strong>
                 </div>
               </div>
 
               {/* SELEZIONE TARA / ROCHETTO VUOTO */}
-              <div className="bg-slate-950/40 border border-slate-800/80 rounded-xl p-4 space-y-3">
+              <div className="bg-sunken border border-line rounded-xl p-4 space-y-3">
                 <div className="flex justify-between items-center">
-                  <label className="text-xs font-semibold text-slate-200 flex items-center gap-1.5">
-                    <SlidersHorizontal className="w-3.5 h-3.5 text-emerald-400" />
+                  <label className="text-xs font-semibold text-ink flex items-center gap-1.5">
+                    <SlidersHorizontal className="w-3.5 h-3.5 text-accent-ink" />
                     Tara Rocchetto Vuoto Applicata:
                   </label>
-                  <span className="text-sm font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded border border-emerald-500/20">
+                  <span className="text-sm font-mono font-bold text-accent-ink bg-accent-soft px-2.5 py-0.5 rounded border border-accent-line">
                     -{activeTareWeight}g
                   </span>
                 </div>
@@ -1187,13 +1187,13 @@ export default function MagazzinoPage() {
                       value={tareSearchFilter}
                       onChange={e => setTareSearchFilter(e.target.value)}
                       placeholder="Cerca produttore (Bambu, Sunlu, eSun, Polymaker...)"
-                      className="flex-1 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white outline-none focus:border-emerald-500"
+                      className="flex-1 bg-surface border border-line-strong rounded-lg px-2.5 py-1.5 text-xs text-ink outline-none focus:border-accent"
                     />
                     {tareSearchFilter && (
                       <button 
                         type="button" 
                         onClick={() => setTareSearchFilter('')}
-                        className="text-xs text-slate-400 hover:text-white px-2"
+                        className="text-xs text-ink-muted hover:text-ink px-2"
                       >
                         Reset
                       </button>
@@ -1209,7 +1209,7 @@ export default function MagazzinoPage() {
                         setActiveTareWeight(selected.tareWeight);
                       }
                     }}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-200 outline-none focus:border-emerald-500 font-mono"
+                    className="w-full bg-surface border border-line-strong rounded-lg px-3 py-2 text-xs text-ink outline-none focus:border-accent font-mono"
                   >
                     <optgroup label="Preset Produttori Riconosciuti Online">
                       {filteredTarePresets.map(p => (
@@ -1222,7 +1222,7 @@ export default function MagazzinoPage() {
 
                   {/* TARA MANUALE DI PRECISIONE */}
                   <div className="flex items-center gap-2 pt-1">
-                    <span className="text-[11px] text-slate-400">Tara manuale bilancia:</span>
+                    <span className="text-[11px] text-ink-muted">Tara manuale bilancia:</span>
                     <input 
                       type="number" 
                       value={activeTareWeight} 
@@ -1231,19 +1231,19 @@ export default function MagazzinoPage() {
                         setActiveTareWeight(v);
                         setActiveTareModel('Personalizzata');
                       }}
-                      className="w-20 bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-xs text-center font-mono text-white outline-none focus:border-emerald-500"
+                      className="w-20 bg-surface border border-line-strong rounded-lg px-2 py-1 text-xs text-center font-mono text-ink outline-none focus:border-accent"
                     />
-                    <span className="text-xs text-slate-500">g</span>
+                    <span className="text-xs text-ink-faint">g</span>
                   </div>
                 </div>
               </div>
 
               {/* INPUT PESO LORDO BILANCIA (BOX PRINCIPALE IN EVIDENZA) */}
-              <div className="bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-emerald-500/40 rounded-2xl p-5 space-y-4 shadow-xl">
+              <div className=" border-2 border-accent-line rounded-xl p-5 space-y-4 shadow-lg">
                 <div>
-                  <label className="block text-xs font-bold text-emerald-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+                  <label className="block text-xs font-bold text-accent-ink mb-1 flex items-center justify-between">
                     <span>Peso Lordo Letto sulla Bilancia (g)</span>
-                    <span className="text-[10px] text-slate-400 lowercase font-normal">bobina intera + filamento</span>
+                    <span className="text-[10px] text-ink-muted lowercase font-normal">bobina intera + filamento</span>
                   </label>
                   
                   <div className="relative">
@@ -1253,50 +1253,50 @@ export default function MagazzinoPage() {
                       placeholder="Es. 830"
                       value={grossWeightInput} 
                       onChange={e => setGrossWeightInput(e.target.value === '' ? '' : parseInt(e.target.value) || 0)} 
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3.5 text-2xl font-mono font-bold text-white text-center focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+                      className="w-full bg-surface border border-line-strong rounded-xl px-4 py-3.5 text-2xl font-mono font-bold text-ink text-center focus:border-accent focus:ring-[3px] focus:ring-accent/20 outline-none transition-all"
                     />
-                    <span className="absolute right-4 top-4 text-slate-500 font-mono text-sm">grammi</span>
+                    <span className="absolute right-4 top-4 text-ink-faint font-mono text-sm">grammi</span>
                   </div>
                 </div>
 
                 {/* AVVISO SE PESO LORDO < TARA */}
                 {isGrossLessThanTare && (
-                  <div className="flex items-center gap-2 text-xs text-amber-300 bg-amber-950/40 border border-amber-800/60 p-2.5 rounded-xl">
-                    <AlertTriangle className="w-4 h-4 text-amber-400 flex-shrink-0" />
+                  <div className="flex items-center gap-2 text-xs text-warn-ink bg-warn-soft border border-warn-line p-2.5 rounded-xl">
+                    <AlertTriangle className="w-4 h-4 text-warn-ink flex-shrink-0" />
                     <span>Attenzione: il peso lordo ({currentGross}g) è inferiore al solo rocchetto vuoto ({activeTareWeight}g)!</span>
                   </div>
                 )}
 
                 {/* FORMULA E CALCOLO NETTO IN TEMPO REALE */}
-                <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 space-y-3">
-                  <div className="flex items-center justify-between text-xs text-slate-400 font-mono pb-2 border-b border-slate-800/80">
+                <div className="bg-surface border border-line rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between text-xs text-ink-muted font-mono pb-2 border-b border-line">
                     <span>Formula di Calcolo:</span>
                     <span>{currentGross}g (Lordo) - {activeTareWeight}g (Tara)</span>
                   </div>
 
                   <div className="flex items-end justify-between">
                     <div>
-                      <span className="text-xs text-slate-400 block">Filamento Netto Rimanente:</span>
-                      <div className="text-3xl font-extrabold text-white font-mono flex items-baseline gap-1.5">
-                        <span className={currentNet > 0 ? "text-emerald-400" : "text-slate-400"}>{currentNet}</span>
-                        <span className="text-base text-slate-500 font-normal">grammi</span>
+                      <span className="text-xs text-ink-muted block">Filamento Netto Rimanente:</span>
+                      <div className="text-3xl font-extrabold text-ink font-mono flex items-baseline gap-1.5">
+                        <span className={currentNet > 0 ? "text-accent-ink" : "text-ink-muted"}>{currentNet}</span>
+                        <span className="text-base text-ink-faint font-normal">grammi</span>
                       </div>
                     </div>
 
                     <div className="text-right">
-                      <span className="text-xs text-slate-400 block">Percentuale & Valore:</span>
-                      <div className="font-mono font-bold text-sm text-white">
-                        <span className={netPercentage <= 20 ? 'text-amber-400' : 'text-emerald-400'}>{netPercentage}%</span>
-                        <span className="text-slate-500 mx-1.5">•</span>
-                        <span className="text-emerald-400">€{remainingValue}</span>
+                      <span className="text-xs text-ink-muted block">Percentuale & Valore:</span>
+                      <div className="font-mono font-bold text-sm text-ink">
+                        <span className={netPercentage <= 20 ? 'text-warn-ink' : 'text-accent-ink'}>{netPercentage}%</span>
+                        <span className="text-ink-faint mx-1.5">•</span>
+                        <span className="text-accent-ink">€{remainingValue}</span>
                       </div>
                     </div>
                   </div>
 
                   {/* MINI BARRA LIVELLO */}
-                  <div className="w-full h-2.5 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                  <div className="w-full h-2.5 bg-sunken rounded-full overflow-hidden border border-line">
                     <div 
-                      className={`h-full transition-all duration-300 ${netPercentage <= 20 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                      className={`h-full transition-all duration-300 ${netPercentage <= 20 ? 'bg-warn' : 'bg-accent'}`}
                       style={{ width: `${Math.min(100, Math.max(0, netPercentage))}%` }}
                     />
                   </div>
@@ -1309,7 +1309,7 @@ export default function MagazzinoPage() {
                 <button
                   type="button"
                   onClick={() => setWeighingSpool(null)}
-                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition-colors"
+                  className="px-4 py-2.5 bg-raised hover:bg-muted text-ink-muted rounded-xl text-xs font-semibold transition-colors"
                 >
                   Annulla
                 </button>
@@ -1318,7 +1318,7 @@ export default function MagazzinoPage() {
                   type="button"
                   onClick={handleApplyWeighedWeight}
                   disabled={currentGross <= 0}
-                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-lg shadow-emerald-950"
+                  className="px-6 py-2.5 bg-accent hover:bg-accent-hover disabled:opacity-50 text-on-accent rounded-xl text-xs font-bold flex items-center gap-2 transition-all shadow-lg "
                 >
                   <Scale className="w-4 h-4" />
                   <span>Applica {currentNet}g e Salva nel Magazzino</span>

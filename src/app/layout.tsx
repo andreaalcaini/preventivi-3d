@@ -1,11 +1,11 @@
 import type { Metadata, Viewport } from 'next';
-import { Plus_Jakarta_Sans, Geist_Mono } from 'next/font/google';
+import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import ClientShell from '@/components/ClientShell';
 
-const jakarta = Plus_Jakarta_Sans({
+const geistSans = Geist({
   subsets: ['latin'],
-  variable: '--font-jakarta',
+  variable: '--font-geist-sans',
   display: 'swap',
 });
 
@@ -16,18 +16,21 @@ const geistMono = Geist_Mono({
 });
 
 export const viewport: Viewport = {
-  themeColor: '#020617',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#f1f0ed' },
+    { media: '(prefers-color-scheme: dark)', color: '#121211' },
+  ],
   width: 'device-width',
   initialScale: 1,
 };
 
 export const metadata: Metadata = {
-  title: 'Preventivi di Stampa 3D | Lab Manager',
-  description: 'Piattaforma per maker e laboratori di stampa 3D FDM/SLA: calcolo preventivi, viewer STL WebGL, gestione clienti con portale ordini e magazzino con tara',
+  title: 'Preventivi 3D | Gestionale di stampa',
+  description: 'Gestionale per maker e laboratori di stampa 3D FDM/SLA: preventivi, viewer STL e 3MF, clienti con portale ordini, magazzino bobine e integrazioni API.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'black-translucent',
+    statusBarStyle: 'default',
     title: 'Preventivi 3D',
   },
   icons: {
@@ -36,15 +39,20 @@ export const metadata: Metadata = {
   },
 };
 
+// Applica il tema scelto prima del primo paint, così non c'è il lampo di colore sbagliato
+const themeBootstrap = `try{var t=localStorage.getItem('p3d_theme');if(t==='light'||t==='dark'){document.documentElement.dataset.theme=t}}catch(e){}`;
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="it" className={`${jakarta.variable} ${geistMono.variable}`}>
-      <body className="bg-slate-950 text-slate-100 antialiased selection:bg-emerald-500/30 min-h-[100dvh] flex flex-col font-sans relative">
-        <div className="ambient-mesh" aria-hidden="true" />
+    <html lang="it" className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootstrap }} />
+      </head>
+      <body className="bg-canvas text-ink antialiased min-h-[100dvh] flex flex-col font-sans">
         <ClientShell>
           {children}
         </ClientShell>

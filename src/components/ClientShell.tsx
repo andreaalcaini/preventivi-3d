@@ -3,10 +3,10 @@
 import React, { useState, useEffect, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { 
-  Calculator, FolderKanban, Users, Box, 
+import {
+  Calculator, FolderKanban, Users, Box,
   Eye, EyeOff, Shield, LogOut, BarChart3, Wrench, HardDrive,
-  ExternalLink, Sparkles
+  ArrowUpRight, KeyRound, Sun, Moon, Menu, X, type LucideIcon,
 } from 'lucide-react';
 import { NotificationManager } from '@/components/NotificationManager';
 
@@ -15,13 +15,21 @@ function subscribeToStorage(callback: () => void) {
   return () => window.removeEventListener('storage', callback);
 }
 
-function getPrivacySnapshot(): string {
-  return localStorage.getItem('printquote_privacy') || 'false';
-}
-
-function getPrivacyServerSnapshot(): string {
-  return 'false';
-}
+const getPrivacySnapshot = () => localStorage.getItem('printquote_privacy') || 'false';
+const getThemeSnapshot = () => {
+  const stored = localStorage.getItem('p3d_theme');
+  if (stored === 'light' || stored === 'dark') return stored;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+};
+const subscribeToViewport = (cb: () => void) => {
+  const mq = window.matchMedia('(min-width: 1024px)');
+  mq.addEventListener('change', cb);
+  return () => mq.removeEventListener('change', cb);
+};
+const getDesktopSnapshot = () => window.matchMedia('(min-width: 1024px)').matches;
+const serverDesktop = () => true;
+const serverFalse = () => 'false';
+const serverLight = () => 'light';
 
 interface CurrentUser {
   id: string;
@@ -30,28 +38,78 @@ interface CurrentUser {
   role: 'admin' | 'operatore';
 }
 
+interface NavItem { href: string; label: string; icon: LucideIcon }
+
+const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
+  {
+    title: 'Lavoro',
+    items: [
+      { href: '/', label: 'Calcolatore', icon: Calculator },
+      { href: '/preventivi', label: 'Preventivi', icon: FolderKanban },
+      { href: '/clienti', label: 'Clienti', icon: Users },
+    ],
+  },
+  {
+    title: 'Laboratorio',
+    items: [
+      { href: '/magazzino', label: 'Magazzino', icon: Box },
+      { href: '/manutenzione', label: 'Manutenzione', icon: Wrench },
+      { href: '/dashboard', label: 'Statistiche', icon: BarChart3 },
+    ],
+  },
+  {
+    title: 'Sistema',
+    items: [
+      { href: '/integrazioni', label: 'Integrazioni API', icon: KeyRound },
+      { href: '/utenti', label: 'Utenti', icon: Shield },
+      { href: '/backup', label: 'Backup', icon: HardDrive },
+    ],
+  },
+];
+
+const PORTALS = [
+  { href: '/richiedi-preventivo', label: 'Richiesta preventivo' },
+  { href: '/ordine', label: 'Tracciamento ordine' },
+];
+
+function Brand() {
+  return (
+    <Link href="/" className="flex items-center gap-2.5 min-w-0">
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-ink text-canvas">
+        <Box className="h-4 w-4" strokeWidth={1.75} />
+      </span>
+      <span className="min-w-0">
+        <span className="block text-sm font-semibold tracking-tight text-ink leading-tight">Preventivi 3D</span>
+        <span className="block text-xs text-ink-faint leading-tight">Gestionale di stampa</span>
+      </span>
+    </Link>
+  );
+}
+
 export default function ClientShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const rawPrivacy = useSyncExternalStore(
-    subscribeToStorage,
-    getPrivacySnapshot,
-    getPrivacyServerSnapshot
-  );
-  const privacyMode = rawPrivacy === 'true';
+  const privacyMode = useSyncExternalStore(subscribeToStorage, getPrivacySnapshot, serverFalse) === 'true';
+  const theme = useSyncExternalStore(subscribeToStorage, getThemeSnapshot, serverLight);
+  // Un solo NotificationManager montato alla volta (apre lo stream SSE e mostra i toast)
+  const isDesktop = useSyncExternalStore(subscribeToViewport, getDesktopSnapshot, serverDesktop);
 
   useEffect(() => {
-    if (typeof document !== 'undefined') {
-      document.documentElement.classList.toggle('privacy-active', privacyMode);
-    }
+    document.documentElement.classList.toggle('privacy-active', privacyMode);
   }, [privacyMode]);
 
   const togglePrivacy = () => {
-    const next = !privacyMode;
-    localStorage.setItem('printquote_privacy', String(next));
+    localStorage.setItem('printquote_privacy', String(!privacyMode));
+    window.dispatchEvent(new Event('storage'));
+  };
+
+  const toggleTheme = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('p3d_theme', next);
+    document.documentElement.dataset.theme = next;
     window.dispatchEvent(new Event('storage'));
   };
 
@@ -62,16 +120,11 @@ export default function ClientShell({ children }: { children: React.ReactNode })
   }, [pathname]);
 
   useEffect(() => {
-    if (!isPublicPage) {
-      fetch('/api/auth/me')
-        .then(res => res.ok ? res.json() : null)
-        .then(data => {
-          if (data?.user) {
-            setCurrentUser(data.user);
-          }
-        })
-        .catch(() => {});
-    }
+    if (isPublicPage) return;
+    fetch('/api/auth/me')
+      .then(res => (res.ok ? res.json() : null))
+      .then(data => { if (data?.user) setCurrentUser(data.user); })
+      .catch(() => {});
   }, [pathname, isPublicPage]);
 
   const handleLogout = async () => {
@@ -85,290 +138,164 @@ export default function ClientShell({ children }: { children: React.ReactNode })
     }
   };
 
-  const navLinks = [
-    { href: '/', label: 'Calcolatore', icon: Calculator },
-    { href: '/preventivi', label: 'Preventivi', icon: FolderKanban },
-    { href: '/clienti', label: 'Clienti', icon: Users },
-    { href: '/dashboard', label: 'Dashboard', icon: BarChart3 },
-    { href: '/magazzino', label: 'Magazzino', icon: Box },
-    { href: '/manutenzione', label: 'Manutenzione', icon: Wrench },
-    { href: '/backup', label: 'Backup', icon: HardDrive },
-    { href: '/utenti', label: 'Utenti', icon: Shield },
-  ];
+  if (isPublicPage) {
+    return <main className="flex-1 flex flex-col min-h-[100dvh]">{children}</main>;
+  }
+
+  const navList = (
+    <nav className="flex flex-col gap-6" aria-label="Navigazione principale">
+      {NAV_GROUPS.map(group => (
+        <div key={group.title}>
+          <p className="px-3 mb-1.5 text-xs font-medium text-ink-faint">{group.title}</p>
+          <ul className="flex flex-col gap-0.5">
+            {group.items.map(item => {
+              const Icon = item.icon;
+              const active = pathname === item.href;
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    aria-current={active ? 'page' : undefined}
+                    className={`flex items-center gap-3 rounded-lg px-3 min-h-10 text-sm transition-colors ${
+                      active
+                        ? 'bg-surface text-ink font-medium shadow-sm ring-1 ring-line'
+                        : 'text-ink-muted hover:bg-raised hover:text-ink'
+                    }`}
+                  >
+                    <Icon className={`h-4 w-4 shrink-0 ${active ? 'text-accent' : ''}`} strokeWidth={1.75} />
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      ))}
+
+      <div>
+        <p className="px-3 mb-1.5 text-xs font-medium text-ink-faint">Portali clienti</p>
+        <ul className="flex flex-col gap-0.5">
+          {PORTALS.map(p => (
+            <li key={p.href}>
+              <Link
+                href={p.href}
+                className="flex items-center justify-between rounded-lg px-3 min-h-10 text-sm text-ink-muted hover:bg-raised hover:text-ink transition-colors"
+              >
+                {p.label}
+                <ArrowUpRight className="h-3.5 w-3.5 text-ink-faint" strokeWidth={1.75} />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </nav>
+  );
+
+  const utilityRow = (withBell: boolean) => (
+    <div className="flex items-center gap-1.5">
+      {withBell && <NotificationManager align="left" />}
+      <button
+        onClick={togglePrivacy}
+        aria-pressed={privacyMode}
+        title={privacyMode ? 'Mostra margini e costi' : 'Modalità cliente: nasconde margini e costi'}
+        className={`grid h-9 w-9 place-items-center rounded-full border transition-colors ${
+          privacyMode
+            ? 'bg-warn-soft border-warn-line text-warn-ink'
+            : 'bg-surface border-line text-ink-muted hover:text-ink hover:border-line-strong'
+        }`}
+      >
+        {privacyMode ? <EyeOff className="h-4 w-4" strokeWidth={1.75} /> : <Eye className="h-4 w-4" strokeWidth={1.75} />}
+        <span className="sr-only">Modalità cliente</span>
+      </button>
+      <button
+        onClick={toggleTheme}
+        title={theme === 'dark' ? 'Passa al tema chiaro' : 'Passa al tema scuro'}
+        className="grid h-9 w-9 place-items-center rounded-full border bg-surface border-line text-ink-muted hover:text-ink hover:border-line-strong transition-colors"
+      >
+        {theme === 'dark' ? <Sun className="h-4 w-4" strokeWidth={1.75} /> : <Moon className="h-4 w-4" strokeWidth={1.75} />}
+        <span className="sr-only">Cambia tema</span>
+      </button>
+    </div>
+  );
+
+  const userCard = (
+    <div className="flex items-center gap-2.5 rounded-lg px-2 py-2">
+      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-raised text-xs font-semibold text-ink uppercase">
+        {currentUser?.displayName?.slice(0, 2) || 'OP'}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-sm font-medium text-ink">{currentUser?.displayName || 'Operatore'}</span>
+        <span className="block truncate text-xs text-ink-faint">
+          {currentUser ? `${currentUser.role === 'admin' ? 'Amministratore' : 'Operatore'} · @${currentUser.username}` : 'Caricamento'}
+        </span>
+      </span>
+      <button
+        onClick={handleLogout}
+        title="Esci"
+        className="grid h-9 w-9 place-items-center rounded-lg text-ink-faint hover:bg-danger-soft hover:text-danger-ink transition-colors"
+      >
+        <LogOut className="h-4 w-4" strokeWidth={1.75} />
+        <span className="sr-only">Esci</span>
+      </button>
+    </div>
+  );
 
   return (
-    <div className="flex flex-col min-h-[100dvh] relative z-10">
-      {/* Floating Island Navigation per l'area laboratorio */}
-      {!isPublicPage && (
-        <header className="sticky top-2 sm:top-3 z-40 w-full px-2 sm:px-6 pointer-events-none print:hidden">
-          <div className="max-w-7xl mx-auto pointer-events-auto bg-slate-950/80 backdrop-blur-2xl border border-white/10 ring-1 ring-white/5 rounded-2xl sm:rounded-full px-3 sm:px-5 h-14 flex items-center justify-between shadow-2xl shadow-black/80 transition-all">
-            
-            {/* Brand Logo con Doppelrand micro-shell */}
-            <Link 
-              href="/" 
-              className="flex items-center gap-2.5 hover:opacity-90 transition-opacity flex-shrink-0 group"
+    <div className="flex min-h-[100dvh] w-full">
+      {/* Sidebar desktop */}
+      <aside className="hidden lg:flex w-64 shrink-0 flex-col border-r border-line bg-canvas sticky top-0 h-[100dvh] print:hidden">
+        <div className="px-5 h-16 flex items-center border-b border-line">
+          <Brand />
+        </div>
+        <div className="flex-1 overflow-y-auto px-3 py-5">{navList}</div>
+        <div className="border-t border-line px-3 py-3 space-y-2">
+          <div className="px-2">{utilityRow(isDesktop)}</div>
+          {userCard}
+        </div>
+      </aside>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* Barra superiore mobile */}
+        <header className="lg:hidden sticky top-0 z-40 flex h-14 items-center justify-between gap-3 border-b border-line bg-canvas px-4 print:hidden">
+          <Brand />
+          <div className="flex items-center gap-1.5">
+            {!isDesktop && <NotificationManager align="right" />}
+            <button
+              onClick={() => setMobileMenuOpen(true)}
+              aria-label="Apri menu"
+              className="grid h-10 w-10 place-items-center rounded-lg border border-line bg-surface text-ink"
             >
-              <div className="p-1.5 rounded-xl bg-white/[0.04] border border-white/10 ring-1 ring-white/5 group-hover:border-emerald-500/40 transition-colors shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]">
-                <div className="w-6 h-6 rounded-lg bg-emerald-500/15 flex items-center justify-center text-emerald-400">
-                  <Calculator className="w-3.5 h-3.5" strokeWidth={2} />
-                </div>
-              </div>
-              <div>
-                <span className="font-bold text-white text-xs sm:text-sm tracking-tight block leading-none">
-                  Preventivi 3D
-                </span>
-                <span className="text-[9px] text-slate-400 font-mono tracking-[0.2em] uppercase">
-                  Lab Manager
-                </span>
-              </div>
-            </Link>
-
-            {/* Desktop Navigation Links (schermi larghi >= xl) */}
-            <nav className="hidden xl:flex items-center gap-1">
-              {navLinks.map((item) => {
-                const Icon = item.icon;
-                const isActive = pathname === item.href;
-                return (
-                  <Link 
-                    key={item.href}
-                    href={item.href} 
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                      isActive 
-                        ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]' 
-                        : 'text-slate-300 hover:bg-white/[0.06] hover:text-white border border-transparent'
-                    }`}
-                  >
-                    <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />
-                    <span>{item.label}</span>
-                  </Link>
-                );
-              })}
-            </nav>
-
-            {/* Medium screens (lg: 1024px - 1279px): Icone compatte a pillola */}
-            <nav className="hidden lg:flex xl:hidden items-center gap-1">
-              {navLinks.map((item) => {
-                const Icon = item.icon;
-                const isActive = pathname === item.href;
-                return (
-                  <Link 
-                    key={item.href}
-                    href={item.href} 
-                    title={item.label}
-                    className={`p-2 rounded-full text-xs transition-all ${
-                      isActive 
-                        ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]' 
-                        : 'text-slate-300 hover:bg-white/[0.06] hover:text-white border border-transparent'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4" strokeWidth={1.75} />
-                  </Link>
-                );
-              })}
-            </nav>
-
-            {/* Azioni Rapide a Destra */}
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              
-              {/* Notifiche Push PWA & Popup In-App */}
-              <NotificationManager />
-
-              {/* Privacy Mode Toggle Button */}
-              <button
-                onClick={togglePrivacy}
-                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium transition-all border active:scale-[0.98] ${
-                  privacyMode 
-                    ? 'bg-amber-500/15 border-amber-500/40 text-amber-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]' 
-                    : 'bg-white/[0.03] border-white/10 text-slate-400 hover:text-slate-200 hover:border-white/20'
-                }`}
-                title={privacyMode ? "Disattiva Privacy Mode" : "Attiva Privacy Mode (nasconde margini per mostrare lo schermo)"}
-              >
-                {privacyMode ? <EyeOff className="w-3.5 h-3.5 text-amber-400" strokeWidth={1.75} /> : <Eye className="w-3.5 h-3.5" strokeWidth={1.75} />}
-                <span className="hidden md:inline">{privacyMode ? 'Cliente' : 'Privacy'}</span>
-              </button>
-
-              {/* Desktop User / Logout Pill */}
-              <button
-                onClick={handleLogout}
-                className="hidden lg:flex items-center gap-1.5 pl-2 pr-3 py-1 rounded-full text-xs font-medium text-slate-300 hover:text-red-400 bg-white/[0.03] hover:bg-white/[0.07] border border-white/10 hover:border-red-500/30 transition-all active:scale-[0.98]"
-                title={`Disconnetti (${currentUser?.username || 'Logout'})`}
-              >
-                <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-bold text-white uppercase">
-                  {currentUser?.displayName?.slice(0, 1) || 'U'}
-                </div>
-                <span className="max-w-[75px] truncate">{currentUser?.displayName || 'Esci'}</span>
-                <LogOut className="w-3 h-3 text-slate-400 ml-0.5" strokeWidth={1.75} />
-              </button>
-
-              {/* Hamburger Button con Morphing */}
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                aria-label="Menu di navigazione"
-                className="lg:hidden p-2 rounded-xl bg-white/[0.04] border border-white/10 text-slate-300 hover:text-white hover:bg-white/[0.08] transition-colors focus:outline-none"
-              >
-                <div className="w-5 h-4 relative flex flex-col justify-between items-center">
-                  <span className={`w-5 h-0.5 bg-current rounded-full transition-all duration-300 ${mobileMenuOpen ? 'rotate-45 translate-y-1.5' : ''}`} />
-                  <span className={`w-5 h-0.5 bg-current rounded-full transition-opacity duration-200 ${mobileMenuOpen ? 'opacity-0' : 'opacity-100'}`} />
-                  <span className={`w-5 h-0.5 bg-current rounded-full transition-all duration-300 ${mobileMenuOpen ? '-rotate-45 -translate-y-2' : ''}`} />
-                </div>
-              </button>
-
-            </div>
-
+              <Menu className="h-5 w-5" strokeWidth={1.75} />
+            </button>
           </div>
         </header>
-      )}
 
-      {/* Mobile Drawer (Side sheet ad isola di vetro) */}
-      {mobileMenuOpen && !isPublicPage && (
-        <div className="fixed inset-0 z-50 lg:hidden flex justify-end">
-          
-          {/* Backdrop con Blur profondo */}
-          <div 
-            className="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity"
-            onClick={() => setMobileMenuOpen(false)}
-          />
+        <main className="flex-1 flex flex-col min-h-0">{children}</main>
+      </div>
 
-          {/* Drawer Content */}
-          <div className="relative w-80 max-w-[85vw] bg-slate-950/95 border-l border-white/10 h-full flex flex-col justify-between p-6 z-10 animate-slide-in shadow-2xl backdrop-blur-2xl">
-            
-            <div className="space-y-6 overflow-y-auto pr-1">
-              
-              {/* Drawer Header */}
-              <div className="flex items-center justify-between pb-4 border-b border-white/10">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-400">
-                    <Calculator className="w-5 h-5" strokeWidth={1.75} />
-                  </div>
-                  <div>
-                    <span className="font-bold text-white text-sm block">Preventivi 3D</span>
-                    <span className="text-[10px] text-slate-400 font-mono tracking-wider">PANNELLO LAB</span>
-                  </div>
-                </div>
-                
-                <button 
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-white/10 transition-colors"
-                  aria-label="Chiudi menu"
-                >
-                  <div className="w-5 h-5 relative flex items-center justify-center">
-                    <span className="w-4 h-0.5 bg-current rotate-45 absolute" />
-                    <span className="w-4 h-0.5 bg-current -rotate-45 absolute" />
-                  </div>
-                </button>
-              </div>
-
-              {/* Voci di Menu */}
-              <div className="space-y-1">
-                <span className="text-[10px] font-mono uppercase text-slate-500 px-3 tracking-[0.2em] block mb-2 font-bold">
-                  Gestione Laboratorio
-                </span>
-                {navLinks.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = pathname === item.href;
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all ${
-                        isActive 
-                          ? 'bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]' 
-                          : 'text-slate-300 hover:bg-white/[0.05] hover:text-white'
-                      }`}
-                    >
-                      <Icon className={`w-4 h-4 ${isActive ? 'text-emerald-400' : 'text-slate-400'}`} strokeWidth={1.75} />
-                      <span>{item.label}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-
-              {/* Portali Esterni */}
-              <div className="pt-4 border-t border-white/10 space-y-1">
-                <span className="text-[10px] font-mono uppercase text-slate-500 px-3 tracking-[0.2em] block mb-2 font-bold">
-                  Portali Pubblici
-                </span>
-                <Link
-                  href="/richiedi-preventivo"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between px-3.5 py-2 rounded-xl text-xs text-slate-300 hover:bg-white/[0.05] hover:text-white transition-colors"
-                >
-                  <span className="flex items-center gap-2.5">
-                    <Sparkles className="w-3.5 h-3.5 text-amber-400" strokeWidth={1.75} />
-                    Richiedi Preventivo
-                  </span>
-                  <ExternalLink className="w-3 h-3 text-slate-500" />
-                </Link>
-
-                <Link
-                  href="/ordine"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-between px-3.5 py-2 rounded-xl text-xs text-slate-300 hover:bg-white/[0.05] hover:text-white transition-colors"
-                >
-                  <span className="flex items-center gap-2.5">
-                    <Box className="w-3.5 h-3.5 text-cyan-400" strokeWidth={1.75} />
-                    Traccia un Ordine
-                  </span>
-                  <ExternalLink className="w-3 h-3 text-slate-500" />
-                </Link>
-              </div>
-
-            </div>
-
-            {/* Drawer Footer */}
-            <div className="pt-4 border-t border-white/10 space-y-3">
+      {/* Drawer mobile */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div className="absolute inset-0 bg-scrim" onClick={() => setMobileMenuOpen(false)} />
+          <div className="absolute inset-y-0 left-0 flex w-80 max-w-[86vw] flex-col bg-canvas border-r border-line shadow-lg animate-slide-in">
+            <div className="flex h-14 items-center justify-between border-b border-line px-4">
+              <Brand />
               <button
-                onClick={togglePrivacy}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold border transition-all ${
-                  privacyMode 
-                    ? 'bg-amber-500/15 border-amber-500/40 text-amber-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]' 
-                    : 'bg-white/[0.03] border-white/10 text-slate-400 hover:text-slate-200'
-                }`}
+                onClick={() => setMobileMenuOpen(false)}
+                aria-label="Chiudi menu"
+                className="grid h-10 w-10 place-items-center rounded-lg text-ink-muted hover:bg-raised"
               >
-                <span className="flex items-center gap-2">
-                  {privacyMode ? <EyeOff className="w-4 h-4 text-amber-400" strokeWidth={1.75} /> : <Eye className="w-4 h-4" strokeWidth={1.75} />}
-                  <span>Modalità Privacy</span>
-                </span>
-                <span className="text-[10px] uppercase font-mono tracking-wider font-bold">
-                  {privacyMode ? 'ATTIVA' : 'DISATTIVA'}
-                </span>
+                <X className="h-5 w-5" strokeWidth={1.75} />
               </button>
-
-              <div className="p-3 bg-white/[0.03] rounded-xl border border-white/10 flex items-center justify-between">
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center font-bold text-white text-xs uppercase flex-shrink-0">
-                    {currentUser?.displayName?.slice(0, 2) || 'OP'}
-                  </div>
-                  <div className="min-w-0">
-                    <span className="font-semibold text-white text-xs block truncate">
-                      {currentUser?.displayName || 'Operatore'}
-                    </span>
-                    <span className="text-[10px] text-slate-500 font-mono block">
-                      @{currentUser?.username || 'operatore'}
-                    </span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleLogout}
-                  className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-white/10 rounded-lg transition-colors"
-                  title="Disconnetti"
-                >
-                  <LogOut className="w-4 h-4" strokeWidth={1.75} />
-                </button>
-              </div>
             </div>
-
+            <div className="flex-1 overflow-y-auto px-3 py-5">{navList}</div>
+            <div className="border-t border-line px-3 py-3 space-y-2 pb-safe">
+              <div className="px-2">{utilityRow(false)}</div>
+              {userCard}
+            </div>
           </div>
-
         </div>
       )}
-
-      {/* Main Content */}
-      <main className={`flex-1 flex flex-col min-h-0 ${isPublicPage ? '' : 'pt-2'}`}>
-        {children}
-      </main>
     </div>
   );
 }

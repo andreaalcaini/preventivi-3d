@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { verifySessionToken, SESSION_COOKIE_NAME } from '@/lib/auth';
+import { extractApiKey, authorizeApiKey } from '@/lib/apiKeys';
 
 const PUBLIC_PATHS = ['/login', '/ordine', '/richiedi-preventivo'];
 const PUBLIC_API_PREFIXES = ['/api/auth/login', '/api/public/', '/api/makerworld'];
@@ -12,7 +13,7 @@ export function proxy(request: NextRequest) {
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/static') ||
-    pathname.includes('.') // favicon.ico, immagini, file statici
+    (!pathname.startsWith('/api/') && pathname.includes('.')) // favicon.ico, immagini, file statici (mai le API)
   ) {
     return NextResponse.next();
   }
@@ -30,6 +31,19 @@ export function proxy(request: NextRequest) {
       }
     }
     return NextResponse.next();
+  }
+
+  // Integrazioni esterne: chiave API in Authorization: Bearer p3d_... o X-API-Key
+  const apiKey = extractApiKey(request.headers);
+  if (apiKey) {
+    const check = authorizeApiKey(apiKey, pathname, request.method);
+    if (!check.ok) {
+      return NextResponse.json({ error: check.error }, { status: check.status });
+    }
+    const headers = new Headers(request.headers);
+    headers.set('x-p3d-api-key-id', check.key.id);
+    headers.set('x-p3d-api-key-scope', check.key.scope);
+    return NextResponse.next({ request: { headers } });
   }
 
   // Per tutte le altre rotte (calcolatore, preventivi, clienti, magazzino, utenti), verifica autenticazione

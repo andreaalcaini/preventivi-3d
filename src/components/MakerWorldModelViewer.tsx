@@ -160,17 +160,17 @@ export default function MakerWorldModelViewer({
   }, [pictures, activeGalleryIndex, displayCover, displayTitle]);
 
   return (
-    <div className={`bg-slate-950/90 border border-white/10 rounded-2xl overflow-hidden flex flex-col shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] ${className}`}>
+    <div className={`bg-sunken border border-line rounded-xl overflow-hidden flex flex-col ${className}`}>
       {/* Barra Superiore: Titolo & Switcher Modalità */}
-      <div className="p-3 bg-white/[0.02] border-b border-white/10 flex flex-wrap items-center justify-between gap-2">
+      <div className="p-3 bg-raised border-b border-line flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          <span className="text-xs font-semibold text-slate-200 flex items-center gap-1.5 truncate">
-            <BoxIcon className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" strokeWidth={1.75} />
+          <span className="text-xs font-semibold text-ink flex items-center gap-1.5 truncate">
+            <BoxIcon className="w-3.5 h-3.5 text-accent-ink flex-shrink-0" strokeWidth={1.75} />
             <span className="truncate">{displayTitle || modelFileName || 'Visualizzatore Modello'}</span>
           </span>
 
           {loadingMw && (
-            <span className="text-[10px] text-emerald-400 flex items-center gap-1 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20 font-mono">
+            <span className="text-[10px] text-accent-ink flex items-center gap-1 bg-accent-soft px-2 py-0.5 rounded-full border border-accent-line font-mono">
               <Loader2 className="w-3 h-3 animate-spin" />
               <span>MakerWorld...</span>
             </span>
@@ -178,18 +178,18 @@ export default function MakerWorldModelViewer({
         </div>
 
         {/* Tab Switcher: [ 📐 Piatto 3D ] [ 📸 Foto & Renders ] [ 🧊 Mesh 3D ] */}
-        <div className="flex items-center gap-1 bg-white/[0.03] border border-white/10 p-0.5 rounded-full flex-wrap">
+        <div className="flex items-center gap-1 bg-raised border border-line p-0.5 rounded-full flex-wrap">
           {hasPlates && (
             <button
               type="button"
               onClick={() => setViewMode('plate')}
               className={`px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-[0.98] ${
                 viewMode === 'plate'
-                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]'
-                  : 'text-slate-400 hover:text-white border border-transparent'
+                  ? 'bg-accent-soft text-accent-ink border border-accent-line '
+                  : 'text-ink-muted hover:text-ink border border-transparent'
               }`}
             >
-              <Layers className="w-3 h-3 text-emerald-400" strokeWidth={1.75} />
+              <Layers className="w-3 h-3 text-accent-ink" strokeWidth={1.75} />
               <span>Piatto 3D</span>
             </button>
           )}
@@ -200,11 +200,11 @@ export default function MakerWorldModelViewer({
               onClick={() => setViewMode('gallery')}
               className={`px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-[0.98] ${
                 viewMode === 'gallery'
-                  ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]'
-                  : 'text-slate-400 hover:text-white border border-transparent'
+                  ? 'bg-info-soft text-info-ink border border-info-line '
+                  : 'text-ink-muted hover:text-ink border border-transparent'
               }`}
             >
-              <ImageIcon className="w-3 h-3 text-purple-400" strokeWidth={1.75} />
+              <ImageIcon className="w-3 h-3 text-info-ink" strokeWidth={1.75} />
               <span>Foto ({pictures?.length || 0})</span>
             </button>
           )}
@@ -215,25 +215,25 @@ export default function MakerWorldModelViewer({
               onClick={() => setViewMode('mesh')}
               className={`px-3 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 transition-all cursor-pointer active:scale-[0.98] ${
                 viewMode === 'mesh'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)]'
-                  : 'text-slate-400 hover:text-white border border-transparent'
+                  ? 'bg-info-soft text-info-ink border border-info-line '
+                  : 'text-ink-muted hover:text-ink border border-transparent'
               }`}
             >
-              <BoxIcon className="w-3 h-3 text-cyan-400" strokeWidth={1.75} />
+              <BoxIcon className="w-3 h-3 text-info-ink" strokeWidth={1.75} />
               <span>Mesh 3D {modelFileName ? '✓' : ''}</span>
             </button>
           )}
         </div>
 
         {modelFileName && onRemoveModel && (
-          <div className="flex items-center gap-1 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded text-emerald-400 text-[11px]">
+          <div className="flex items-center gap-1 bg-accent-soft border border-accent-line px-2 py-0.5 rounded text-accent-ink text-[11px]">
             <span className="font-medium truncate max-w-[120px]" title={modelFileName}>
-              📎 {modelFileName}
+              {modelFileName}
             </span>
             <button
               type="button"
               onClick={onRemoveModel}
-              className="hover:text-red-400 text-slate-400 font-bold ml-1 cursor-pointer"
+              className="hover:text-danger-ink text-ink-muted font-bold ml-1 cursor-pointer"
               title="Rimuovi file 3D"
             >
               ×
@@ -243,13 +243,13 @@ export default function MakerWorldModelViewer({
       </div>
 
       {/* Area Contenuto Visualizzatore */}
-      <div className="relative flex-1 bg-slate-950 flex flex-col justify-center">
+      <div className="relative flex-1 bg-sunken flex flex-col justify-center">
         {/* VISTA 1: PIATTO 3D CON RENDERING DELLA LASTRA DI STAMPA */}
         {viewMode === 'plate' && currentPlate && (
           <div className="space-y-2 p-2">
             <div 
               style={{ minHeight: `${height}px` }} 
-              className="relative bg-slate-950 border border-slate-800/80 rounded-xl overflow-hidden flex flex-col items-center justify-center p-3 select-none"
+              className="relative bg-sunken border border-line rounded-xl overflow-hidden flex flex-col items-center justify-center p-3 select-none"
             >
               {/* Texture reticolo del piatto di stampa */}
               <div className="absolute inset-0 opacity-15 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:18px_18px]" />
@@ -263,11 +263,11 @@ export default function MakerWorldModelViewer({
                     <img 
                       src={imgUrl} 
                       alt={currentPlate.name || `Piatto ${currentPlate.index}`}
-                      className="max-h-[250px] w-auto object-contain rounded-lg shadow-2xl drop-shadow-[0_12px_24px_rgba(0,0,0,0.85)] transition-transform hover:scale-[1.02]" 
+                      className="max-h-[250px] w-auto object-contain rounded-lg shadow-lg drop-shadow-[0_12px_24px_rgba(0,0,0,0.85)] transition-transform hover:scale-[1.02]" 
                     />
                   </div>
                 ) : (
-                  <div className="text-slate-500 text-xs py-12 flex flex-col items-center gap-1.5">
+                  <div className="text-ink-faint text-xs py-12 flex flex-col items-center gap-1.5">
                     <Layers className="w-8 h-8 opacity-40" />
                     <span>Render del piatto non disponibile per questo profilo</span>
                   </div>
@@ -276,17 +276,17 @@ export default function MakerWorldModelViewer({
 
               {/* Badge info sopra l'immagine: Nome piatto, peso stimato, tempo */}
               <div className="absolute top-2.5 left-2.5 z-20 flex items-center gap-1.5 flex-wrap">
-                <span className="bg-slate-900/90 backdrop-blur-md border border-slate-700 px-2 py-0.5 rounded-md text-[11px] font-bold text-white shadow">
+                <span className="bg-surface border border-line-strong px-2 py-0.5 rounded-md text-[11px] font-bold text-ink shadow">
                   {currentPlate.name || `Piatto ${currentPlate.index}`}
                 </span>
                 {currentPlate.weightGrams > 0 && (
-                  <span className="bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 px-2 py-0.5 rounded-md text-[10px] font-mono font-semibold">
+                  <span className="bg-accent-soft border border-accent-line text-accent-ink px-2 py-0.5 rounded-md text-[10px] font-mono font-semibold">
                     ~{currentPlate.weightGrams}g
                   </span>
                 )}
                 {currentPlate.predictionSeconds > 0 && (
-                  <span className="bg-slate-900/90 border border-slate-700/80 text-slate-300 px-2 py-0.5 rounded-md text-[10px] font-mono">
-                    ⏱️ {Math.floor(currentPlate.predictionSeconds / 3600)}h {Math.round((currentPlate.predictionSeconds % 3600) / 60)}m
+                  <span className="bg-surface border border-line-strong text-ink-muted px-2 py-0.5 rounded-md text-[10px] font-mono">
+                    {Math.floor(currentPlate.predictionSeconds / 3600)}h {Math.round((currentPlate.predictionSeconds % 3600) / 60)}m
                   </span>
                 )}
               </div>
@@ -297,14 +297,14 @@ export default function MakerWorldModelViewer({
                   {currentPlate.filaments.map((f, i) => (
                     <div 
                       key={i} 
-                      className="flex items-center gap-1 bg-slate-900/95 border border-slate-700/80 px-2 py-0.5 rounded-md text-[10px] text-slate-200 shadow"
+                      className="flex items-center gap-1 bg-surface border border-line-strong px-2 py-0.5 rounded-md text-[10px] text-ink shadow"
                     >
                       <span 
-                        className="w-2.5 h-2.5 rounded-full border border-black/40 shadow-inner flex-shrink-0" 
+                        className="w-2.5 h-2.5 rounded-full border border-line shadow-inner flex-shrink-0" 
                         style={{ backgroundColor: f.color || '#10b981' }} 
                       />
                       <span className="font-semibold">{f.type || 'PLA'}</span>
-                      {f.usedG ? <span className="text-slate-400 font-mono text-[9px]">({f.usedG}g)</span> : null}
+                      {f.usedG ? <span className="text-ink-muted font-mono text-[9px]">({f.usedG}g)</span> : null}
                     </div>
                   ))}
                 </div>
@@ -316,10 +316,10 @@ export default function MakerWorldModelViewer({
                   href={currentPlate.topPictureUrl || currentPlate.thumbnailUrl || displayCover} 
                   target="_blank" 
                   rel="noreferrer" 
-                  className="absolute bottom-2.5 right-2.5 z-20 bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white text-[10px] px-2.5 py-1 rounded-md border border-slate-700 flex items-center gap-1 transition-colors shadow"
+                  className="absolute bottom-2.5 right-2.5 z-20 bg-surface hover:bg-raised text-ink-muted hover:text-ink text-[10px] px-2.5 py-1 rounded-md border border-line-strong flex items-center gap-1 transition-colors shadow"
                   title="Apri immagine ad alta risoluzione"
                 >
-                  <Maximize2 className="w-3 h-3 text-emerald-400" />
+                  <Maximize2 className="w-3 h-3 text-accent-ink" />
                   <span>Zoom HD</span>
                 </a>
               )}
@@ -328,8 +328,8 @@ export default function MakerWorldModelViewer({
             {/* Selettore Piatti (se sono presenti più piatti nel profilo) */}
             {plates && plates.length > 1 && (
               <div className="flex items-center gap-1.5 flex-wrap pt-0.5 px-1">
-                <span className="text-[11px] text-slate-400 font-medium mr-1 flex items-center gap-1">
-                  <Layers className="w-3 h-3 text-emerald-400" />
+                <span className="text-[11px] text-ink-muted font-medium mr-1 flex items-center gap-1">
+                  <Layers className="w-3 h-3 text-accent-ink" />
                   Seleziona Piatto ({plates.length}):
                 </span>
                 {plates.map((plate) => (
@@ -339,8 +339,8 @@ export default function MakerWorldModelViewer({
                     onClick={() => setActivePlateIndex(plate.index)}
                     className={`px-2.5 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer flex items-center gap-1.5 ${
                       activePlateIndex === plate.index
-                        ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300 shadow-sm'
-                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
+                        ? 'bg-accent-soft border-accent text-accent-ink shadow-sm'
+                        : 'bg-surface border-line text-ink-muted hover:text-ink'
                     }`}
                   >
                     <span>{plate.name || `Piatto ${plate.index}`}</span>
@@ -359,7 +359,7 @@ export default function MakerWorldModelViewer({
           <div className="space-y-2 p-2">
             <div 
               style={{ minHeight: `${height}px` }} 
-              className="relative bg-slate-950 border border-slate-800/80 rounded-xl overflow-hidden flex flex-col items-center justify-center p-3 select-none"
+              className="relative bg-sunken border border-line rounded-xl overflow-hidden flex flex-col items-center justify-center p-3 select-none"
             >
               {currentPicture?.url ? (
                 <div className="relative z-10 flex flex-col items-center justify-center max-h-full max-w-full">
@@ -367,11 +367,11 @@ export default function MakerWorldModelViewer({
                   <img
                     src={currentPicture.url}
                     alt={currentPicture.name || 'Foto Modello'}
-                    className="max-h-[250px] w-auto object-contain rounded-lg shadow-xl transition-all"
+                    className="max-h-[250px] w-auto object-contain rounded-lg shadow-lg transition-all"
                   />
                 </div>
               ) : (
-                <div className="text-slate-500 text-xs py-12 flex flex-col items-center gap-1.5">
+                <div className="text-ink-faint text-xs py-12 flex flex-col items-center gap-1.5">
                   <ImageIcon className="w-8 h-8 opacity-40" />
                   <span>Nessuna foto disponibile per questo modello</span>
                 </div>
@@ -383,7 +383,7 @@ export default function MakerWorldModelViewer({
                   <button
                     type="button"
                     onClick={() => setActiveGalleryIndex(prev => (prev > 0 ? prev - 1 : pictures.length - 1))}
-                    className="absolute left-2.5 top-1/2 -translate-y-1/2 p-2 bg-slate-900/85 hover:bg-slate-800 text-white rounded-full border border-slate-700 transition-all shadow-lg hover:scale-105 cursor-pointer z-20"
+                    className="absolute left-2.5 top-1/2 -translate-y-1/2 p-2 bg-surface hover:bg-raised text-ink rounded-full border border-line-strong transition-all shadow-lg hover:scale-105 cursor-pointer z-20"
                     title="Foto precedente"
                   >
                     <ChevronLeft className="w-4 h-4" />
@@ -391,7 +391,7 @@ export default function MakerWorldModelViewer({
                   <button
                     type="button"
                     onClick={() => setActiveGalleryIndex(prev => (prev < pictures.length - 1 ? prev + 1 : 0))}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-2 bg-slate-900/85 hover:bg-slate-800 text-white rounded-full border border-slate-700 transition-all shadow-lg hover:scale-105 cursor-pointer z-20"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-2 bg-surface hover:bg-raised text-ink rounded-full border border-line-strong transition-all shadow-lg hover:scale-105 cursor-pointer z-20"
                     title="Foto successiva"
                   >
                     <ChevronRight className="w-4 h-4" />
@@ -401,8 +401,8 @@ export default function MakerWorldModelViewer({
 
               {/* Contatore immagini */}
               {pictures && pictures.length > 0 && (
-                <div className="absolute bottom-2.5 left-2.5 z-20 bg-slate-900/90 backdrop-blur-md text-slate-300 text-[10px] px-2.5 py-1 rounded-md border border-slate-700 font-mono flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-purple-400" />
+                <div className="absolute bottom-2.5 left-2.5 z-20 bg-surface text-ink-muted text-[10px] px-2.5 py-1 rounded-md border border-line-strong font-mono flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-info-ink" />
                   <span>{activeGalleryIndex + 1} / {pictures.length}</span>
                 </div>
               )}
@@ -413,10 +413,10 @@ export default function MakerWorldModelViewer({
                   href={currentPicture.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="absolute bottom-2.5 right-2.5 z-20 bg-slate-900/90 hover:bg-slate-800 text-slate-300 hover:text-white text-[10px] px-2.5 py-1 rounded-md border border-slate-700 flex items-center gap-1 transition-colors shadow"
+                  className="absolute bottom-2.5 right-2.5 z-20 bg-surface hover:bg-raised text-ink-muted hover:text-ink text-[10px] px-2.5 py-1 rounded-md border border-line-strong flex items-center gap-1 transition-colors shadow"
                   title="Apri immagine ad alta risoluzione"
                 >
-                  <ExternalLink className="w-3 h-3 text-purple-400" />
+                  <ExternalLink className="w-3 h-3 text-info-ink" />
                   <span>HD</span>
                 </a>
               )}
@@ -432,8 +432,8 @@ export default function MakerWorldModelViewer({
                     onClick={() => setActiveGalleryIndex(idx)}
                     className={`w-12 h-12 rounded-lg border overflow-hidden flex-shrink-0 transition-all cursor-pointer ${
                       activeGalleryIndex === idx
-                        ? 'border-purple-500 ring-2 ring-purple-500/50 scale-105 shadow-md'
-                        : 'border-slate-800 opacity-60 hover:opacity-100 hover:border-slate-700'
+                        ? 'border-info ring-2 ring-info/30 scale-105 shadow-md'
+                        : 'border-line opacity-60 hover:opacity-100 hover:border-line-strong'
                     }`}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -465,9 +465,9 @@ export default function MakerWorldModelViewer({
 
       {/* Footer informativo con link a MakerWorld se presente */}
       {makerWorldUrl && (
-        <div className="p-2 bg-slate-950 border-t border-slate-800/80 flex items-center justify-between text-xs flex-wrap gap-2 px-3">
-          <div className="flex items-center gap-1.5 text-slate-400 text-[11px] truncate">
-            <Sparkles className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+        <div className="p-2 bg-sunken border-t border-line flex items-center justify-between text-xs flex-wrap gap-2 px-3">
+          <div className="flex items-center gap-1.5 text-ink-muted text-[11px] truncate">
+            <Sparkles className="w-3.5 h-3.5 text-accent-ink flex-shrink-0" />
             <span className="truncate">
               Modello originale MakerWorld {authorName ? `di ${authorName}` : ''}
             </span>
@@ -478,7 +478,7 @@ export default function MakerWorldModelViewer({
               href={makerWorldUrl}
               target="_blank"
               rel="noreferrer"
-              className="text-[11px] text-emerald-400 hover:text-emerald-300 font-medium flex items-center gap-1 transition-colors"
+              className="text-[11px] text-accent-ink hover:text-accent-ink font-medium flex items-center gap-1 transition-colors"
             >
               <span>Vedi su MakerWorld</span>
               <ExternalLink className="w-3 h-3" />
