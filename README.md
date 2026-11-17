@@ -50,6 +50,20 @@
 - Esportazione istantanea di un archivio compresso `.zip` contenente tutti i database JSON (`quotes.json`, `inventory.json`, `maintenance.json`, `users.json`, `api_keys.json`).
 - Ripristino completo e storico dei backup scaricabili.
 
+### Preventivo automatico e listino
+- **Stima anche da STL**: il browser misura il modello (volume, superficie, ingombro, base d'appoggio, superfici aperte); il server calcola grammi, ore e prezzo con il **Listino** (materiali, costi, margine, minimo, sconti per quantità, urgenza, multicolore). Con i dati dello slicer usa quelli.
+- **Calibrazione**: dopo almeno 3 lavori con geometria e dati reali (slicer o consuntivo) la stima si corregge da sola.
+- **Avvisi di stampabilità** nel portale: pezzo più grande del piano, mesh aperta, base piccola, dettagli troppo sottili.
+- Codici ordine casuali (es. `K7QF-M2XA-9H`); i vecchi codici restano validi.
+
+### Produzione
+- **Pannello Produzione** per ogni lavoro: stampante, bobina, inizio e consegna promessa, consuntivo con costo e margine reali, tentativi falliti (scaricati dal magazzino), controllo qualità con checklist, esito e foto.
+- **Pagina Produzione**: calendario settimanale per stampante, pianificazione automatica (urgenti e consegne vicine prima), consegne a rischio, confronto stime/consuntivi.
+
+### Gestione
+- Vista **Kanban** dei lavori con trascinamento, **ricerca globale** (Ctrl+K), **registro attività**, **scheda cliente** (azienda, recapiti, note interne), **catalogo** di pezzi ricorrenti a prezzo fisso, **esportazione CSV** (lavori, clienti, magazzino) dalla pagina Backup.
+- Portale: colori disponibili in magazzino, consegna stimata nel tracking, consenso privacy obbligatorio con pagina `/privacy` (da completare con i dati del titolare).
+
 ### Importazione da siti di modelli 3D
 - Nel portale "Richiedi preventivo" il campo **Link al modello** accetta MakerWorld (con tempi e grammi dei profili), **Printables** (titolo, autore, licenza, immagini e download automatico di STL/3MF), **Thingiverse** e **MyMiniFactory** (file scaricati se sul server sono impostati `THINGIVERSE_TOKEN` o `MYMINIFACTORY_API_KEY`), Cults3D e Thangs (solo informazioni, file da caricare a mano).
 - I file passano da un proxy che accetta solo gli host dei siti supportati, solo STL/3MF e massimo 60 MB; la lettura dei link blocca gli indirizzi di rete interni.
