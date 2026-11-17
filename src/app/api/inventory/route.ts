@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { logActivity } from '@/lib/activity';
 import fs from 'fs';
 import path from 'path';
 
@@ -34,6 +35,7 @@ export async function POST(request: Request) {
     ensureFileExists();
     const inventory = await request.json();
     fs.writeFileSync(filePath, JSON.stringify(inventory, null, 2), 'utf-8');
+    logActivity(request.headers.get('x-p3d-key') ? 'chiave API' : 'gestionale', 'magazzino', '', `Magazzino aggiornato (${inventory?.spools?.length ?? 0} bobine, ${inventory?.hardware?.length ?? 0} componenti)`);
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Errore salvataggio file inventario' }, { status: 500 });

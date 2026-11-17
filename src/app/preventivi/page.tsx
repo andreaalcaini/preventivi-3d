@@ -82,6 +82,10 @@ function getSettingsServerSnapshot(): string {
 /** Elementi per pagina; 0 = tutti. Multipli di 3 per riempire la griglia a 3 colonne. */
 const PAGE_SIZE_OPTIONS = [6, 12, 24, 48, 0];
 const PAGE_SIZE_KEY = 'p3d_quotes_page_size';
+const VIEW_KEY = 'p3d_quotes_view';
+const getViewSnapshot = () => localStorage.getItem(VIEW_KEY) || 'griglia';
+const getViewServerSnapshot = () => 'griglia';
+const KANBAN_COLUMNS: JobStatus[] = ['richiesta', 'in_attesa', 'in_stampa', 'pronto', 'saldato'];
 const DEFAULT_PAGE_SIZE = 6;
 
 function getPageSizeSnapshot(): string {
@@ -95,10 +99,23 @@ function getPageSizeServerSnapshot(): string {
 export default function PreventiviPage() {
   const [quotes, setQuotes] = useState<SavedQuote[]>([]);
   const [search, setSearch] = useState('');
+  // Ricerca globale: /pagina?cerca=testo
+  useEffect(() => {
+    const term = new URLSearchParams(window.location.search).get('cerca');
+    if (term) setSearch(term);
+  }, []);
   const [statusFilter, setStatusFilter] = useState<'all' | JobStatus>('all');
   const [currentPage, setCurrentPage] = useState(1);
   const storedPageSize = Number(useSyncExternalStore(subscribeToStorage, getPageSizeSnapshot, getPageSizeServerSnapshot));
   const pageSizeChoice = PAGE_SIZE_OPTIONS.includes(storedPageSize) ? storedPageSize : DEFAULT_PAGE_SIZE;
+  const view = useSyncExternalStore(subscribeToStorage, getViewSnapshot, getViewServerSnapshot) === 'kanban' ? 'kanban' : 'griglia';
+  const setView = (v: 'griglia' | 'kanban') => {
+    localStorage.setItem(VIEW_KEY, v);
+    window.dispatchEvent(new Event('storage'));
+  };
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dropTarget, setDropTarget] = useState<JobStatus | null>(null);
+
   const changePageSize = (value: number) => {
     localStorage.setItem(PAGE_SIZE_KEY, String(value));
     window.dispatchEvent(new Event('storage'));
@@ -356,6 +373,14 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
             <button onClick={() => { setStatusFilter('pronto'); setCurrentPage(1); }} className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap border transition-all ${statusFilter === 'pronto' ? 'bg-info-soft border-info-line text-info-ink' : 'border-transparent text-ink-muted hover:text-info-ink'}`}>Pronti</button>
             <button onClick={() => { setStatusFilter('saldato'); setCurrentPage(1); }} className={`px-2.5 py-1 rounded-lg text-xs font-medium whitespace-nowrap border transition-all ${statusFilter === 'saldato' ? 'bg-accent-soft border-accent-line text-accent-ink' : 'border-transparent text-ink-muted hover:text-accent-ink'}`}>Saldati</button>
           </div>
+          <div className="inline-grid grid-flow-col gap-1 rounded-lg border border-line bg-sunken p-1 shrink-0" role="tablist" aria-label="Vista">
+            {(['griglia', 'kanban'] as const).map(v => (
+              <button key={v} role="tab" aria-selected={view === v} onClick={() => setView(v)}
+                className={`min-h-7 rounded-md px-2.5 text-xs capitalize ${view === v ? 'bg-surface text-ink font-medium shadow-sm ring-1 ring-line' : 'text-ink-muted hover:text-ink'}`}>
+                {v}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* LISTA SCHEDE LAVORI */}
@@ -365,6 +390,62 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
             <Link href="/" className="inline-block mt-3 text-accent-ink hover:underline text-xs">
               + Crea un nuovo preventivo nel calcolatore
             </Link>
+          </div>
+        ) : view === 'kanban' ? (
+          <div className="flex-1 min-h-0 overflow-x-auto pb-1">
+            <div className="grid grid-cols-5 gap-3 min-w-[1100px] h-full">
+              {KANBAN_COLUMNS.map(col => {
+                const items = filteredQuotes.filter(q => (q.status || 'in_attesa') === col);
+                const total = items.reduce((s, q) => s + (q.totalCalculated || 0), 0);
+                return (
+                  <div
+                    key={col}
+                    onDragOver={e => { e.preventDefault(); setDropTarget(col); }}
+                    onDragLeave={() => setDropTarget(t => (t === col ? null : t))}
+                    onDrop={e => {
+                      e.preventDefault();
+                      const id = e.dataTransfer.getData('text/plain') || dragId;
+                      setDropTarget(null);
+                      setDragId(null);
+                      const item = quotes.find(q => q.id === id);
+                      if (item && (item.status || 'in_attesa') !== col) handleStatusChange(item.id, col);
+                    }}
+                    className={`flex min-h-0 flex-col rounded-xl border bg-sunken transition-colors ${dropTarget === col ? 'border-accent bg-accent-soft' : 'border-line'}`}
+                  >
+                    <div className="flex items-center justify-between gap-2 border-b border-line px-3 py-2.5">
+                      <span className={`text-sm font-medium ${statusConfig[col].text}`}>{statusConfig[col].label}</span>
+                      <span className="text-xs text-ink-faint font-mono">{items.length} · €{total.toFixed(0)}</span>
+                    </div>
+                    <ul className="flex-1 min-h-0 overflow-y-auto p-2 space-y-2">
+                      {items.map(item => (
+                        <li
+                          key={item.id}
+                          draggable
+                          onDragStart={e => { e.dataTransfer.setData('text/plain', item.id); setDragId(item.id); }}
+                          onDragEnd={() => { setDragId(null); setDropTarget(null); }}
+                          className={`cursor-grab rounded-lg border border-line bg-surface p-3 shadow-sm active:cursor-grabbing ${dragId === item.id ? 'opacity-50' : ''}`}
+                        >
+                          <p className="text-sm font-medium text-ink line-clamp-2">{item.name}</p>
+                          <p className="mt-0.5 text-xs text-ink-faint truncate">{item.clientName || 'Cliente'}{item.quantity && item.quantity > 1 ? ` · ${item.quantity} pz` : ''}</p>
+                          <div className="mt-2 flex items-center justify-between gap-2">
+                            <span className="font-mono text-sm text-ink">€{(item.totalCalculated || 0).toFixed(2)}</span>
+                            <span className="flex items-center gap-1">
+                              {msgSummary[item.id]?.unread ? (
+                                <button onClick={() => setThreadFor(item)} className="rounded-full bg-accent px-1.5 text-[10px] font-semibold text-on-accent" title="Messaggi non letti">{msgSummary[item.id].unread}</button>
+                              ) : null}
+                              <button onClick={() => setProductionFor(item)} className={`grid h-7 w-7 place-items-center rounded-md hover:bg-raised ${isLate(item as unknown as ProductionQuote) ? 'text-danger-ink' : 'text-ink-faint'}`} title="Produzione">
+                                <Factory className="h-3.5 w-3.5" />
+                              </button>
+                            </span>
+                          </div>
+                        </li>
+                      ))}
+                      {items.length === 0 && <li className="px-2 py-6 text-center text-xs text-ink-faint">Trascina qui un lavoro</li>}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         ) : (
           <div className="flex-1 min-h-0 overflow-y-auto pr-1">
@@ -620,7 +701,7 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
         )}
 
         {/* FOOTER PAGINAZIONE */}
-        {filteredQuotes.length > 0 && (
+        {filteredQuotes.length > 0 && view === 'griglia' && (
           <div className="flex-shrink-0 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-3 border-t border-line text-sm text-ink-muted">
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
               <span>

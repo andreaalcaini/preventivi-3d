@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { logActivity } from '@/lib/activity';
 import {
   verifySessionToken,
   SESSION_COOKIE_NAME,
@@ -35,6 +36,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const result = createUser(body);
     if (result.error) return NextResponse.json({ error: result.error }, { status: 400 });
+    logActivity(actor.username, 'utenti', result.user?.id || '', `Creato utente @${result.user?.username} (${result.user?.role})`);
     return NextResponse.json({ success: true, user: result.user });
   } catch {
     return NextResponse.json({ error: 'Errore creazione utente' }, { status: 500 });
@@ -60,6 +62,7 @@ export async function PATCH(request: NextRequest) {
       if (actor.role !== 'admin') return adminOnly();
       const result = setUserApiKeyPermission(userId, body.canCreateApiKeys);
       if (!result.success) return NextResponse.json({ error: result.error }, { status: 404 });
+      logActivity(actor.username, 'utenti', userId, `${body.canCreateApiKeys ? 'Concesso' : 'Revocato'} permesso chiavi API a ${getUserById(userId)?.username || userId}`);
       return NextResponse.json({ success: true });
     }
 
@@ -67,6 +70,7 @@ export async function PATCH(request: NextRequest) {
       if (actor.role !== 'admin' && actor.id !== userId) return adminOnly();
       const result = updateUserPassword(userId, body.newPassword);
       if (!result.success) return NextResponse.json({ error: result.error }, { status: 400 });
+      logActivity(actor.username, 'utenti', userId, `Password cambiata per ${getUserById(userId)?.username || userId}`);
       return NextResponse.json({ success: true });
     }
 
@@ -87,8 +91,10 @@ export async function DELETE(request: NextRequest) {
     if (userId === actor.id) {
       return NextResponse.json({ error: 'Non puoi eliminare il tuo stesso account' }, { status: 400 });
     }
+    const removed = getUserById(userId);
     const result = deleteUser(userId);
     if (!result.success) return NextResponse.json({ error: result.error }, { status: 400 });
+    logActivity(actor.username, 'utenti', userId, `Eliminato utente @${removed?.username || userId}`);
     return NextResponse.json({ success: true });
   } catch {
     return NextResponse.json({ error: 'Errore eliminazione utente' }, { status: 500 });

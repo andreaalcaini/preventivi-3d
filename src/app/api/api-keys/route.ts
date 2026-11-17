@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { logActivity } from '@/lib/activity';
 import { verifySessionToken, SESSION_COOKIE_NAME, getAllPublicUsers, getUserById, userCanManageApiKeys } from '@/lib/auth';
 import {
   listApiKeys, createApiKey, updateApiKey, rotateApiKey, revokeApiKey, deleteApiKey, type Actor,
@@ -36,6 +37,7 @@ export async function POST(request: NextRequest) {
   if (!body) return NextResponse.json({ error: 'Richiesta non valida' }, { status: 400 });
   const result = createApiKey(actor, body);
   if ('error' in result) return NextResponse.json({ error: result.error }, { status: 400 });
+  logActivity(actor.username, 'chiavi', result.key.id, `Creata chiave API "${result.key.name}" per @${result.key.ownerUsername}`);
   return NextResponse.json(result, { status: 201 });
 }
 
@@ -48,11 +50,13 @@ export async function PATCH(request: NextRequest) {
 
   if (body.action === 'revoke') {
     if (!revokeApiKey(actor, body.id)) return NextResponse.json({ error: 'Chiave non trovata o già revocata' }, { status: 404 });
+    logActivity(actor.username, 'chiavi', body.id, 'Chiave API revocata');
     return NextResponse.json({ success: true });
   }
   if (body.action === 'rotate') {
     const r = rotateApiKey(actor, body.id);
     if ('error' in r) return NextResponse.json({ error: r.error }, { status: r.status });
+    logActivity(actor.username, 'chiavi', body.id, `Chiave API "${r.key.name}" rigenerata`);
     return NextResponse.json(r);
   }
   if (body.action === 'update') {

@@ -6,9 +6,10 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   Calculator, FolderKanban, Users, Box,
   Eye, EyeOff, Shield, LogOut, BarChart3, Wrench, HardDrive,
-  ArrowUpRight, KeyRound, Sun, Moon, Menu, X, Tags, CalendarClock, type LucideIcon,
+  ArrowUpRight, KeyRound, Sun, Moon, Menu, X, Tags, CalendarClock, History, BookMarked, Search, type LucideIcon,
 } from 'lucide-react';
 import { NotificationManager } from '@/components/NotificationManager';
+import CommandSearch from '@/components/CommandSearch';
 
 function subscribeToStorage(callback: () => void) {
   window.addEventListener('storage', callback);
@@ -47,6 +48,7 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
       { href: '/', label: 'Calcolatore', icon: Calculator },
       { href: '/preventivi', label: 'Preventivi', icon: FolderKanban },
       { href: '/clienti', label: 'Clienti', icon: Users },
+      { href: '/catalogo', label: 'Catalogo', icon: BookMarked },
       { href: '/listino', label: 'Listino', icon: Tags },
     ],
   },
@@ -62,6 +64,7 @@ const NAV_GROUPS: { title: string; items: NavItem[] }[] = [
   {
     title: 'Sistema',
     items: [
+      { href: '/attivita', label: 'Attività', icon: History },
       { href: '/integrazioni', label: 'Integrazioni API', icon: KeyRound },
       { href: '/utenti', label: 'Utenti', icon: Shield },
       { href: '/backup', label: 'Backup', icon: HardDrive },
@@ -93,6 +96,7 @@ export default function ClientShell({ children }: { children: React.ReactNode })
   const router = useRouter();
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const privacyMode = useSyncExternalStore(subscribeToStorage, getPrivacySnapshot, serverFalse) === 'true';
   const theme = useSyncExternalStore(subscribeToStorage, getThemeSnapshot, serverLight);
@@ -143,6 +147,18 @@ export default function ClientShell({ children }: { children: React.ReactNode })
   if (isPublicPage) {
     return <main className="flex-1 flex flex-col min-h-[100dvh]">{children}</main>;
   }
+
+
+  const searchButton = (
+    <button
+      onClick={() => { setMobileMenuOpen(false); setSearchOpen(true); }}
+      className="flex w-full items-center gap-2.5 rounded-lg border border-line bg-surface px-3 min-h-10 text-sm text-ink-faint hover:border-line-strong hover:text-ink-muted"
+    >
+      <Search className="h-4 w-4" strokeWidth={1.75} />
+      <span className="flex-1 text-left">Cerca</span>
+      <kbd className="hidden lg:inline rounded border border-line px-1.5 font-mono text-[11px]">Ctrl K</kbd>
+    </button>
+  );
 
   const navList = (
     <nav className="flex flex-col gap-6" aria-label="Navigazione principale">
@@ -249,6 +265,7 @@ export default function ClientShell({ children }: { children: React.ReactNode })
         <div className="px-5 h-16 flex items-center border-b border-line">
           <Brand />
         </div>
+        <div className="px-3 pt-4">{searchButton}</div>
         <div className="flex-1 overflow-y-auto px-3 py-5">{navList}</div>
         <div className="border-t border-line px-3 py-3 space-y-2">
           <div className="px-2">{utilityRow(isDesktop)}</div>
@@ -261,6 +278,9 @@ export default function ClientShell({ children }: { children: React.ReactNode })
         <header className="lg:hidden sticky top-0 z-40 flex h-14 items-center justify-between gap-3 border-b border-line bg-canvas px-4 print:hidden">
           <Brand />
           <div className="flex items-center gap-1.5">
+            <button onClick={() => setSearchOpen(true)} aria-label="Cerca" className="grid h-10 w-10 place-items-center rounded-lg border border-line bg-surface text-ink">
+              <Search className="h-5 w-5" strokeWidth={1.75} />
+            </button>
             {!isDesktop && <NotificationManager align="right" />}
             <button
               onClick={() => setMobileMenuOpen(true)}
@@ -274,6 +294,8 @@ export default function ClientShell({ children }: { children: React.ReactNode })
 
         <main className="flex-1 flex flex-col min-h-0">{children}</main>
       </div>
+
+      <CommandSearch open={searchOpen} onOpenChange={setSearchOpen} />
 
       {/* Drawer mobile */}
       {mobileMenuOpen && (

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { logActivity } from '@/lib/activity';
 import { verifySessionToken, SESSION_COOKIE_NAME, getUserById } from '@/lib/auth';
 import { readPricing, writePricing } from '@/lib/pricingStore';
 import { mergePricing, DEFAULT_PRICING, type PricingConfig } from '@/lib/pricing';
@@ -67,5 +68,6 @@ export async function PUT(request: NextRequest) {
     calibration: current.calibration,
   });
   writePricing(next);
+  logActivity(user.username, 'listino', '', 'Listino aggiornato');
   return NextResponse.json({ pricing: next });
 }

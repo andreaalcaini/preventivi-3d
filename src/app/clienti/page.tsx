@@ -48,6 +48,11 @@ interface ClientSummary {
 export default function ClientiPage() {
   const [quotes, setQuotes] = useState<SavedQuote[]>([]);
   const [search, setSearch] = useState('');
+  // Ricerca globale: /pagina?cerca=testo
+  useEffect(() => {
+    const term = new URLSearchParams(window.location.search).get('cerca');
+    if (term) setSearch(term);
+  }, []);
   const [selectedClientName, setSelectedClientName] = useState<string | null>(null);
   const [mobileTab, setMobileTab] = useState<'list' | 'detail'>('list');
 

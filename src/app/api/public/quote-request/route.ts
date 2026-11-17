@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { logActivity } from '@/lib/activity';
 import fs from 'fs';
 import path from 'path';
 import { broadcastLabNotification } from '@/lib/notification-bus';
@@ -129,6 +130,7 @@ export async function POST(request: NextRequest) {
     }
 
     quotes.unshift(newQuote);
+    logActivity('portale', 'lavori', orderId, `Richiesta dal portale: "${newQuote.name}" da ${newQuote.clientName}`);
     fs.writeFileSync(quotesFilePath, JSON.stringify(quotes, null, 2), 'utf-8');
 
     // 1. Broadcast real-time per le schede aperte del sito (Popup in-app + Suono)
