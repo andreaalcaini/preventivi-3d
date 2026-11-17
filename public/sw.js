@@ -17,7 +17,7 @@ self.addEventListener('push', (event) => {
     title: 'Nuova Richiesta Preventivo!',
     body: 'È arrivata una nuova richiesta di preventivo da revisionare.',
     icon: '/icons/icon-192.png',
-    badge: '/icons/icon-192.png',
+    badge: '/icons/badge-96.png',
     url: '/preventivi',
     tag: 'quote-notification',
   };
@@ -37,7 +37,7 @@ self.addEventListener('push', (event) => {
   const options = {
     body: notificationData.body,
     icon: notificationData.icon || '/icons/icon-192.png',
-    badge: notificationData.badge || '/icons/icon-192.png',
+    badge: notificationData.badge || '/icons/badge-96.png',
     tag: notificationData.tag || `quote-${Date.now()}`,
     renotify: true,
     requireInteraction: true,

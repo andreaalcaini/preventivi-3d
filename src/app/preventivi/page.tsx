@@ -76,12 +76,31 @@ function getSettingsServerSnapshot(): string {
   return '';
 }
 
+/** Elementi per pagina; 0 = tutti. Multipli di 3 per riempire la griglia a 3 colonne. */
+const PAGE_SIZE_OPTIONS = [6, 12, 24, 48, 0];
+const PAGE_SIZE_KEY = 'p3d_quotes_page_size';
+const DEFAULT_PAGE_SIZE = 6;
+
+function getPageSizeSnapshot(): string {
+  return localStorage.getItem(PAGE_SIZE_KEY) || String(DEFAULT_PAGE_SIZE);
+}
+
+function getPageSizeServerSnapshot(): string {
+  return String(DEFAULT_PAGE_SIZE);
+}
+
 export default function PreventiviPage() {
   const [quotes, setQuotes] = useState<SavedQuote[]>([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | JobStatus>('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 6;
+  const storedPageSize = Number(useSyncExternalStore(subscribeToStorage, getPageSizeSnapshot, getPageSizeServerSnapshot));
+  const pageSizeChoice = PAGE_SIZE_OPTIONS.includes(storedPageSize) ? storedPageSize : DEFAULT_PAGE_SIZE;
+  const changePageSize = (value: number) => {
+    localStorage.setItem(PAGE_SIZE_KEY, String(value));
+    window.dispatchEvent(new Event('storage'));
+    setCurrentPage(1);
+  };
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null);
   const [activeParcelLabel, setActiveParcelLabel] = useState<ParcelLabelData | null>(null);
@@ -222,10 +241,12 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
     });
   }, [quotes, statusFilter, search]);
 
+  const pageSize = pageSizeChoice === 0 ? Math.max(1, filteredQuotes.length) : pageSizeChoice;
   const totalPages = Math.max(1, Math.ceil(filteredQuotes.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
   const paginatedQuotes = useMemo(() => {
-    return filteredQuotes.slice((currentPage - 1) * pageSize, currentPage * pageSize);
-  }, [filteredQuotes, currentPage, pageSize]);
+    return filteredQuotes.slice((safePage - 1) * pageSize, safePage * pageSize);
+  }, [filteredQuotes, safePage, pageSize]);
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-sunken text-ink p-2 sm:p-4 font-sans relative">
@@ -560,31 +581,47 @@ ${item.extraBom && item.extraBom.length > 0 ? `- Componenti: ${item.extraBom.map
 
         {/* FOOTER PAGINAZIONE */}
         {filteredQuotes.length > 0 && (
-          <div className="flex-shrink-0 flex items-center justify-between pt-2 border-t border-line text-xs text-ink-muted">
-            <span>
-              Mostrando <strong className="text-ink">{((currentPage - 1) * pageSize) + 1}-{Math.min(currentPage * pageSize, filteredQuotes.length)}</strong> di <strong className="text-ink">{filteredQuotes.length}</strong> lavori
-            </span>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage <= 1}
-                className="px-2.5 py-1 bg-surface border border-line hover:bg-raised disabled:opacity-40 disabled:hover:bg-surface text-ink-muted rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed text-xs"
-              >
-                ← Precedente
-              </button>
-              <span className="font-mono text-ink-muted text-xs">
-                {currentPage} / {totalPages}
+          <div className="flex-shrink-0 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between pt-3 border-t border-line text-sm text-ink-muted">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+              <span>
+                <strong className="text-ink font-medium">{((safePage - 1) * pageSize) + 1}-{Math.min(safePage * pageSize, filteredQuotes.length)}</strong> di <strong className="text-ink font-medium">{filteredQuotes.length}</strong> lavori
               </span>
-              <button
-                type="button"
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage >= totalPages}
-                className="px-2.5 py-1 bg-surface border border-line hover:bg-raised disabled:opacity-40 disabled:hover:bg-surface text-ink-muted rounded-lg transition-colors cursor-pointer disabled:cursor-not-allowed text-xs"
-              >
-                Successivo →
-              </button>
+              <label className="flex items-center gap-2">
+                <span>Per pagina</span>
+                <select
+                  value={pageSizeChoice}
+                  onChange={e => changePageSize(Number(e.target.value))}
+                  className="min-h-9 rounded-lg border border-line-strong bg-surface px-2.5 text-sm text-ink focus:outline-none focus:border-accent focus:ring-[3px] focus:ring-accent/20"
+                >
+                  {PAGE_SIZE_OPTIONS.map(n => (
+                    <option key={n} value={n}>{n === 0 ? 'Tutti' : n}</option>
+                  ))}
+                </select>
+              </label>
             </div>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(Math.max(1, safePage - 1))}
+                  disabled={safePage <= 1}
+                  className="btn btn-secondary btn-sm"
+                >
+                  Precedente
+                </button>
+                <span className="font-mono text-ink-muted text-sm px-1">
+                  {safePage} / {totalPages}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(Math.min(totalPages, safePage + 1))}
+                  disabled={safePage >= totalPages}
+                  className="btn btn-secondary btn-sm"
+                >
+                  Successivo
+                </button>
+              </div>
+            )}
           </div>
         )}
 

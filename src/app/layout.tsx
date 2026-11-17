@@ -34,8 +34,9 @@ export const metadata: Metadata = {
     title: 'Preventivi 3D',
   },
   icons: {
-    icon: '/icons/icon.svg',
-    apple: '/icons/icon-192.png',
+    // favicon.ico in src/app viene aggiunto automaticamente da Next.js
+    icon: [{ url: '/icons/icon.svg', type: 'image/svg+xml' }],
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180' }],
   },
 };
 

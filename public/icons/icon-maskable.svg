@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <title>Preventivi 3D</title>
+  <rect width="512" height="512" fill="#1d6a50"/>
+  <polygon points="106.0,170.0 256.0,256.6 256.0,428.6 106.0,342.0" fill="#e3efe9"/>
+  <polygon points="256.0,256.6 406.0,170.0 406.0,342.0 256.0,428.6" fill="#b9d8ca"/>
+  <g stroke="#1d6a50" stroke-opacity="0.28" stroke-width="7" stroke-linecap="butt"><line x1="106" y1="198.7" x2="256" y2="285.3"/><line x1="256" y1="285.3" x2="406" y2="198.7"/><line x1="106" y1="227.3" x2="256" y2="313.9"/><line x1="256" y1="313.9" x2="406" y2="227.3"/><line x1="106" y1="256.0" x2="256" y2="342.6"/><line x1="256" y1="342.6" x2="406" y2="256.0"/><line x1="106" y1="284.7" x2="256" y2="371.3"/><line x1="256" y1="371.3" x2="406" y2="284.7"/><line x1="106" y1="313.3" x2="256" y2="399.9"/><line x1="256" y1="399.9" x2="406" y2="313.3"/></g>
+  <polygon points="256.0,83.4 406.0,170.0 256.0,256.6 106.0,170.0" fill="#ffffff"/>
+</svg>

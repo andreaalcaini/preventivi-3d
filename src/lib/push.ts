@@ -161,7 +161,7 @@ export async function sendPushNotificationToAll(payload: PushPayload): Promise<{
     body: payload.body,
     url: payload.url || '/preventivi',
     icon: payload.icon || '/icons/icon-192.png',
-    badge: payload.badge || '/icons/icon-192.png',
+    badge: payload.badge || '/icons/badge-96.png',
     tag: payload.tag || `quote-${Date.now()}`,
   });
 
