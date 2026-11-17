@@ -3,7 +3,7 @@ import type { NextRequest } from 'next/server';
 import { verifySessionToken, SESSION_COOKIE_NAME } from '@/lib/auth';
 import { extractApiKey, authorizeApiKey, clientIp } from '@/lib/apiKeys';
 
-const PUBLIC_PATHS = ['/login', '/ordine', '/richiedi-preventivo'];
+const PUBLIC_PATHS = ['/login', '/ordine', '/richiedi-preventivo', '/privacy'];
 const PUBLIC_API_PREFIXES = ['/api/auth/login', '/api/public/', '/api/makerworld'];
 
 export function proxy(request: NextRequest) {

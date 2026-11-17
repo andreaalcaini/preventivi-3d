@@ -29,6 +29,17 @@ interface PublicOrder {
   modelFiles?: Array<{ url: string; fileName: string }>;
   messageCount?: number;
   unreadMessages?: number;
+  estimatedDelivery?: string | null;
+}
+
+function DeliveryNote({ order }: { order: PublicOrder }) {
+  if (!order.estimatedDelivery || order.status === 'pronto' || order.status === 'saldato') return null;
+  const d = new Date(`${order.estimatedDelivery}T12:00:00`);
+  return (
+    <p className="rounded-lg border border-line bg-raised px-3 py-2 text-sm text-ink-muted">
+      Pronto indicativamente entro <strong className="text-ink">{d.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' })}</strong>
+    </p>
+  );
 }
 
 interface HistoryOrder {
@@ -486,6 +497,8 @@ function OrdineClienteContent() {
                 )}
               </div>
 
+              <DeliveryNote order={order} />
+
               <OrderThread orderId={order.id} side="cliente" initialCount={order.messageCount || 0} />
 
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line px-4 py-3">
@@ -728,6 +741,7 @@ function OrdineClienteContent() {
                       </div>
                     )}
 
+                    <DeliveryNote order={order} />
                     <OrderThread
                       orderId={order.id}
                       side="cliente"

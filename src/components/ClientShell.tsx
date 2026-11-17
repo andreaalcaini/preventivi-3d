@@ -119,7 +119,7 @@ export default function ClientShell({ children }: { children: React.ReactNode })
     window.dispatchEvent(new Event('storage'));
   };
 
-  const isPublicPage = pathname === '/login' || pathname.startsWith('/ordine') || pathname.startsWith('/richiedi-preventivo');
+  const isPublicPage = pathname === '/login' || pathname === '/privacy' || pathname.startsWith('/ordine') || pathname.startsWith('/richiedi-preventivo');
 
   useEffect(() => {
     setMobileMenuOpen(false);

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { getMessages } from '@/lib/orderMessages';
+import { plannedEnd, type ProductionQuote } from '@/lib/production';
 
 const quotesFilePath = path.join(process.cwd(), 'data', 'quotes.json');
 
@@ -79,6 +80,13 @@ export async function GET(request: NextRequest) {
       extraBom: Array.isArray(q.extraBom) ? q.extraBom.map(b => ({ name: b.name, qty: b.qty })) : [],
       makerWorldUrl: q.makerWorldUrl || '',
       color: typeof q.preferredColor === 'string' ? q.preferredColor : '',
+      // Solo la data (mai stampante o orari): consegna promessa, altrimenti fine stampa pianificata
+      estimatedDelivery: (() => {
+        const prod = (q as unknown as ProductionQuote).production;
+        if (prod?.dueDate) return prod.dueDate;
+        const end = plannedEnd(q as unknown as ProductionQuote);
+        return end ? end.toISOString().slice(0, 10) : null;
+      })(),
       messageCount: getMessages(String(q.id)).length,
       unreadMessages: getMessages(String(q.id)).filter(m => m.author === 'laboratorio' && !m.readByClient).length,
       modelUrl: q.modelUrl || '',

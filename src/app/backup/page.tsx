@@ -144,6 +144,14 @@ export default function BackupPage() {
           </button>
         </div>
 
+        {/* Esportazione CSV per Excel / commercialista */}
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-line bg-surface px-4 py-3 flex-shrink-0">
+          <span className="text-sm text-ink-muted mr-1">Esporta in CSV (Excel):</span>
+          {[['lavori', 'Lavori'], ['clienti', 'Clienti'], ['magazzino', 'Magazzino']].map(([t, l]) => (
+            <a key={t} href={`/api/export?type=${t}`} className="btn btn-secondary btn-sm">{l}</a>
+          ))}
+        </div>
+
         {/* Feedback Message */}
         {message && (
           <div className={`p-3 rounded-xl border text-xs flex items-start gap-2.5 flex-shrink-0 ${

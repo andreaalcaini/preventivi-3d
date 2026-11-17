@@ -34,6 +34,9 @@ export default function RichiediPreventivoPage() {
   // Analisi geometrica per file (volume, superficie, ingombro) e stima calcolata dal server con il listino
   const [statsByFile, setStatsByFile] = useState<Record<string, MeshStats | null>>({});
   const [urgent, setUrgent] = useState(false);
+  const [privacyConsent, setPrivacyConsent] = useState(false);
+  // Colori disponibili in magazzino per il materiale scelto (solo nomi, niente quantità)
+  const [stockColors, setStockColors] = useState<Array<{ name: string; hex: string }>>([]);
   const [estimate, setEstimate] = useState<{
     singlePrice: number; total: number; grams: number; hours: number; discountPct: number;
     source: 'slicer' | 'geometria'; calibrated: boolean;
@@ -306,6 +309,15 @@ export default function RichiediPreventivoPage() {
     author: undefined
   } : null;
 
+  useEffect(() => {
+    const ctrl = new AbortController();
+    fetch(`/api/public/colors?material=${encodeURIComponent(material || 'PLA')}`, { signal: ctrl.signal })
+      .then(r => r.json())
+      .then(d => setStockColors(d.colors || []))
+      .catch(() => {});
+    return () => ctrl.abort();
+  }, [material]);
+
   const meshStats = useMemo(
     () => combineStats(selectedFiles.map(f => statsByFile[fileKey(f)]).filter((m): m is MeshStats => Boolean(m))),
     [selectedFiles, statsByFile]
@@ -400,6 +412,7 @@ export default function RichiediPreventivoPage() {
           weightSource: activeModelInfo ? 'slicer' : estimate ? 'geometria' : '',
           meshStats,
           urgent,
+          privacyConsent,
           multiColor: Boolean(activeModelInfo?.needAms),
           totalCalculated: estimate?.total || 0
         })
@@ -871,16 +884,36 @@ export default function RichiediPreventivoPage() {
                       </div>
 
                       <div>
-                        <label className="block text-ink-muted font-medium mb-1.5">
+                        <label htmlFor="req-color" className="block text-ink-muted font-medium mb-1.5">
                           Colore Desiderato
                         </label>
                         <input
+                          id="req-color"
                           type="text"
                           value={color}
                           onChange={e => setColor(e.target.value)}
                           placeholder="Es. Nero, Bianco..."
                           className="w-full bg-surface border border-line-strong rounded-xl p-3 text-ink focus:outline-none focus:border-accent focus:ring-[3px] focus:ring-accent/20 transition-all"
                         />
+                        {stockColors.length > 0 && (
+                          <div className="mt-2">
+                            <p className="text-[11px] text-ink-faint mb-1.5">Disponibili subito:</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {stockColors.slice(0, 12).map(c => (
+                                <button
+                                  key={c.name}
+                                  type="button"
+                                  onClick={() => setColor(c.name)}
+                                  aria-pressed={color === c.name}
+                                  className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 min-h-7 text-xs ${color === c.name ? 'border-accent bg-accent-soft text-accent-ink' : 'border-line bg-surface text-ink-muted hover:border-line-strong'}`}
+                                >
+                                  {c.hex && <span className="h-3 w-3 rounded-full border border-line" style={{ backgroundColor: c.hex }} aria-hidden="true" />}
+                                  {c.name}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       <div>
@@ -921,6 +954,14 @@ export default function RichiediPreventivoPage() {
                         ))}
                       </ul>
                     )}
+
+                    <label className="flex items-start gap-2.5 text-sm text-ink-muted cursor-pointer">
+                      <input type="checkbox" required checked={privacyConsent} onChange={e => setPrivacyConsent(e.target.checked)} className="mt-0.5 h-4 w-4 accent-accent" />
+                      <span>
+                        Acconsento al trattamento dei miei dati per gestire questa richiesta.{' '}
+                        <a href="/privacy" target="_blank" rel="noreferrer" className="text-accent-ink underline underline-offset-4">Informativa privacy</a>
+                      </span>
+                    </label>
 
                     <label className="flex items-start gap-2.5 text-sm text-ink-muted cursor-pointer">
                       <input type="checkbox" checked={urgent} onChange={e => setUrgent(e.target.checked)} className="mt-0.5 h-4 w-4 accent-accent" />

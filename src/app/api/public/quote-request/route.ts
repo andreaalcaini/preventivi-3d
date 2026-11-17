@@ -50,6 +50,10 @@ export async function POST(request: NextRequest) {
       privacyConsent
     } = body;
 
+    if (!privacyConsent) {
+      return NextResponse.json({ error: 'Serve il consenso al trattamento dei dati per inviare la richiesta' }, { status: 400 });
+    }
+
     if (!name || !contact || !projectName) {
       return NextResponse.json({ error: 'Compila tutti i campi obbligatori (Nome, Contatto, Progetto)' }, { status: 400 });
     }
